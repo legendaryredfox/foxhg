@@ -1,0 +1,196 @@
+# Confirmed formats
+
+Facts verified against the clean English HeartGold ROM (`roms/heartgold.nds`, game code `IPKE`) by tests in `core`.
+Add an entry here whenever a layout, offset or quirk is confirmed.
+
+## NDS container
+
+- Header is 0x200 bytes of fields; the image has a 0x4000-byte header area (`headerSize` at 0x84). CRC-16/MODBUS of
+  bytes 0x000..0x15D is stored at 0x15E (`Crc16`, checked against the real header).
+- HeartGold English layout, in file order: header 0x0, ARM9 0x4000 (size 0xBA314, followed by a 12-byte footer that
+  starts `2106C0DE`), ARM9 overlay table (`y9`) 0xBE400 (0x1020 bytes), overlay and data files from 0xBF600, ARM7
+  0x2F7400, FNT 0x31EC00, FAT 0x31F800, banner 0x320A00 (0x840 bytes). Used size (0x80) is 0x78C763C; the image is
+  padded with 0xFF to 128 MB (capacity byte at 0x14 is 10, chip size = 0x20000 << capacity).
+- FAT has 513 entries (8 bytes each: start, end). Entries 0..128 are the ARM9 overlays and have **no name** in the
+  FNT; 384 files are named (all the `a/x/y/z` NARCs). `NdsRom.files` lists named files, `NdsRom.file(id)` also finds
+  unnamed ones.
+- FNT: main table of 8-byte entries (subtable offset, first file id, parent id; the root's last field is the
+  directory count). Subtable entry: byte `n` = file name length (1..0x7F) followed by the name; `0x80 | n` followed by
+  the name and a u16 directory id (`0xF000 + index`); `0` ends the directory. File ids are sequential per directory.
+- ARM9 overlay table entry (32 bytes): id, RAM address, RAM size, BSS size, static-init start, static-init end, FAT
+  file id, then a word with compressed size (low 24 bits) and flags (high 8 bits, bit 0 = compressed).
+- FAT entries never overlap and gaps between files are 0..29 bytes of padding.
+- 129 ARM9 overlays, no ARM7 overlays.
+
+## NARC
+
+- Header 16 bytes (`NARC`, BOM `FFFE`, version `0100`, total size, header size 0x10, 3 sections), then `BTAF`
+  (file ranges relative to the image start), `BTNF` (name table, kept raw), `GMIF` (data, each file padded to 4 bytes
+  with 0xFF).
+- **All 308 NARCs of the ROM parse and serialize back byte-for-byte** (`RealRomFileSystemTest`).
+- `a/0/0/2` is a NARC (personal data), confirmed present.
+
+## ARM9 replacement
+
+- `RomEdits.arm9` replaces the ARM9 as it must be stored (`Arm9.forRom`: plain with `compressed_static_end` = 0, or BLZ with
+  the raw prefix kept up to the module parameters and `compressed_static_end` = RAM base + packed size).
+- Everything after the ARM9 (the tail starting at the 0x200-aligned end of ARM9 + footer, here the ARM9 overlay table at
+  0xBE400) shifts by a multiple of 0x200. Header offsets (0x30 ARM7, 0x40 FNT, 0x48 FAT, 0x50/0x58 overlay tables, 0x68
+  banner, 0x80 used size), the ARM9 size (0x2C), every FAT entry and the header CRC are adjusted; the shifted ROM is a lazy
+  `RomSource` view, so file edits then apply on top of it.
+- Vanilla ARM9: 762,644 bytes packed, 1,122,040 plain, 759,892 with `Blz.compress`. A plain ARM9 grows the ROM by 359,424
+  bytes (134,217,728 -> 134,577,152).
+- **Boot-tested:** both the plain and the recompressed ARM9 builds (no other change) reach the same intro frame as vanilla
+  after 2400 frames in DeSmuME. All 513 files are byte-identical after the shift (`RealRomArm9Test`).
+
+## Building
+
+- `NdsBuilder` patches a copy of the original image. Unedited build has the same SHA-256 as the input
+  (`RealRomBuildTest`). Edited builds keep ARM9 and untouched files identical and re-open cleanly.
+
+## BLZ ("bottom LZ") code compression
+
+- The ARM9 binary and 127 of the 129 ARM9 overlays are BLZ-compressed. Header is the last 8 bytes: `u24 compressedLen`
+  + `u8 headerLen` (>= 8, 0xFF padding before the last 8 bytes) then `u32 extraSize`; output length = file length +
+  extraSize. The stream is read backwards and writes backwards (LZ10-like: flag byte MSB first; match = 2 bytes,
+  `length = (b1 >> 4) + 3`, `disp = (((b1 & 0xF) << 8) | b2) + 3`).
+- **Every compressed overlay decompresses to exactly its overlay-table RAM size**; the ARM9 (762,644 bytes packed) gives
+  1,122,040 bytes. All of them satisfy the in-place rule (the write pointer never passes unread input), which
+  `Blz.isInPlaceSafe` checks and `Blz.compress` guarantees (it keeps a raw prefix when needed).
+- Our compressor round-trips (ARM9, a large overlay) and passes the in-place check. Total packed size of the 127
+  overlays: 2,291,932 bytes original, 2,291,736 with `Blz.compress`.
+- **Boot-tested:** a ROM with all 127 overlays replaced by our recompressed versions reaches the same intro frame as
+  vanilla after 2400 frames in DeSmuME (`scripts/boot-test.sh`, byte-identical screenshot). **[UNVERIFIED]** for the
+  ARM9: `NdsBuilder` cannot replace it yet.
+- **Overlay table entries must match the file.** For a compressed overlay, the last word of its table entry is
+  `flags << 24 | compressedSize` and equals the file size in all 127 cases; the loader relies on it. Replacing an
+  overlay without updating it gives a white screen (seen in the emulator), so `NdsBuilder` updates it.
+- The ARM9 in the ROM is followed by a 12-byte footer: bytes `21 06 C0 DE` (little-endian word `0xDEC00621`), the offset of
+  the module-parameter block (0xBA0), 0. It is not part of the BLZ stream.
+- **Module parameters** (at the footer's offset, inside the always-raw first 0x41BA bytes): autoload list, autoload list
+  end, autoload start, static BSS start/end, **`compressed_static_end` (+0x14) = `0x02000000` + packed size**, SDK
+  version, the nitro marker. The startup code decompresses only when `compressed_static_end` is non-zero. Vanilla:
+  `0x020BA314`, identical in the packed and unpacked image.
+
+## Message archives (`a/0/2/7`)
+
+- 829 archives, 49,984 messages. Header `u16 count, u16 key`. Table entry `i`: `u32 offset, u32 length` (length in
+  u16 units, including the 0xFFFF terminator), both XOR-masked with `k | k << 16` where
+  `k = (key * 0x2FD * (i + 1)) & 0xFFFF`. Message `i` characters are XOR-masked with a key that starts at
+  `(0x91BD3 * (i + 1)) & 0xFFFF` and adds 0x493D per character.
+- **All 829 archives re-serialize byte-for-byte.**
+- Messages starting with 0xF100 are 9-bit compressed: values are packed 9 bits at a time into the **low 15 bits** of
+  each 16-bit word (bit 15 unused), LSB first, the unused bits of the last word are ones. A 0x1FF value ends the
+  string when it fits in the bits left in the last word; a string that fills its words exactly has no end mark. A plain
+  0xFFFF word always follows. Vanilla HeartGold uses this only for trainer names (bank 729, all 738 entries); all of
+  them decode and re-encode byte-for-byte. Anything that does not re-encode identically is kept as plain codes.
+- Names the editors use (bank index in `TextBanks`): species 237 (upper case, index = dex number), moves 750, items 222,
+  abilities 720, types 735, trainer names 729 (index = trainer id), trainer classes 730, map names 279. Verified by `RealRomNamesTest`.
+- Charmap: generated from the community `charmap.txt` by `scripts/gen-charmap.py` (2892 entries).
+
+## Personal data (`a/0/0/2`)
+
+- 508 records of 44 bytes (496 species + forms). Bytes: 0-5 HP/Atk/Def/Spe/SpA/SpD, 6-7 types, 8 catch rate, 9 base
+  EXP, 10-11 EV yield (2 bits each in order HP, Atk, Def, Spe, SpA, SpD), 12-13 and 14-15 held items, 16 gender ratio,
+  17 hatch cycles, 18 base friendship, 19 growth rate, 20-21 egg groups, 22-23 abilities, 24 Safari flee rate,
+  25 colour (low 7 bits) and flip (bit 7), 26-27 padding, 28-43 TM/HM bits (4 words).
+- **All 508 records round-trip**; Bulbasaur and Pikachu match the known stats, types, abilities and catch rates.
+- **[UNVERIFIED]**: which of the TM/HM bits beyond TM92/HM08 are move-tutor flags.
+
+## Learnsets (`a/0/3/3`)
+
+- 508 records. Each is a list of u16 `move | level << 9` (move in the low 9 bits) ended by 0xFFFF; bytes after the
+  terminator are padding and are kept. The longest vanilla learnset has 20 entries (`Learnset.MAX_ENTRIES`).
+- **All records re-serialize unchanged; the NARC re-serializes byte-for-byte.** Bulbasaur: Tackle at level 1, Growl at 3.
+
+## Evolutions (`a/0/3/4`)
+
+- 7 slots of `u16 method, u16 param, u16 target` (42 bytes) plus trailing padding. Method ids 0..26 (see
+  `EvolutionMethod`); every method present in the ROM is a known one. Param meaning depends on the method (level, item,
+  move, species, friendship, beauty).
+- **Round trip is exact.** Vanilla HeartGold has 17 trade evolutions (method 5 trade, 6 trade holding an item);
+  `TradeEvolutions.convert` turns trade into level-up at a chosen level and trade-with-item into use-item (method 7).
+- Kadabra is record 64 (trade into 65).
+
+## Moves (`a/0/1/1`)
+
+- 471 records of 16 bytes (3 more than the 468 named moves): effect u16, category (0 physical, 1 special, 2 status),
+  power, type, accuracy (0 = never misses), PP, effect chance, range u16, priority (signed), flags, contest effect,
+  contest type, u16 contest word. **Round trip is exact**; Pound = physical, 40 power, normal, 100 accuracy, 35 PP.
+
+## Trainers (`a/0/5/5` headers, `a/0/5/6` parties)
+
+- 738 trainers; both NARCs have 738 files. Header is 20 bytes: type (bit 0 custom moves, bit 1 held items), class,
+  unknown byte, party size, 4 battle items (u16), AI flags (u32), double-battle (u32).
+- Party record size depends on the type: 8 bytes (difficulty, gender/ability override, level, species+form, capsule),
+  10 with a held item, 16 with custom moves, 18 with both; species is the low 10 bits and the form the high 6 bits.
+  Vanilla: 487 default, 177 custom moves, 7 items, 67 both.
+- **All 738 headers and parties re-serialize unchanged.** Trainer 0 (a dummy) has 8 spare party bytes, kept in
+  `Trainer.trailing`. Falkner is trainer 20: Pidgey L9, Pidgeotto L13, class Leader. Names come from bank 729.
+- A ROM with Pidgey replaced everywhere in all parties boots to the vanilla intro frame.
+
+## Wild encounters (`a/0/3/7` HeartGold, `a/1/3/6` SoulSilver)
+
+- 142 records of 196 bytes in each NARC; **both ROMs carry both tables** and the game loads its own. Layout (decomp
+  `EncounterData`): 6 rates (walking, surfing, rock smash, old/good/super rod), 2 dummy bytes, then grass: 12 levels (shared
+  by the times of day) and 12 morning, 12 day, 12 night species (u16); 2 Hoenn + 2 Sinnoh radio species; surf (5), rock
+  smash (2), old rod (5), good rod (5), super rod (5) slots of `min level, max level, species u16`; land swarm, surf swarm,
+  night-fishing and fishing-swarm species (u16).
+- **Both NARCs re-serialize unchanged.** Route 29 (file 1): Pidgey, Sentret, Rattata at level 2. 53 areas differ between the
+  versions. Species only in SoulSilver's table: Ledyba, Weedle, Kakuna, Ekans, Vulpix, Meowth, Delibird, Teddiursa, Skarmory,
+  Ursaring, Arbok, Beedrill, Ledian, Gulpin, Persian, Mawile. Only in HeartGold's: Spinarak, Growlithe, Mankey, Phanpy,
+  Mantine, Gligar, Sableye, Baltoy, Sandshrew, Caterpie, Metapod, Sandslash, Butterfree, Ariados, Primeape, Donphan. (Spinarak
+  is HeartGold's and Ledyba SoulSilver's, as in the decomp's data.)
+- A HeartGold ROM whose table was replaced by SoulSilver's boots to the vanilla intro frame. Static encounters, roamers and
+  fossils are not in these tables (scripts / overlay data) and are not handled yet.
+
+## Map headers (ARM9)
+
+- 24 bytes each: wild encounter file (0xFF none), area data, packed world-map coordinates (u16), matrix, script, level
+  script, text archive, day music, night music, event file (u16 each), location-name index (byte, into message bank 279),
+  area properties (byte), 32 packed flag bits (weather, camera, battle background, ...). Layout from DSPRE's `HeaderHGSS`.
+- The table is in the **decompressed** ARM9. In English HeartGold header 0 is at `0xF6BE0` (24 bytes after the offset DSPRE
+  quotes, because DSPRE's image differs by one entry); there are **540** headers, 135 with encounters, all encounter ids
+  below 142. **[UNVERIFIED]** for SoulSilver (assumed `0xF6BE8`).
+- Packed fields (from DSPRE's `HeaderHGSS`, all 32+16+8 bits covered so a header round-trips exactly): coordinate word =
+  4 unknown bits, world-map X (6), Y (6); area-properties byte = area icon (low 4) and Mom's-call intro (high 4); flag word
+  = Kanto flag (bit 0), weather (7 bits), location type (4), camera (6), follower mode (2), battle background (5),
+  permissions (7). Permission bits, lowest first: bicycle, running (unused), escape rope, fly, outgoing calls, incoming
+  calls, radio. Confirmed on Route 29: Fly allowed, Escape Rope not; 170 maps allow the bicycle and 92 allow Fly.
+  **[UNVERIFIED]**: the world-map X/Y of Route 29 decodes as (0, 0), so those two fields may not be where the player's
+  position is stored for HGSS; treat them as raw.
+- Writing: `MapHeaderTable.write` patches the table into the decompressed ARM9 and stores it with `RomProject.writeArm9`;
+  a ROM with edited headers (ARM9 recompressed) boots to the vanilla intro frame.
+
+## Matrices (`a/0/4/1`)
+
+- 288 matrices. Per file: width, height, "has headers" byte, "has altitudes" byte, name length, name (UTF-8), then
+  row-major grids: u16 header ids (if flagged), u8 altitudes (if flagged), u16 map-file ids (`0xFFFF` = no map). The path
+  `a/0/0/9` from an earlier guess is not the matrix NARC (DSPRE's table says `a/0/4/1`).
+- **The NARC re-serializes byte-for-byte; every matrix round-trips.** Matrix 0 `map` is the 47 x 17 overworld with headers
+  and altitudes; the other 287 are small (218 are 1 x 1). Only two matrices have the optional sections. Every matrix id used
+  by a map header exists, and every header id in the overworld grid is a real map header.
+
+## Wiki path table (to verify per editor)
+
+Taken from the DS Pokémon Hacking wiki "File Structure": personal `a/0/0/2`, learnsets `a/0/3/3`, evolutions `a/0/3/4`,
+egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events `a/0/3/2`, encounters `a/0/3/7` (HG) and
+`a/1/3/6` (SS), messages `a/0/2/7`. Trainer data and parties are `a/0/5/5` and `a/0/5/6` (not yet read).
+
+## Item data (`a/0/1/7`)
+
+- Records are **34 bytes** (the decomp's `ItemData` comment suggests more; the ROM has 34). 0-1 price, 2 hold effect, 3 hold param,
+  4 Pluck, 5 Fling effect, 6 Fling power, 7 Natural Gift power, 8-9 packed bits (type 0-4, prevent toss 5, selectable 6,
+  field pocket 7-10, battle pocket 11-15), 10 field use, 11 battle use, 12 party use, 13 pad, 14-33 party-use parameters
+  (kept raw). Round trip exact over every record; Poké Ball (4) costs 200, battle use 1.
+
+## Egg moves (`a/2/2/9`)
+
+- NARC with one file, a flat u16 list ending in 0xFFFF: `20000 + species` opens a group, the move ids after it belong to it.
+  Vanilla/hg-engine ROM: 198 groups, 4092 bytes. The game (`LoadEggMoves`) scans only the first 2045 words for a header, then
+  reads moves until a word above 20000, at most 16 per species. Header index >= 2045 is never found (`EggMoves.overLimit`).
+
+## TM/HM moves (ARM9)
+
+- 100 u16 move ids at 0x1000CC of the **decompressed** ARM9 (same offset DSPRE uses for English HGSS): TM01-TM92, HM01-HM08.
+  Verified: TM01 = Focus Punch, HM01 = Cut. Saving replaces the ARM9 on build.

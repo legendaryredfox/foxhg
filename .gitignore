@@ -1,0 +1,46 @@
+# ROMs and anything extracted from them (commercial data)
+*.nds
+*.srl
+*.sav
+*.dsv
+*.sav.bak
+roms/
+unpacked/
+extracted/
+*_dsrom/
+*.bak.nds
+
+# Reference clones (recreate with scripts/setup-references.sh)
+references/
+
+# Gradle / Kotlin
+.gradle/
+.kotlin/
+build/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+local.properties
+*.hprof
+hs_err_pid*
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.fleet/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Packaging output
+*.deb
+*.msi
+*.dmg
+*.AppImage
+
+# Test and tool output
+*.log
+/tmp/
+.claude/settings.local.json

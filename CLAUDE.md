@@ -1,0 +1,98 @@
+# foxhg
+
+## Project Overview
+
+**foxhg** is a clone of [DSPRE](https://github.com/DS-Pokemon-Rom-Editor/DSPRE) (DS Pokémon ROM Editor Reloaded)
+rebuilt as a Kotlin Multiplatform app. DSPRE is a C# WinForms app on .NET Framework 4.8 that only runs on Windows
+(or under wine). foxhg keeps the same job, editing Nintendo DS Pokémon ROMs, but runs natively on Linux, Windows and
+macOS, and keeps the format code separate from the UI so it can be tested without a window.
+
+Current focus: **Pokémon HeartGold (English)**. SoulSilver comes for free where the layout is identical. Diamond,
+Pearl, Platinum and other languages are out of scope until HGSS English is solid.
+
+The ROM data model and the editors are ported from DSPRE; the file formats are documented by the
+[DS Pokémon Hacking wiki](https://ds-pokemon-hacking.github.io/) and the
+[pret/pokeheartgold](https://github.com/pret/pokeheartgold) decomp. Spec and plan:
+[docs/spec.md](./docs/spec.md) and [docs/plan.md](./docs/plan.md).
+
+## Tech Stack
+
+| Category | Technology | Version / Notes |
+|----------|------------|-----------------|
+| Language | Kotlin Multiplatform | 2.4.20 |
+| UI | Compose Multiplatform (desktop) | 1.12.1 |
+| JDK | Azul Zulu 26 | `26.0.1-zulu` via sdkman (`.sdkmanrc`); always build and test with it |
+| Build | Gradle (wrapper), version catalog | `gradle/libs.versions.toml` |
+| Async / data | kotlinx-coroutines, kotlinx-serialization | project files and settings as JSON |
+| Tests | `kotlin.test`, Compose UI test | UI tests run under `xvfb-run` |
+| Test ROM | clean English HeartGold, `roms/heartgold.nds` | gitignored (symlink), never commit it |
+
+## Setup Commands
+
+| Command | Description |
+|---------|-------------|
+| `sdk env` | select Zulu 26 from `.sdkmanrc` (do this in every new shell) |
+| `./gradlew :core:jvmTest` | format and model tests (no UI) |
+| `./gradlew :app:run` | launch the desktop app |
+| `./gradlew build` | compile and test everything |
+| `./gradlew :app:packageDeb` | native Linux package |
+| `scripts/setup-references.sh` | clone the reference projects into `references/` (shallow) |
+| `scripts/boot-test.sh rom.nds out.png [frames]` | boot a ROM headless in RetroArch + DeSmuME and save a screenshot; compare with the vanilla frame (`BootFixtures` writes test ROMs when `FOXHG_BOOT_DIR` is set) |
+
+## Layout
+
+- `core/`: KMP library, **no UI**. NDS container, NARC, overlays, text, and one package per ROM data type. Code goes in `commonMain`; only file and OS access goes in `jvmMain`.
+- `app/`: Compose Multiplatform desktop app. One screen per editor, all state in view models that depend only on `core`.
+- `docs/`: [spec.md](./docs/spec.md), [plan.md](./docs/plan.md), notes on formats found while porting.
+- `references/`: shallow clones of other projects (gitignored, recreate with `scripts/setup-references.sh`). `references/DSPRE` is the main source to port from.
+- `roms/`: commercial ROMs (gitignored). `roms/heartgold.nds` links to the clean ROM.
+
+## Before porting or fixing a format (mandatory)
+
+Look at the reference projects first, in this order:
+
+1. `references/DSPRE/DS_Map/ROMFiles/` has one class per file type (`PokemonPersonalData.cs`, `LearnsetData.cs`, `TrainerFile.cs`, `EncounterFile.cs`, ...). `DS_Map/RomInfo.cs` has the per-game NARC paths and offsets. `DS_Map/Narc.cs` and `DS_Map/DSUtils/` have NARC, overlay and text handling.
+2. The [DS Pokémon Hacking wiki](https://ds-pokemon-hacking.github.io/) for the format description.
+3. `references/pokeheartgold` (pret decomp) for struct layouts and constants.
+4. Only then, your own hypothesis. Verify it against the real ROM.
+
+Port the **behavior**, not the WinForms structure. Do not translate designer files or event handlers one-to-one.
+Record every address, offset or quirk you confirm in `docs/formats.md`.
+
+## Acceptance Criteria
+
+- the user is the sole author of all commits (github.com/legendaryredfox). **Do not** add `Co-Authored-By` or any Claude attribution line to commits or PRs in this project
+- every format in `core` has a round-trip test: `parse(bytes)` then `serialize()` must reproduce the original bytes for every entry of the real HeartGold ROM
+- a change is done only when `./gradlew build` passes; anything not built or run must be stated explicitly, never described as done
+- an editor must not write to the ROM unless the user asked to save; saving must keep a backup of the original file
+- never commit `*.nds`, `roms/`, `references/`, or any commercial ROM or extracted ROM data
+
+## Do
+
+- read DSPRE's matching class and the wiki page before writing a parser
+- keep `core` free of Compose, AWT and `java.*` outside `jvmMain`
+- write the test (round trip against the ROM) together with the parser
+- follow the style of the surrounding code; one class per file type; immutable data classes for parsed records
+- mark any step that was not built or run as **[UNVERIFIED]**
+- keep `docs/plan.md` ticked as work lands and `docs/formats.md` updated with what you confirm
+
+## Do Not
+
+- do not run on a different JDK; Gradle toolchain is pinned to 26
+- do not depend on DSPRE's external `.exe` tools (`ndstool`, `dsrom`, `chatot`, `blz`, `apicula`); everything is pure Kotlin, or a Linux-native tool called through one adapter in `jvmMain`
+- do not copy code from the reference projects: DSPRE is AGPL-3.0 and ndspy is GPL-3.0. Read them to understand a format, then write the code from the format description (see how `Blz.kt` and `TextArchive.kt` were done). The foxhg license is undecided; ask the user before choosing one
+- do not reference `references/` paths from shipped files (README, build files); only from `CLAUDE.md` and `docs/`
+- do not `git push`, open a PR, or switch the `gh` account without an explicit request; commit only when asked
+
+## Disk and Build Hygiene
+
+- the disk sits near 91% (`df -h ~`). Check before downloading a toolchain or cloning something large.
+- `build/` and `.gradle/` regenerate; delete them when they pass ~1 GB (`du -sh build .gradle`). `./gradlew clean` first if the build misbehaves.
+- unpacked ROM trees and other temporary output go in the session scratchpad, never inside the repository.
+
+## Reference Documentation
+
+- [docs/spec.md](./docs/spec.md), [docs/plan.md](./docs/plan.md)
+- [DSPRE](https://github.com/DS-Pokemon-Rom-Editor/DSPRE), [DS Pokémon Hacking wiki](https://ds-pokemon-hacking.github.io/), [pret/pokeheartgold](https://github.com/pret/pokeheartgold)
+- [Pokémon DS Map Studio](https://github.com/Trifindo/Pokemon-DS-Map-Studio) (map models), [VSMaker2](https://github.com/Chvlkie/VSMaker2) (trainer editing), [scrcmd-database](https://github.com/DS-Pokemon-Rom-Editor/scrcmd-database) (script commands)
+- Kotlin and Compose conventions: `~/development/cross_platform_apps/foxtimer_kt` (version catalog, Compose Desktop packaging). Doc and guard-rail style: `~/development/foxdecompiles/CLAUDE.md`

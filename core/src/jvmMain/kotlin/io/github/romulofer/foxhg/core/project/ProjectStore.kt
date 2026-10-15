@@ -1,0 +1,149 @@
+package io.github.romulofer.foxhg.core.project
+
+import io.github.romulofer.foxhg.core.FoxResult
+import io.github.romulofer.foxhg.core.nds.FileRomSource
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.exists
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.relativeTo
+
+/**
+ * A project on disk: `<dir>/project.properties` (path of the ROM), `<dir>/files/<rom path>` for every file the
+ * user changed and `<dir>/arm9.bin` (decompressed) when the ARM9 was changed. Nothing else is stored, so a project is a few megabytes at most and the ROM is never copied.
+ * Writes go to a temporary file first and are renamed into place.
+ */
+object ProjectStore {
+    private const val PROPERTIES = "project.properties"
+    private const val FILES = "files"
+    private const val ARM9_FILE = "arm9.bin" // the decompressed ARM9 image, only when edited
+
+    fun isProject(directory: Path): Boolean = directory.resolve(PROPERTIES).exists()
+
+    /** Creates an empty project in [directory] (made if needed). Refuses to overwrite an existing project. */
+    fun create(directory: Path, romPath: Path): FoxResult<RomProjectFiles> = try {
+        if (isProject(directory)) {
+            FoxResult.Err("$directory already contains a foxhg project")
+        } else {
+            Files.createDirectories(directory.resolve(FILES))
+            writeProperties(directory, linkedMapOf("rom" to romPath.toAbsolutePath().toString()))
+            FoxResult.Ok(RomProjectFiles(directory, romPath))
+        }
+    } catch (e: IOException) {
+        FoxResult.Err("Cannot create project in $directory: ${e.message}")
+    }
+
+    /** Points the project at a ROM that moved. The new ROM must open as a ROM foxhg understands. */
+    fun relink(directory: Path, newRom: Path): FoxResult<Unit> = try {
+        if (!isProject(directory)) {
+            FoxResult.Err("$directory is not a foxhg project")
+        } else if (!newRom.exists()) {
+            FoxResult.Err("$newRom does not exist")
+        } else {
+            val check = FileRomSource(newRom).use { io.github.romulofer.foxhg.core.nds.NdsRom.open(it) }
+            when (check) {
+                is FoxResult.Err -> check
+                is FoxResult.Ok -> {
+                    val properties = readProperties(directory)
+                    properties["rom"] = newRom.toAbsolutePath().toString()
+                    writeProperties(directory, properties)
+                    FoxResult.Ok(Unit)
+                }
+            }
+        }
+    } catch (e: IOException) {
+        FoxResult.Err("Cannot update project $directory: ${e.message}")
+    }
+
+    /** The ROM path a project points at, whether or not it still exists. */
+    fun romOf(directory: Path): Path? = readProperties(directory)["rom"]?.let { Path.of(it) }
+
+    private fun readProperties(directory: Path): LinkedHashMap<String, String> {
+        val map = LinkedHashMap<String, String>()
+        val file = directory.resolve(PROPERTIES)
+        if (file.exists()) {
+            Files.readAllLines(file).forEach { line ->
+                val eq = line.indexOf('=')
+                if (eq > 0) map[line.substring(0, eq).trim()] = line.substring(eq + 1)
+            }
+        }
+        return map
+    }
+
+    private fun writeProperties(directory: Path, properties: Map<String, String>) {
+        atomicWrite(directory.resolve(PROPERTIES), properties.entries.joinToString("") { "${it.key}=${it.value}\n" }.encodeToByteArray())
+    }
+
+    fun save(directory: Path, project: RomProject): FoxResult<Unit> = try {
+        if (!isProject(directory)) return FoxResult.Err("$directory is not a foxhg project")
+        val filesDir = directory.resolve(FILES)
+        Files.createDirectories(filesDir)
+        val properties = readProperties(directory)
+        properties["compressArm9"] = project.compressArm9.toString()
+        writeProperties(directory, properties)
+        val edited = project.editedFiles()
+        for ((path, bytes) in edited) atomicWrite(filesDir.resolve(path), bytes)
+        val arm9File = directory.resolve(ARM9_FILE)
+        val arm9 = project.editedArm9
+        if (arm9 != null) atomicWrite(arm9File, arm9) else arm9File.deleteIfExists()
+        // Reverted files must disappear too, or they would come back on the next load.
+        Files.walk(filesDir).use { stream ->
+            stream.filter { it.isRegularFile() }.forEach { file ->
+                if (file.relativeTo(filesDir).joinToString("/") !in edited) file.deleteIfExists()
+            }
+        }
+        FoxResult.Ok(Unit)
+    } catch (e: IOException) {
+        FoxResult.Err("Cannot save project to $directory: ${e.message}")
+    }
+
+    /** Opens the ROM named by the project and applies its saved edits. The caller closes [RomProjectFiles.source]. */
+    fun load(directory: Path): FoxResult<Loaded> = try {
+        if (!isProject(directory)) return FoxResult.Err("$directory is not a foxhg project (no $PROPERTIES)")
+        val properties = readProperties(directory)
+        val romPath = properties["rom"]?.let { Path.of(it) } ?: return FoxResult.Err("$PROPERTIES has no rom= line")
+        if (!romPath.exists()) return FoxResult.Err("The ROM $romPath of this project no longer exists")
+
+        val edits = LinkedHashMap<String, ByteArray>()
+        val filesDir = directory.resolve(FILES)
+        if (filesDir.exists()) {
+            Files.walk(filesDir).use { stream ->
+                stream.filter { it.isRegularFile() }.forEach { edits[it.relativeTo(filesDir).joinToString("/")] = Files.readAllBytes(it) }
+            }
+        }
+        val arm9Path = directory.resolve(ARM9_FILE)
+        val arm9 = if (arm9Path.exists()) Files.readAllBytes(arm9Path) else null
+        val source = FileRomSource(romPath)
+        when (val project = RomProject.open(source, edits, arm9)) {
+            is FoxResult.Ok -> {
+                properties["compressArm9"]?.toBooleanStrictOrNull()?.let { project.value.compressArm9 = it }
+                FoxResult.Ok(Loaded(project.value, source, romPath))
+            }
+            is FoxResult.Err -> {
+                source.close()
+                project
+            }
+        }
+    } catch (e: IOException) {
+        FoxResult.Err("Cannot read project $directory: ${e.message}")
+    }
+
+    class Loaded(val project: RomProject, val source: FileRomSource, val romPath: Path)
+
+    private fun atomicWrite(target: Path, bytes: ByteArray) {
+        Files.createDirectories(target.parent)
+        val temp = Files.createTempFile(target.parent, ".foxhg", ".tmp")
+        try {
+            Files.write(temp, bytes)
+            Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+        } finally {
+            temp.deleteIfExists()
+        }
+    }
+}
+
+/** Handle returned by [ProjectStore.create]. */
+class RomProjectFiles(val directory: Path, val romPath: Path)
