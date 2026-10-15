@@ -1,6 +1,7 @@
 package io.github.romulofer.foxhg.app
 
 import androidx.compose.foundation.Image
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.clickable
@@ -96,7 +97,8 @@ private fun Modifier.dropTarget(model: AppModel): Modifier = dragAndDropTarget(
 @Composable
 private fun TopBar(model: AppModel) {
     Row(Modifier.fillMaxWidth().height(52.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Image(AppIcon.painter, contentDescription = "foxhg", modifier = Modifier.size(30.dp))
+        val iconPixels = with(LocalDensity.current) { 30.dp.toPx() }
+        Image(remember(iconPixels) { AppIcon.painter(iconPixels) }, contentDescription = "foxhg", modifier = Modifier.size(30.dp))
         Text(model.projectName ?: "foxhg", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         model.header?.let { header ->
             Chip(header.game.displayName.replace("Pokémon ", "").replace(" (English)", " · English"))

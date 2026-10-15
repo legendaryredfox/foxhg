@@ -33,8 +33,6 @@ Platinum and other languages are out of scope until HeartGold is solid.
 
 ## Screenshots
 
-Text and numbers only: no sprites or maps, so nothing here is more than the values the editors show.
-
 <table>
   <tr>
     <td><img src="docs/images/moves-editor.png" alt="Moves editor" width="440"><br><sub><b>Moves:</b> battle data, effect, flags, CSV import and export</sub></td>
@@ -230,7 +228,7 @@ a ROM you own, and respect the law where you live.
 
 ## Support
 
-If foxhg saves you time, you can buy me a coffee - it keeps the project going. ☕
+If you like this project, please consider buying me a coffee. ☕
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-legendaryredfox-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/legendaryredfox)
 

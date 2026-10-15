@@ -52,7 +52,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -179,6 +181,9 @@ fun PickerField(
     leading: (@Composable (Int) -> Unit)? = null,
 ) {
     var open by remember { mutableStateOf(false) }
+    // Closing the popup inside the pointer event that picked a row disposes its scene while that event is still being
+    // dispatched ("RootNodeOwner is already disposed"), so selection and close run after the event.
+    val scope = rememberCoroutineScope()
     val source = remember { MutableInteractionSource() }
     val hovered by source.collectIsHoveredAsState()
     Column(modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -199,7 +204,7 @@ fun PickerField(
                 Text("%d".format(selected), style = Fox.mono, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("  ▾", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (open) PickerPopup(selected, options, onSelect = { onSelect(it); open = false }, onDismiss = { open = false }, leading = leading)
+            if (open) PickerPopup(selected, options, onSelect = { id -> scope.launch { onSelect(id); open = false } }, onDismiss = { scope.launch { open = false } }, leading = leading)
         }
     }
 }

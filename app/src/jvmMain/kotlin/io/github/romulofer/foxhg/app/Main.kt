@@ -1,5 +1,6 @@
 package io.github.romulofer.foxhg.app
 
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -31,9 +32,9 @@ fun main(args: Array<String>) = application {
         onPreviewKeyEvent = { e -> Actions.shortcut(model, e) },
         onCloseRequest = { Actions.quit(model, ::exitApplication) },
         title = title,
-        icon = AppIcon.painter,
         state = rememberWindowState(size = DpSize(1180.dp, 760.dp)),
     ) {
+        SideEffect { window.iconImages = AppIcon.windowImages }
         App(model)
     }
 }
