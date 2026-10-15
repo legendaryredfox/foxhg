@@ -121,6 +121,9 @@ data class Trigger(
     }
 }
 
+/** The four kinds of event of an [EventFile]. */
+enum class EventKind(val label: String) { OVERWORLD("Object"), WARP("Warp"), TRIGGER("Trigger"), SIGN("Sign") }
+
 /**
  * The events of one map (a file of `a/0/3/2`): four counted lists in a fixed order, each `u32 count` then fixed-size
  * records: spawnables, overworld objects, warps, triggers. Bytes after the last record are kept in [trailing].
@@ -135,6 +138,63 @@ data class EventFile(
     val isEmpty: Boolean get() = spawnables.isEmpty() && overworlds.isEmpty() && warps.isEmpty() && triggers.isEmpty()
 
     val count: Int get() = spawnables.size + overworlds.size + warps.size + triggers.size
+
+    fun count(kind: EventKind): Int = when (kind) {
+        EventKind.OVERWORLD -> overworlds.size
+        EventKind.WARP -> warps.size
+        EventKind.TRIGGER -> triggers.size
+        EventKind.SIGN -> spawnables.size
+    }
+
+    /** Where event [index] of [kind] stands on the matrix (the top left tile for a trigger). */
+    fun positionOf(kind: EventKind, index: Int): Pair<Int, Int>? = when (kind) {
+        EventKind.OVERWORLD -> overworlds.getOrNull(index)?.let { it.x to it.y }
+        EventKind.WARP -> warps.getOrNull(index)?.let { it.x to it.y }
+        EventKind.TRIGGER -> triggers.getOrNull(index)?.let { it.x to it.y }
+        EventKind.SIGN -> spawnables.getOrNull(index)?.let { it.x to it.y }
+    }
+
+    /** The events that cover tile ([x], [y]) of the matrix, objects and warps first, triggers (which are areas) last. */
+    fun at(x: Int, y: Int): List<Pair<EventKind, Int>> = buildList {
+        overworlds.forEachIndexed { i, e -> if (e.x == x && e.y == y) add(EventKind.OVERWORLD to i) }
+        warps.forEachIndexed { i, e -> if (e.x == x && e.y == y) add(EventKind.WARP to i) }
+        spawnables.forEachIndexed { i, e -> if (e.x == x && e.y == y) add(EventKind.SIGN to i) }
+        triggers.forEachIndexed { i, e -> if (x >= e.x && x < e.x + maxOf(1, e.width) && y >= e.y && y < e.y + maxOf(1, e.height)) add(EventKind.TRIGGER to i) }
+    }
+
+    fun moved(kind: EventKind, index: Int, x: Int, y: Int): EventFile = when (kind) {
+        EventKind.OVERWORLD -> copy(overworlds = overworlds.replaced(index) { it.copy(x = x, y = y) })
+        EventKind.WARP -> copy(warps = warps.replaced(index) { it.copy(x = x, y = y) })
+        EventKind.TRIGGER -> copy(triggers = triggers.replaced(index) { it.copy(x = x, y = y) })
+        EventKind.SIGN -> copy(spawnables = spawnables.replaced(index) { it.copy(x = x, y = y) })
+    }
+
+    fun removed(kind: EventKind, index: Int): EventFile = when (kind) {
+        EventKind.OVERWORLD -> copy(overworlds = overworlds.filterIndexed { i, _ -> i != index })
+        EventKind.WARP -> copy(warps = warps.filterIndexed { i, _ -> i != index })
+        EventKind.TRIGGER -> copy(triggers = triggers.filterIndexed { i, _ -> i != index })
+        EventKind.SIGN -> copy(spawnables = spawnables.filterIndexed { i, _ -> i != index })
+    }
+
+    /** A copy of event [index] one tile to the right, added at the end; objects get the next free object id. */
+    fun duplicated(kind: EventKind, index: Int): EventFile = when (kind) {
+        EventKind.OVERWORLD -> overworlds.getOrNull(index)?.let { copy(overworlds = overworlds + it.copy(id = nextObjectId(), x = it.x + 1)) } ?: this
+        EventKind.WARP -> warps.getOrNull(index)?.let { copy(warps = warps + it.copy(x = it.x + 1)) } ?: this
+        EventKind.TRIGGER -> triggers.getOrNull(index)?.let { copy(triggers = triggers + it.copy(x = it.x + 1)) } ?: this
+        EventKind.SIGN -> spawnables.getOrNull(index)?.let { copy(spawnables = spawnables + it.copy(x = it.x + 1)) } ?: this
+    }
+
+    /** A new event of [kind] at ([x], [y]), like the last one of its kind if there is one. It is the last of its list afterwards. */
+    fun added(kind: EventKind, x: Int, y: Int): EventFile = when (kind) {
+        EventKind.OVERWORLD -> copy(overworlds = overworlds + (overworlds.lastOrNull() ?: OverworldEvent(1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)).copy(id = nextObjectId(), x = x, y = y))
+        EventKind.WARP -> copy(warps = warps + (warps.lastOrNull() ?: Warp(0, 0, 0, 0, 0)).copy(x = x, y = y))
+        EventKind.TRIGGER -> copy(triggers = triggers + (triggers.lastOrNull() ?: Trigger(0, 0, 0, 1, 1, 0, 0, 0)).copy(x = x, y = y))
+        EventKind.SIGN -> copy(spawnables = spawnables + (spawnables.lastOrNull() ?: Spawnable(0, 0, 0, 0, 0, 0, 0, 0, 0)).copy(x = x, y = y))
+    }
+
+    private fun nextObjectId(): Int = (overworlds.maxOfOrNull { it.id } ?: 0) + 1
+
+    private fun <T> List<T>.replaced(index: Int, change: (T) -> T): List<T> = mapIndexed { i, e -> if (i == index) change(e) else e }
 
     fun toBytes(): ByteArray {
         val out = ByteArray(16 + spawnables.size * Spawnable.SIZE + overworlds.size * OverworldEvent.SIZE + warps.size * Warp.SIZE + triggers.size * Trigger.SIZE + trailing.size)

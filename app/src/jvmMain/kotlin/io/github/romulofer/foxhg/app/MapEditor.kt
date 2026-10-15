@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,6 +33,11 @@ import io.github.romulofer.foxhg.app.ui.Swatch
 import io.github.romulofer.foxhg.app.ui.ToggleChip
 import io.github.romulofer.foxhg.core.FoxResult
 import io.github.romulofer.foxhg.core.data.event.EventFile
+import io.github.romulofer.foxhg.core.data.event.EventKind
+import io.github.romulofer.foxhg.core.data.event.OverworldEvent
+import io.github.romulofer.foxhg.core.data.event.Spawnable
+import io.github.romulofer.foxhg.core.data.event.Trigger
+import io.github.romulofer.foxhg.core.data.event.Warp
 import io.github.romulofer.foxhg.core.data.map.Collision
 import io.github.romulofer.foxhg.core.data.map.MapFile
 import io.github.romulofer.foxhg.core.data.map.MapUsage
@@ -40,18 +46,20 @@ import io.github.romulofer.foxhg.core.data.map.TileTypes
 import io.github.romulofer.foxhg.core.project.RomProject
 
 enum class MapLayer(val label: String) { TYPES("Tile types"), COLLISION("Collision"), BOTH("Both") }
-enum class MapTool(val label: String) { PAINT("Paint"), FILL("Fill"), PICK("Pick") }
+enum class MapTool(val label: String) { PAINT("Paint"), FILL("Fill"), PICK("Pick"), EVENTS("Edit events") }
 
 /** State of the Maps editor: the map files are a [RecordEditorModel], the rest is how they are shown and painted. */
 class MapEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
     private val usages = MapUsages(project)
     private val names = project.names
-    private val events: List<EventFile> = (EventFile.load(project) as? FoxResult.Ok)?.value?.records ?: emptyList()
+    private val events = RecordEditorModel(project, EventFile.SPEC, { "%03d".format(it) }, onChanged)
+    val eventLabels = EventLabels(project)
 
     val maps = RecordEditorModel(project, MapFile.SPEC, ::label, onChanged)
 
     var layer by mutableStateOf(MapLayer.BOTH)
-    var tool by mutableStateOf(MapTool.PAINT)
+    /** FOXHG_MAP_TOOL=EVENTS starts with that tool (for screenshots). */
+    var tool by mutableStateOf(System.getenv("FOXHG_MAP_TOOL")?.let { name -> MapTool.entries.firstOrNull { it.name == name } } ?: MapTool.PAINT)
     var brushType by mutableStateOf(2)
     var brushCollision by mutableStateOf(0)
     var paintType by mutableStateOf(true)
@@ -73,10 +81,78 @@ class MapEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
         return "%03d  %s".format(map, first?.let { headerName(it.header) } ?: "(not in a matrix)")
     }
 
-    fun eventsOf(usage: MapUsage?): EventFile? = usage?.let { events.getOrNull(usages.headers.getOrNull(it.header)?.eventFile ?: -1) }
+    private fun eventFileOf(usage: MapUsage?): Int? = usage?.let { usages.headers.getOrNull(it.header)?.eventFile }
+
+    fun eventsOf(usage: MapUsage?): EventFile? = eventFileOf(usage)?.let { events.records.getOrNull(it) }
+
+    /** The event being edited: its kind and its place in the list of that kind. */
+    var selectedEvent: Pair<EventKind, Int>? by mutableStateOf(null)
+    private var dragging by mutableStateOf(false)
+
+    private fun change(usage: MapUsage?, transform: (EventFile) -> EventFile) {
+        val file = eventFileOf(usage) ?: return
+        if (file !in 0 until events.recordCount) return
+        events.select(file)
+        events.update(transform)
+    }
+
+    private fun global(usage: MapUsage, tx: Int, ty: Int) = usage.x * MapFile.SIZE + tx to usage.y * MapFile.SIZE + ty
+
+    /** Selects the event on the tile, or the next one when several share it and one is selected already; starts a drag. */
+    fun pressEvent(usage: MapUsage?, tx: Int, ty: Int) {
+        val file = eventsOf(usage) ?: return
+        val (gx, gy) = global(usage ?: return, tx, ty)
+        val here = file.at(gx, gy)
+        val current = here.indexOf(selectedEvent)
+        selectedEvent = when {
+            here.isEmpty() -> null
+            current >= 0 && here.size > 1 -> here[(current + 1) % here.size]
+            else -> here.first()
+        }
+        dragging = selectedEvent != null
+    }
+
+    fun dragEvent(usage: MapUsage?, tx: Int, ty: Int) {
+        val (kind, index) = selectedEvent ?: return
+        if (!dragging || usage == null) return
+        val (gx, gy) = global(usage, tx, ty)
+        if (eventsOf(usage)?.positionOf(kind, index) == gx to gy) return
+        change(usage) { it.moved(kind, index, gx, gy) }
+    }
+
+    fun endDrag() { dragging = false }
+
+    /** Adds an event of [kind] on the tile (or in the middle of the cell) and selects it. */
+    fun addEvent(usage: MapUsage?, kind: EventKind, tile: Pair<Int, Int>?) {
+        if (usage == null) return
+        val (tx, ty) = tile ?: (16 to 16)
+        val (gx, gy) = global(usage, tx, ty)
+        change(usage) { it.added(kind, gx, gy) }
+        selectedEvent = kind to ((eventsOf(usage)?.count(kind) ?: 1) - 1)
+    }
+
+    fun removeSelected(usage: MapUsage?) {
+        val (kind, index) = selectedEvent ?: return
+        change(usage) { it.removed(kind, index) }
+        selectedEvent = null
+    }
+
+    fun duplicateSelected(usage: MapUsage?) {
+        val (kind, index) = selectedEvent ?: return
+        change(usage) { it.duplicated(kind, index) }
+        selectedEvent = kind to ((eventsOf(usage)?.count(kind) ?: 1) - 1)
+    }
+
+    fun setObject(usage: MapUsage?, o: OverworldEvent) = selectedEvent?.let { (_, i) -> change(usage) { f -> f.copy(overworlds = f.overworlds.mapIndexed { k, e -> if (k == i) o else e }) } }
+    fun setWarp(usage: MapUsage?, w: Warp) = selectedEvent?.let { (_, i) -> change(usage) { f -> f.copy(warps = f.warps.mapIndexed { k, e -> if (k == i) w else e }) } }
+    fun setTrigger(usage: MapUsage?, t: Trigger) = selectedEvent?.let { (_, i) -> change(usage) { f -> f.copy(triggers = f.triggers.mapIndexed { k, e -> if (k == i) t else e }) } }
+    fun setSign(usage: MapUsage?, s: Spawnable) = selectedEvent?.let { (_, i) -> change(usage) { f -> f.copy(spawnables = f.spawnables.mapIndexed { k, e -> if (k == i) s else e }) } }
+
+    fun isEventFileEdited(usage: MapUsage?): Boolean = eventFileOf(usage)?.let { events.isEdited(it) } == true
 
     fun select(map: Int) {
         usageIndex = 0
+        selectedEvent = null
         maps.select(map)
     }
 
@@ -90,6 +166,7 @@ class MapEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
                 maps.update { it.withTile(x, y, type, collision) }
             }
             MapTool.FILL -> maps.update { it.filled(x, y, type, collision) }
+            MapTool.EVENTS -> {}
         }
     }
 }
@@ -110,8 +187,8 @@ fun MapEditor(model: MapEditorModel, modifier: Modifier = Modifier) {
             FieldFlow {
                 MapLayer.entries.forEach { l -> ToggleChip(l.label, model.layer == l, { model.layer = l }) }
                 MapTool.entries.forEach { t -> ToggleChip(t.label, model.tool == t, { model.tool = t }) }
-                ToggleChip("Events", model.showEvents, { model.showEvents = it })
-                ToggleChip("Buildings", model.showBuildings, { model.showBuildings = it })
+                ToggleChip("Show events", model.showEvents, { model.showEvents = it })
+                ToggleChip("Show buildings", model.showBuildings, { model.showBuildings = it })
             }
             FieldFlow {
                 ToggleChip("Paint type", model.paintType, { model.paintType = it })
@@ -124,6 +201,7 @@ fun MapEditor(model: MapEditorModel, modifier: Modifier = Modifier) {
             MapCanvas(model, map, usage)
             MapLegend(model, map)
         }
+        if (model.tool == MapTool.EVENTS) EventPanel(model, usage)
         SectionCard("Buildings", subtitle = "3D models placed on the map; they are only listed here", actions = { Chip(map.buildings.size.toString()) }) {
             if (map.buildings.isEmpty()) Text("None.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             map.buildings.forEachIndexed { i, b ->
@@ -153,7 +231,7 @@ private fun MapCanvas(model: MapEditorModel, map: MapFile, usage: MapUsage?) {
     val events = model.eventsOf(usage)
     val outline = MaterialTheme.colorScheme.outline
     Canvas(
-        Modifier.size((CELL * MapFile.SIZE).dp).pointerInput(model, map) {
+        Modifier.size((CELL * MapFile.SIZE).dp).pointerInput(model, map, usage) {
             awaitPointerEventScope {
                 while (true) {
                     val event = awaitPointerEvent()
@@ -163,8 +241,15 @@ private fun MapCanvas(model: MapEditorModel, map: MapFile, usage: MapUsage?) {
                     model.hover = if (inside) cell else null
                     if (!inside) continue
                     when (event.type) {
-                        PointerEventType.Press -> if (event.buttons.isSecondaryPressed) { val keep = model.tool; model.tool = MapTool.PICK; model.apply(cell.first, cell.second); model.tool = keep } else if (event.buttons.isPrimaryPressed) model.apply(cell.first, cell.second)
-                        PointerEventType.Move -> if (event.buttons.isPrimaryPressed && model.tool == MapTool.PAINT) model.apply(cell.first, cell.second)
+                        PointerEventType.Press -> when {
+                            model.tool == MapTool.EVENTS -> if (event.buttons.isPrimaryPressed) model.pressEvent(usage, cell.first, cell.second)
+                            event.buttons.isSecondaryPressed -> { val keep = model.tool; model.tool = MapTool.PICK; model.apply(cell.first, cell.second); model.tool = keep }
+                            event.buttons.isPrimaryPressed -> model.apply(cell.first, cell.second)
+                        }
+                        PointerEventType.Move -> if (event.buttons.isPrimaryPressed) {
+                            if (model.tool == MapTool.EVENTS) model.dragEvent(usage, cell.first, cell.second) else if (model.tool == MapTool.PAINT) model.apply(cell.first, cell.second)
+                        }
+                        PointerEventType.Release -> model.endDrag()
                         else -> {}
                     }
                 }
@@ -203,6 +288,15 @@ private fun MapCanvas(model: MapEditorModel, map: MapFile, usage: MapUsage?) {
             for (t in events.triggers) cellOf(t.x, t.y)?.let { drawRect(Color(0xFF2F855A), it, Size(cell * t.width.coerceAtLeast(1), cell * t.height.coerceAtLeast(1)), style = Stroke(2f)) }
             for (s in events.spawnables) cellOf(s.x, s.y)?.let { drawCircle(Color(0xFF975A16), cell * 0.18f, it + Offset(cell / 2, cell / 2), style = Stroke(2f)) }
         }
+        model.selectedEvent?.let { (kind, index) ->
+            if (events != null && usage != null) events.positionOf(kind, index)?.let { (ex, ey) ->
+                if (ex / MapFile.SIZE == usage.x && ey / MapFile.SIZE == usage.y) {
+                    val w = if (kind == EventKind.TRIGGER) events.triggers[index].width.coerceAtLeast(1) else 1
+                    val h = if (kind == EventKind.TRIGGER) events.triggers[index].height.coerceAtLeast(1) else 1
+                    drawRect(Color(0xFFFFC107), Offset((ex % MapFile.SIZE) * cell, (ey % MapFile.SIZE) * cell), Size(cell * w, cell * h), style = Stroke(3f))
+                }
+            }
+        }
         model.hover?.let { (x, y) -> drawRect(Color.Black, Offset(x * cell, y * cell), Size(cell, cell), style = Stroke(2f)) }
     }
 }
@@ -231,5 +325,41 @@ private fun MapLegend(model: MapEditorModel, map: MapFile) {
             }
         }
         Text("Markers: blue NPC, red trainer, purple warp, green trigger, brown sign, orange building.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+
+/** Adding, editing, copying and removing the events of the map's cell; shown while the Events tool is on. */
+@Composable
+private fun EventPanel(model: MapEditorModel, usage: MapUsage?) {
+    val file = model.eventsOf(usage)
+    SectionCard(
+        "Events",
+        subtitle = if (file == null) "This map has no event file" else "Click a marker to select it and drag it to move it. Click the same tile again to reach events stacked on it.",
+        actions = { if (model.isEventFileEdited(usage)) Chip("edited", emphasis = true) },
+    ) {
+        if (file == null || usage == null) return@SectionCard
+        FieldFlow {
+            EventKind.entries.forEach { kind -> OutlinedButton(onClick = { model.addEvent(usage, kind, model.hover) }) { Text("Add ${kind.label.lowercase()}") } }
+        }
+        val selected = model.selectedEvent
+        if (selected == null) {
+            Text("No event selected.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            return@SectionCard
+        }
+        val (kind, index) = selected
+        val (gx, gy) = file.positionOf(kind, index) ?: return@SectionCard
+        FieldFlow {
+            Chip("${kind.label} ${index + 1} of ${file.count(kind)}", emphasis = true)
+            Text("tile ${gx % MapFile.SIZE}, ${gy % MapFile.SIZE}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedButton(onClick = { model.duplicateSelected(usage) }) { Text("Duplicate") }
+            OutlinedButton(onClick = { model.removeSelected(usage) }) { Text("Remove") }
+        }
+        when (kind) {
+            EventKind.OVERWORLD -> file.overworlds.getOrNull(index)?.let { OverworldForm(it) { o -> model.setObject(usage, o) } }
+            EventKind.WARP -> file.warps.getOrNull(index)?.let { WarpForm(it, model.eventLabels) { w -> model.setWarp(usage, w) } }
+            EventKind.TRIGGER -> file.triggers.getOrNull(index)?.let { TriggerForm(it) { t -> model.setTrigger(usage, t) } }
+            EventKind.SIGN -> file.spawnables.getOrNull(index)?.let { SpawnableForm(it) { s -> model.setSign(usage, s) } }
+        }
     }
 }

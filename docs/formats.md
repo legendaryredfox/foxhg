@@ -307,3 +307,9 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
 - Flag parameters are known by command (`SetFlag`, `ClearFlag`, `CheckFlag` take a flag number); a value of 0x4000 or more in any
   parameter is a variable. Message parameters are the ones named `text_slot`, `message`, ... in the database; the message is
   read from the text bank in the `textArchive` field of the first map header that uses the script file.
+
+## Event editing rules (app)
+
+- Events of a map cell are the ones of its header's event file whose position is inside the cell (x / 32, y / 32 equal the matrix
+  cell). Moving an event keeps it in its cell. Triggers cover `width x height` tiles from their position. New events copy the last
+  event of their kind (objects get the next free object id); an event file shared by several headers is edited for all of them.

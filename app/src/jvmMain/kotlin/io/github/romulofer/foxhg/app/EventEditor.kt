@@ -118,14 +118,14 @@ private fun <T> EventSection(
 }
 
 @Composable
-private fun PositionFields(x: Int, y: Int, onX: (Int) -> Unit, onY: (Int) -> Unit) {
+internal fun PositionFields(x: Int, y: Int, onX: (Int) -> Unit, onY: (Int) -> Unit) {
     NumberField("X", x, 0..65535, onX, Modifier.width(100.dp))
     NumberField("Y", y, 0..65535, onY, Modifier.width(100.dp))
     Chip("cell ${x / MAP_SIZE},${y / MAP_SIZE} tile ${x % MAP_SIZE},${y % MAP_SIZE}")
 }
 
 @Composable
-private fun OverworldForm(o: OverworldEvent, set: (OverworldEvent) -> Unit) = FieldFlow {
+internal fun OverworldForm(o: OverworldEvent, set: (OverworldEvent) -> Unit) = FieldFlow {
     NumberField("Object id", o.id, 0..65535, { set(o.copy(id = it)) })
     NumberField("Sprite entry", o.spriteEntry, 0..65535, { set(o.copy(spriteEntry = it)) })
     NumberField("Script (65535 = alias)", o.script, 0..65535, { set(o.copy(script = it)) }, Modifier.width(170.dp))
@@ -144,7 +144,7 @@ private fun OverworldForm(o: OverworldEvent, set: (OverworldEvent) -> Unit) = Fi
 }
 
 @Composable
-private fun WarpForm(w: Warp, labels: EventLabels, set: (Warp) -> Unit) = FieldFlow {
+internal fun WarpForm(w: Warp, labels: EventLabels, set: (Warp) -> Unit) = FieldFlow {
     NumberField("Target header", w.header, 0..65535, { set(w.copy(header = it)) }, Modifier.width(120.dp))
     Chip(labels.mapName(w.header))
     NumberField("Anchor", w.anchor, 0..65535, { set(w.copy(anchor = it)) })
@@ -153,7 +153,7 @@ private fun WarpForm(w: Warp, labels: EventLabels, set: (Warp) -> Unit) = FieldF
 }
 
 @Composable
-private fun TriggerForm(t: Trigger, set: (Trigger) -> Unit) = FieldFlow {
+internal fun TriggerForm(t: Trigger, set: (Trigger) -> Unit) = FieldFlow {
     NumberField("Script", t.script, 0..65535, { set(t.copy(script = it)) })
     NumberField("Variable (0 = always)", t.variable, 0..65535, { set(t.copy(variable = it)) }, Modifier.width(170.dp))
     NumberField("Expected value", t.expectedValue, 0..65535, { set(t.copy(expectedValue = it)) }, Modifier.width(130.dp))
@@ -164,7 +164,7 @@ private fun TriggerForm(t: Trigger, set: (Trigger) -> Unit) = FieldFlow {
 }
 
 @Composable
-private fun SpawnableForm(s: Spawnable, set: (Spawnable) -> Unit) = FieldFlow {
+internal fun SpawnableForm(s: Spawnable, set: (Spawnable) -> Unit) = FieldFlow {
     PickerField("Type", s.type.coerceAtMost(Spawnable.TYPES.lastIndex), Spawnable.TYPES, { set(s.copy(type = it)) })
     NumberField("Script", s.script, 0..65535, { set(s.copy(script = it)) })
     NumberField("Facing", s.direction, 0..65535, { set(s.copy(direction = it)) })
