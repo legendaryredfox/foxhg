@@ -125,7 +125,7 @@ private fun Form(model: PersonalEditorModel, p: PersonalData) {
 private fun StatRow(label: String, value: Int, onChange: (Int) -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         Text(label, Modifier.width(64.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        NumberField("", value, 0..255, onChange, Modifier.width(72.dp))
+        NumberField("", value, 0..255, onChange, Modifier.width(72.dp), tag = "stat:$label")
         StatBar(value, modifier = Modifier.weight(1f))
     }
 }

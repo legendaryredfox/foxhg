@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
@@ -84,7 +85,15 @@ private fun fieldModifier(invalid: Boolean, hovered: Boolean = false): Modifier 
 
 /** A compact integer field. Typing is free; the value is applied only when it parses and lies in [range]. */
 @Composable
-fun NumberField(label: String, value: Int, range: IntRange, onChange: (Int) -> Unit, modifier: Modifier = Modifier.width(96.dp)) {
+fun NumberField(
+    label: String,
+    value: Int,
+    range: IntRange,
+    onChange: (Int) -> Unit,
+    modifier: Modifier = Modifier.width(96.dp),
+    /** Name for tests to find the field by (`number:<tag>`); the label by default. */
+    tag: String = label,
+) {
     var text by remember(value) { mutableStateOf(value.toString()) }
     val invalid = text.toIntOrNull()?.let { it !in range } ?: true
     Column(modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -104,7 +113,7 @@ fun NumberField(label: String, value: Int, range: IntRange, onChange: (Int) -> U
             decorationBox = { inner ->
                 Box(fieldModifier(invalid).padding(horizontal = 10.dp), contentAlignment = Alignment.CenterStart) { inner() }
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag("number:$tag"),
         )
     }
 }
@@ -127,7 +136,7 @@ fun PickerField(
         FieldLabel(label)
         Box {
             Row(
-                fieldModifier(false, hovered || open).hoverable(source).clickable { open = true }.padding(horizontal = 10.dp),
+                fieldModifier(false, hovered || open).hoverable(source).testTag("picker:$label").clickable { open = true }.padding(horizontal = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 leading?.let { it(selected); Spacer(Modifier.width(6.dp)) }
@@ -223,7 +232,7 @@ fun SearchBox(value: String, onChange: (String) -> Unit, placeholder: String, mo
                 }
             }
         },
-        modifier = modifier,
+        modifier = modifier.testTag("search:$placeholder"),
     )
 }
 
@@ -331,6 +340,7 @@ fun ToggleChip(text: String, checked: Boolean, onToggle: (Boolean) -> Unit, modi
             .background(if (checked) scheme.primaryContainer else if (hovered) scheme.surfaceVariant else scheme.surface, MaterialTheme.shapes.large)
             .border(1.dp, if (checked) scheme.primary.copy(alpha = 0.6f) else scheme.outline, MaterialTheme.shapes.large)
             .hoverable(source)
+            .testTag("chip:$text")
             .clickable { onToggle(!checked) }
             .padding(horizontal = 10.dp, vertical = 4.dp),
     ) {
@@ -382,6 +392,6 @@ fun TextArea(
         textStyle = Fox.mono.copy(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         visualTransformation = transformation,
-        modifier = modifier.heightIn(min = minHeight).background(MaterialTheme.colorScheme.surface, shape).border(1.dp, border, shape).padding(12.dp),
+        modifier = modifier.testTag("textarea").heightIn(min = minHeight).background(MaterialTheme.colorScheme.surface, shape).border(1.dp, border, shape).padding(12.dp),
     )
 }

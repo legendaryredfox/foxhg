@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.romulofer.foxhg.core.sound.PcmClip
 import io.github.romulofer.foxhg.core.sound.Sounds
@@ -84,7 +85,7 @@ fun PlayButton(key: String, produce: (Sounds) -> PcmClip?, enabled: Boolean = tr
     val context = LocalSounds.current ?: return
     val active = context.player.playing == key
     Box(
-        Modifier.size(26.dp).let { if (enabled) it.clickable { context.player.toggle(key) { produce(context.sounds) } } else it },
+        Modifier.size(26.dp).testTag("play:$key").let { if (enabled) it.clickable { context.player.toggle(key) { produce(context.sounds) } } else it },
         contentAlignment = Alignment.Center,
     ) {
         Text(

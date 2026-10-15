@@ -22,6 +22,7 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isPrimaryPressed
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.romulofer.foxhg.app.ui.Chip
 import io.github.romulofer.foxhg.app.ui.EditorHeader
@@ -231,7 +232,7 @@ private fun MapCanvas(model: MapEditorModel, map: MapFile, usage: MapUsage?) {
     val events = model.eventsOf(usage)
     val outline = MaterialTheme.colorScheme.outline
     Canvas(
-        Modifier.size((CELL * MapFile.SIZE).dp).pointerInput(model, map, usage) {
+        Modifier.size((CELL * MapFile.SIZE).dp).testTag("map-canvas").pointerInput(model, map, usage) {
             awaitPointerEventScope {
                 while (true) {
                     val event = awaitPointerEvent()

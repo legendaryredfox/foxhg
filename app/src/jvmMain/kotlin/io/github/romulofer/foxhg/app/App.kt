@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.romulofer.foxhg.app.ui.Chip
 import io.github.romulofer.foxhg.app.ui.FoxTheme
@@ -123,7 +124,7 @@ private fun GroupLabel(text: String) {
 private fun NavItem(title: String, selected: Boolean, enabled: Boolean, soon: Boolean, onClick: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
     Row(
-        Modifier.fillMaxWidth().height(34.dp)
+        Modifier.testTag("nav:$title").fillMaxWidth().height(34.dp)
             .background(if (selected) scheme.primaryContainer else androidx.compose.ui.graphics.Color.Transparent, MaterialTheme.shapes.medium)
             .clickable(enabled = enabled, onClick = onClick).padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
