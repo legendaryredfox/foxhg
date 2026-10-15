@@ -1,6 +1,8 @@
 package io.github.romulofer.foxhg.app
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -89,9 +91,7 @@ private fun Modifier.dropTarget(model: AppModel): Modifier = dragAndDropTarget(
 @Composable
 private fun TopBar(model: AppModel) {
     Row(Modifier.fillMaxWidth().height(52.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(Modifier.width(26.dp).height(26.dp).background(MaterialTheme.colorScheme.primary, MaterialTheme.shapes.medium), contentAlignment = Alignment.Center) {
-            Text("f", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-        }
+        Image(AppIcon.painter, contentDescription = "foxhg", modifier = Modifier.size(30.dp))
         Text(model.projectName ?: "foxhg", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         model.header?.let { header ->
             Chip(header.game.displayName.replace("Pokémon ", "").replace(" (English)", " · English"))
@@ -179,6 +179,7 @@ private fun StatusBar(model: AppModel) {
             if (model.revision >= 0) Text(if (edited == 0) "No changes" else "$edited file(s) changed", color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
         model.romPath?.let { Text(it.fileName.toString(), color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall) }
+        Text("v${AppVersion.current}", color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("app-version"))
     }
 }
 

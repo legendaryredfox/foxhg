@@ -1,5 +1,7 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
+val appVersion = "0.5.0"
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.composeMultiplatform)
@@ -35,14 +37,26 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Deb, TargetFormat.Msi, TargetFormat.Dmg)
             packageName = "foxhg"
-            packageVersion = "0.5.0"
+            packageVersion = appVersion
             description = "Nintendo DS Pokémon ROM editor."
             modules("java.prefs")
             linux {
                 menuGroup = "Development"
                 appCategory = "Development"
                 shortcut = true
+                iconFile.set(project.file("icons/foxhg-512.png"))
+            }
+            windows {
+                iconFile.set(project.file("icons/foxhg.ico"))
+            }
+            macOS {
+                iconFile.set(project.file("icons/foxhg.icns"))
             }
         }
     }
+}
+
+// the window shows the version, read from this resource
+tasks.named<ProcessResources>("jvmProcessResources") {
+    filesMatching("version.properties") { expand("version" to appVersion) }
 }

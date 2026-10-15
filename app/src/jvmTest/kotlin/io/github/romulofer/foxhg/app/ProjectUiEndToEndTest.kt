@@ -107,6 +107,28 @@ class ProjectUiEndToEndTest {
     }
 
     @Test
+    fun folderPickerChoosesExactlyTheFolderItShows() = withBase { base ->
+        java.nio.file.Files.createDirectories(base.resolve("picked/inner"))
+        val model = modelWithRecents(base)
+        try {
+            runApp(model) {
+                tap(onNodeWithText("New project…"), inScrollPane = false)
+                tap(onAllNodesWithText("Browse…").onFirst(), inScrollPane = false)
+                onNodeWithTag("folder-path").performTextReplacement(base.toString())
+                waitForIdle()
+                tap(onNodeWithTag("folder:picked"), inScrollPane = false)
+                onNodeWithText("Choosing: ${base.resolve("picked")}").assertIsDisplayed()
+                tap(onNodeWithTag("folder:inner"), inScrollPane = false)
+                tap(onNodeWithTag("folder-up"), inScrollPane = false)
+                tap(onNodeWithTag("folder-choose"), inScrollPane = false)
+                onNodeWithText("Creates ${base.resolve("picked/my-hack")}").assertIsDisplayed()
+            }
+        } finally {
+            model.close()
+        }
+    }
+
+    @Test
     fun aRomSessionIsSavedAsAProjectThenAutosavesAndComesBack() = withBase { base ->
         val manual = ManualScheduler()
         val model = modelWithRecents(base, manual)

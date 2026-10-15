@@ -36,7 +36,7 @@ object Actions {
 
     fun openProject(model: AppModel) = model.guard {
         val start = model.recent.firstOrNull { it.kind == RecentKind.PROJECT }?.path?.parent ?: AppModel.defaultProjectsDir().takeIf { it.toFile().exists() }
-        chooseDirectory("Open project folder", start)?.let { dir ->
+        chooseDirectory("Open project folder", start) { dir ->
             if (ProjectStore.isProject(dir)) model.openProject(dir) else model.error = "$dir is not a foxhg project folder"
         }
     }

@@ -84,6 +84,7 @@ fun AppDialogs(model: AppModel) {
         is AppDialog.RelinkRom -> RelinkDialog(model, d)
         is AppDialog.Settings -> SettingsDialog(model, d)
     }
+    Choosers.folderRequest?.let { request -> FolderPicker(request) { Choosers.folderRequest = null } }
 }
 
 @Composable
@@ -109,7 +110,7 @@ private fun ProjectDialog(model: AppModel, askRom: Boolean, then: (() -> Unit)?)
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 LabeledText("Name", name) { name = it }
-                PathRow("Location", location.toString()) { chooseDirectory("Choose where to create the project", location)?.let { location = it } }
+                PathRow("Location", location.toString()) { chooseDirectory("Choose where to create the project", location) { location = it } }
                 if (askRom) PathRow("ROM", rom?.toString() ?: "No ROM chosen") { chooseRomToOpen()?.let { rom = it } }
                 Text(
                     problem ?: "Creates ${folder}",

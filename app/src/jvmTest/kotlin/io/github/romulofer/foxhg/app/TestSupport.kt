@@ -97,7 +97,7 @@ fun <T> withChoosers(
 ): T {
     val (oldFile, oldDirectory) = Choosers.file to Choosers.directory
     Choosers.file = file
-    Choosers.directory = directory
+    Choosers.directory = { title, start, onPick -> directory(title, start)?.let(onPick) }
     try {
         return block()
     } finally {
