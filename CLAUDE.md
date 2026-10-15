@@ -35,9 +35,12 @@ The ROM data model and the editors are ported from DSPRE; the file formats are d
 | `./gradlew :core:jvmTest` | format and model tests (no UI) |
 | `./gradlew :app:run` | launch the desktop app |
 | `./gradlew build` | compile and test everything; the UI tests need a display: `env -u XDG_CURRENT_DESKTOP -u DESKTOP_SESSION -u GNOME_DESKTOP_SESSION_ID xvfb-run -a ./gradlew build` |
+| `FOXHG_REQUIRE_ROM=1` | make the ROM-based tests fail instead of skipping when `roms/heartgold.nds` is missing (they skip with a `SKIPPED` notice by default, so a fresh clone or CI builds without the ROM) |
 | `./gradlew :app:packageDeb` | native Linux package |
 | `scripts/setup-references.sh` | clone the reference projects into `references/` (shallow) |
+| Settings file | `~/.config/foxhg/settings.properties` (theme, emulator command for Run, autosave); recents in `recent.txt` beside it. Tests give every model its own temporary settings file (`testSettings()`), never the real one |
 | `scripts/screenshot.sh out.png [rom.nds] [editor]` | run the app under xvfb and screenshot it (clears the GNOME variables that crash Java's GTK look and feel under a bare Xvfb) |
+| `scripts/live-click-test.sh [rom.nds] [out-dir]` | live click test: runs the real app under xvfb and drives it with real X mouse and keyboard events (xdotool): edit an item, save as a project, autosave, quit, reopen. Screenshots of each step go to `build/live-click/`; exit code 0 = all checks passed; skips without the ROM |
 | `scripts/boot-test.sh rom.nds out.png [frames]` | boot a ROM headless in RetroArch + DeSmuME and save a screenshot; compare with the vanilla frame (`BootFixtures` writes test ROMs when `FOXHG_BOOT_DIR` is set) |
 
 ## Layout
@@ -81,7 +84,7 @@ Record every address, offset or quirk you confirm in `docs/formats.md`.
 
 - do not run on a different JDK; Gradle toolchain is pinned to 26
 - do not depend on DSPRE's external `.exe` tools (`ndstool`, `dsrom`, `chatot`, `blz`, `apicula`); everything is pure Kotlin, or a Linux-native tool called through one adapter in `jvmMain`
-- do not copy code from the reference projects: DSPRE is AGPL-3.0 and ndspy is GPL-3.0. Read them to understand a format, then write the code from the format description (see how `Blz.kt` and `TextArchive.kt` were done). The foxhg license is undecided; ask the user before choosing one
+- do not copy code from the reference projects: DSPRE is AGPL-3.0 and ndspy is GPL-3.0. Read them to understand a format, then write the code from the format description (see how `Blz.kt` and `TextArchive.kt` were done). foxhg is GPL-3.0-or-later (decided 2026-10-15, see `LICENSE` and the README)
 - do not reference `references/` paths from shipped files (README, build files); only from `CLAUDE.md` and `docs/`
 - do not `git push`, open a PR, or switch the `gh` account without an explicit request; commit only when asked
 
