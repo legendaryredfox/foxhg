@@ -5,6 +5,7 @@ import io.github.romulofer.foxhg.core.data.eggmove.EggMoves
 import io.github.romulofer.foxhg.core.data.item.ItemData
 import io.github.romulofer.foxhg.core.data.tmhm.TmHmTable
 import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassGenders
+import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassPrizes
 import io.github.romulofer.foxhg.core.nds.FileRomSource
 import io.github.romulofer.foxhg.core.project.RomProject
 import java.nio.file.Files
@@ -41,6 +42,7 @@ class NewEditorsEndToEndTest {
             tm.setMove(0, 1)
             val classes = TrainerClassEditorModel(project, onChanged = app::projectChanged)
             classes.setGender(2, 1)
+            classes.setPrize(2, 9)
 
             app.build(built)
             assertNull(app.error, app.error)
@@ -53,6 +55,7 @@ class NewEditorsEndToEndTest {
                 assertEquals(listOf(85, 98), egg.movesOf(25))
                 assertEquals(1, (TmHmTable.load(reopened) as FoxResult.Ok).value.moves[0])
                 assertEquals(1, (TrainerClassGenders.load(reopened) as FoxResult.Ok).value.genders[2])
+                assertEquals(9, (TrainerClassPrizes.load(reopened) as FoxResult.Ok).value.entries[2].multiplier)
             }
         } finally {
             app.close()

@@ -11,6 +11,7 @@ import io.github.romulofer.foxhg.core.data.item.ItemData
 import io.github.romulofer.foxhg.core.data.move.MoveData
 import io.github.romulofer.foxhg.core.data.tmhm.TmHmTable
 import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassGenders
+import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassPrizes
 import io.github.romulofer.foxhg.core.nds.FileRomSource
 import io.github.romulofer.foxhg.core.project.RomProject
 import java.nio.file.Files
@@ -134,5 +135,17 @@ class RealRomRecordsTest {
         assertContentEquals(plain, table.applyTo(plain))
         TrainerClassGenders.save(project, table.with(2, 1)).ok()
         assertEquals(1, TrainerClassGenders.load(project).ok().genders[2])
+    }
+
+    @Test
+    fun trainerClassPrizesMatchTheGameAndSurviveAnOverlayEdit() = withProject { project ->
+        val table = TrainerClassPrizes.load(project).ok()
+        assertEquals(129, table.entries.size)
+        assertEquals(listOf(4, 40, 15), listOf(2, 32, 24).map { table.multiplierOf(it) }, "Youngster, Rich Boy, Ace Trainer")
+        val plain = project.readOverlay(12).ok()
+        assertContentEquals(plain, table.applyTo(plain))
+        TrainerClassPrizes.save(project, table.withEntry(2, 9)).ok()
+        assertEquals(9, TrainerClassPrizes.load(project).ok().entries[2].multiplier)
+        assertEquals(setOf(12), project.editedOverlays)
     }
 }

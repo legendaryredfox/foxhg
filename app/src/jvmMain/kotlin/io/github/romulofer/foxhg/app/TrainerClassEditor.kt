@@ -13,20 +13,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.romulofer.foxhg.app.ui.NumberField
 import io.github.romulofer.foxhg.app.ui.PickerField
 import io.github.romulofer.foxhg.app.ui.SearchBox
 import io.github.romulofer.foxhg.app.ui.SectionCard
 import io.github.romulofer.foxhg.core.FoxResult
 import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassGenders
+import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassPrizes
 import io.github.romulofer.foxhg.core.game.GameNames
 import io.github.romulofer.foxhg.core.project.RomProject
 
-/** Gender of each trainer class. It lives in the ARM9, so saving it makes the build replace the ARM9. */
+/** Gender (ARM9) and prize money multiplier (overlay 12) of each trainer class; a build replaces what was edited. */
 class TrainerClassEditorModel(private val project: RomProject, private val onChanged: () -> Unit = {}) {
     val names: GameNames? = project.names
     var table: TrainerClassGenders? by mutableStateOf(null)
         private set
     var error: String? by mutableStateOf(null)
+        private set
+    var prizes: TrainerClassPrizes? by mutableStateOf(null)
         private set
     var search: String by mutableStateOf("")
 
@@ -34,6 +38,18 @@ class TrainerClassEditorModel(private val project: RomProject, private val onCha
         when (val loaded = TrainerClassGenders.load(project)) {
             is FoxResult.Ok -> table = loaded.value
             is FoxResult.Err -> error = loaded.message
+        }
+        when (val loaded = TrainerClassPrizes.load(project)) {
+            is FoxResult.Ok -> prizes = loaded.value
+            is FoxResult.Err -> error = loaded.message
+        }
+    }
+
+    fun setPrize(row: Int, multiplier: Int) {
+        val updated = (prizes ?: return).withEntry(row, multiplier)
+        when (val saved = TrainerClassPrizes.save(project, updated)) {
+            is FoxResult.Ok -> { prizes = updated; onChanged() }
+            is FoxResult.Err -> error = saved.message
         }
     }
 
@@ -58,11 +74,22 @@ fun TrainerClassEditor(model: TrainerClassEditorModel, modifier: Modifier = Modi
     Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SearchBox(model.search, { model.search = it }, "Search classes…", Modifier.width(272.dp))
         DetailPane {
-            SectionCard("Trainer class gender", subtitle = "Used for battle text and sprites. Prize money and class names are not editable yet") {
+            SectionCard("Trainer class gender", subtitle = "Used for battle text and sprites. Class names are not editable yet") {
                 val rows = table.genders.indices.filter { model.search.isBlank() || model.label(it).contains(model.search.trim(), ignoreCase = true) }
                 rows.chunked(2).forEach { pair ->
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         for (i in pair) PickerField(model.label(i), table.genders[i], TrainerClassGenders.NAMES, { v -> model.setGender(i, v) }, Modifier.width(280.dp))
+                    }
+                }
+            }
+            val prizes = model.prizes
+            if (prizes != null) {
+                SectionCard("Prize money multiplier", subtitle = "Money won = multiplier x level of the trainer's last Pokémon x a base amount") {
+                    val rows = prizes.entries.indices.filter { model.search.isBlank() || model.label(prizes.entries[it].trainerClass).contains(model.search.trim(), ignoreCase = true) }
+                    rows.chunked(3).forEach { triple ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            for (r in triple) NumberField(model.label(prizes.entries[r].trainerClass), prizes.entries[r].multiplier, 0..65535, { v -> model.setPrize(r, v) }, Modifier.width(180.dp))
+                        }
                     }
                 }
             }

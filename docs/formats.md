@@ -198,5 +198,16 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
 ## Trainer class gender (ARM9)
 
 - One byte per class at 0xFFB90 of the decompressed ARM9: 0 male, 1 female, 2 neither (Elite Four class 89 is 2). Vanilla count is 128
-  (DSPRE); there are 129 class names. Verified: Youngster 0, Lass 1. Prize multiplier: overlay 12 (compressed, 162464 bytes
-  decompressed) at 0x34C04 as 129 u16 pairs {class, multiplier} per DSPRE; **[UNVERIFIED]**, needs overlay writing first.
+  (DSPRE); there are 129 class names. Verified: Youngster 0, Lass 1.
+
+## Trainer class prize multiplier (overlay 12)
+
+- 129 pairs of u16 `{class id, multiplier}` at 0x34C04 of the decompressed overlay 12 (compressed in the ROM, 162464 bytes
+  decompressed). Verified: Youngster 4, Rich Boy 40, Ace Trainer 15. Rows are not in class order: row 128 is class 30 (Bird
+  Keeper, 8), appended at the end; edit by row.
+
+## Overlay edits
+
+- `RomProject.writeOverlay(id, plain)` takes the decompressed image (same size as the original). A build recompresses it
+  (BLZ) when the table entry is flagged compressed, replaces the overlay's FAT file and rewrites the table's size word
+  (low 24 bits of the last word of the 32-byte entry). Projects keep `overlays/<id>.bin`. Round trip verified on overlay 12.

@@ -20,13 +20,16 @@ class RomProject(
     private val source: RomSource,
     initialEdits: Map<String, ByteArray> = emptyMap(),
     initialArm9: ByteArray? = null,
+    initialOverlays: Map<Int, ByteArray> = emptyMap(),
 ) {
     private val edits = LinkedHashMap<String, ByteArray>(initialEdits)
     private var arm9Edit: ByteArray? = initialArm9
+    private val overlayEdits = LinkedHashMap<Int, ByteArray>(initialOverlays)
+    private val originalOverlays = HashMap<Int, FoxResult<ByteArray>>()
     private val originalArm9: FoxResult<ByteArray> by lazy { Arm9.decompressed(rom) }
 
     val editedPaths: Set<String> get() = edits.keys
-    val isDirty: Boolean get() = edits.isNotEmpty() || arm9Edit != null
+    val isDirty: Boolean get() = edits.isNotEmpty() || arm9Edit != null || overlayEdits.isNotEmpty()
 
     /** The ARM9 edit (decompressed image), or null when the ARM9 is as in the ROM. */
     val editedArm9: ByteArray? get() = arm9Edit?.copyOf()
@@ -44,6 +47,36 @@ class RomProject(
     fun writeArm9(plain: ByteArray): FoxResult<Unit> {
         val original = (originalArm9 as? FoxResult.Err)?.let { return it } ?: (originalArm9 as FoxResult.Ok).value
         arm9Edit = if (plain.contentEquals(original)) null else plain.copyOf()
+        return FoxResult.Ok(Unit)
+    }
+
+    /** Overlay ids (ARM9 overlay table) whose decompressed image the user changed. */
+    val editedOverlays: Set<Int> get() = overlayEdits.keys
+
+    fun editedOverlayImages(): Map<Int, ByteArray> = overlayEdits.mapValues { it.value.copyOf() }
+
+    private fun overlayEntry(id: Int) = rom.arm9Overlays.firstOrNull { it.id == id }
+
+    private fun originalOverlay(id: Int): FoxResult<ByteArray> = originalOverlays.getOrPut(id) {
+        val entry = overlayEntry(id) ?: return@getOrPut FoxResult.Err("The ROM has no overlay $id")
+        val stored = rom.readOverlay(entry) ?: return@getOrPut FoxResult.Err("Overlay $id has no file in the ROM")
+        if (entry.isCompressed) Blz.decompress(stored) else FoxResult.Ok(stored)
+    }
+
+    /** The decompressed overlay [id] including edits. */
+    fun readOverlay(id: Int): FoxResult<ByteArray> = overlayEdits[id]?.let { FoxResult.Ok(it.copyOf()) } ?: when (val o = originalOverlay(id)) {
+        is FoxResult.Ok -> FoxResult.Ok(o.value.copyOf())
+        is FoxResult.Err -> o
+    }
+
+    /** Stores [plain] as the new decompressed overlay [id]. Its size must not change; identical to the ROM's means no edit. */
+    fun writeOverlay(id: Int, plain: ByteArray): FoxResult<Unit> {
+        val original = when (val o = originalOverlay(id)) {
+            is FoxResult.Ok -> o.value
+            is FoxResult.Err -> return o
+        }
+        if (plain.size != original.size) return FoxResult.Err("Overlay $id must stay ${original.size} bytes, got ${plain.size}")
+        if (plain.contentEquals(original)) overlayEdits.remove(id) else overlayEdits[id] = plain.copyOf()
         return FoxResult.Ok(Unit)
     }
 
@@ -77,6 +110,7 @@ class RomProject(
     fun revertAll() {
         edits.clear()
         arm9Edit = null
+        overlayEdits.clear()
     }
 
     fun editedFiles(): Map<String, ByteArray> = edits.mapValues { it.value.copyOf() }
@@ -87,6 +121,15 @@ class RomProject(
         for ((path, bytes) in edits) {
             val file = rom.file(path) ?: return FoxResult.Err("Edited file '$path' is no longer in the ROM")
             byId[file.id] = bytes
+        }
+        for ((id, plain) in overlayEdits) {
+            val entry = overlayEntry(id) ?: return FoxResult.Err("Edited overlay $id is no longer in the ROM")
+            byId[entry.fileId] = if (entry.isCompressed) {
+                when (val packed = Blz.compress(plain)) {
+                    is FoxResult.Ok -> packed.value
+                    is FoxResult.Err -> return FoxResult.Err("Overlay $id: ${packed.message}")
+                }
+            } else plain
         }
         val storedArm9 = arm9Edit?.let { plain ->
             val footer = Arm9.footer(rom) ?: return FoxResult.Err("This ROM's ARM9 has no module parameters footer")
@@ -99,9 +142,14 @@ class RomProject(
     }
 
     companion object {
-        fun open(source: RomSource, edits: Map<String, ByteArray> = emptyMap(), arm9: ByteArray? = null): FoxResult<RomProject> =
+        fun open(
+            source: RomSource,
+            edits: Map<String, ByteArray> = emptyMap(),
+            arm9: ByteArray? = null,
+            overlays: Map<Int, ByteArray> = emptyMap(),
+        ): FoxResult<RomProject> =
             when (val rom = NdsRom.open(source)) {
-                is FoxResult.Ok -> FoxResult.Ok(RomProject(rom.value, source, edits, arm9))
+                is FoxResult.Ok -> FoxResult.Ok(RomProject(rom.value, source, edits, arm9, overlays))
                 is FoxResult.Err -> rom
             }
     }

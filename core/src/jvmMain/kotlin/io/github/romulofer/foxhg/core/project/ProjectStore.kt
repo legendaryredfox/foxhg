@@ -13,12 +13,13 @@ import kotlin.io.path.relativeTo
 
 /**
  * A project on disk: `<dir>/project.properties` (path of the ROM), `<dir>/files/<rom path>` for every file the
- * user changed and `<dir>/arm9.bin` (decompressed) when the ARM9 was changed. Nothing else is stored, so a project is a few megabytes at most and the ROM is never copied.
+ * user changed and `<dir>/arm9.bin` (decompressed) when the ARM9 was changed, and `<dir>/overlays/<id>.bin` (decompressed) for each changed overlay. Nothing else is stored, so a project is a few megabytes at most and the ROM is never copied.
  * Writes go to a temporary file first and are renamed into place.
  */
 object ProjectStore {
     private const val PROPERTIES = "project.properties"
     private const val FILES = "files"
+    private const val OVERLAYS = "overlays"
     private const val ARM9_FILE = "arm9.bin" // the decompressed ARM9 image, only when edited
 
     fun isProject(directory: Path): Boolean = directory.resolve(PROPERTIES).exists()
@@ -89,6 +90,14 @@ object ProjectStore {
         val arm9File = directory.resolve(ARM9_FILE)
         val arm9 = project.editedArm9
         if (arm9 != null) atomicWrite(arm9File, arm9) else arm9File.deleteIfExists()
+        val overlaysDir = directory.resolve(OVERLAYS)
+        val overlays = project.editedOverlayImages()
+        for ((id, bytes) in overlays) atomicWrite(overlaysDir.resolve("$id.bin"), bytes)
+        if (overlaysDir.exists()) {
+            Files.list(overlaysDir).use { stream ->
+                stream.filter { it.isRegularFile() && it.fileName.toString().removeSuffix(".bin").toIntOrNull() !in overlays }.forEach { it.deleteIfExists() }
+            }
+        }
         // Reverted files must disappear too, or they would come back on the next load.
         Files.walk(filesDir).use { stream ->
             stream.filter { it.isRegularFile() }.forEach { file ->
@@ -116,8 +125,17 @@ object ProjectStore {
         }
         val arm9Path = directory.resolve(ARM9_FILE)
         val arm9 = if (arm9Path.exists()) Files.readAllBytes(arm9Path) else null
+        val overlays = LinkedHashMap<Int, ByteArray>()
+        val overlaysDir = directory.resolve(OVERLAYS)
+        if (overlaysDir.exists()) {
+            Files.list(overlaysDir).use { stream ->
+                stream.filter { it.isRegularFile() }.forEach { file ->
+                    file.fileName.toString().removeSuffix(".bin").toIntOrNull()?.let { overlays[it] = Files.readAllBytes(file) }
+                }
+            }
+        }
         val source = FileRomSource(romPath)
-        when (val project = RomProject.open(source, edits, arm9)) {
+        when (val project = RomProject.open(source, edits, arm9, overlays)) {
             is FoxResult.Ok -> {
                 properties["compressArm9"]?.toBooleanStrictOrNull()?.let { project.value.compressArm9 = it }
                 FoxResult.Ok(Loaded(project.value, source, romPath))

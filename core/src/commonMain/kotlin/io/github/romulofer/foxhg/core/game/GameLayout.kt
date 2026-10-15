@@ -31,6 +31,10 @@ object HgssLayout {
 
     /** Offset in the decompressed ARM9 of the trainer class gender table: one byte per class, 128 classes. */
     const val TRAINER_CLASS_GENDER_ARM9_OFFSET = 0xFFB90
+
+    /** Overlay and offset (in its decompressed image) of the trainer class prize multiplier table. */
+    const val PRIZE_OVERLAY = 12
+    const val PRIZE_TABLE_OVERLAY_OFFSET = 0x34C04
 }
 
 /** Indexes of the message archives (files of [HgssLayout.MESSAGES]) that hold the lists editors need names from. */

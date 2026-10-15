@@ -145,7 +145,7 @@ private fun StatusBar(model: AppModel) {
             else -> Text(model.status ?: "Ready", color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         }
         model.project?.let { p ->
-            val edited = p.editedPaths.size + if (p.editedArm9 != null) 1 else 0
+            val edited = p.editedPaths.size + p.editedOverlays.size + if (p.editedArm9 != null) 1 else 0
             if (model.revision >= 0) Text(if (edited == 0) "No changes" else "$edited file(s) changed", color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
         model.romPath?.let { Text(it.fileName.toString(), color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall) }
