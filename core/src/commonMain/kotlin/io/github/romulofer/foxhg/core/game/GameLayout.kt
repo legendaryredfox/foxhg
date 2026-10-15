@@ -55,6 +55,20 @@ object HgssLayout {
     /** Offset in the decompressed ARM9 of the trainer class gender table: one byte per class, 128 classes. */
     const val TRAINER_CLASS_GENDER_ARM9_OFFSET = 0xFFB90
 
+    /** In the decompressed ARM9: the hidden item table (8-byte entries), the byte holding its length and the one holding its capacity. */
+    const val HIDDEN_ITEMS_ARM9_TABLE = 0xFA558
+    const val HIDDEN_ITEMS_ARM9_LENGTH = 0x405E4
+    const val HIDDEN_ITEMS_ARM9_CAPACITY = 0x405E8
+
+    /** The overlay of the starter chooser; it keeps its own table of the three species (the cries). */
+    const val STARTER_CHOOSER_OVERLAY = 61
+
+    /** Text bank of the starter chooser screen (professor's questions and Poké Ball descriptions). */
+    const val STARTER_TEXT_BANK = 190
+
+    /** Script files (of [SCRIPTS]) in which the rival's team depends on the player's starter. */
+    val RIVAL_SCRIPT_FILES = listOf(7, 23, 96, 110, 819, 850, 866)
+
     /** Overlay and offset (in its decompressed image) of the trainer class prize multiplier table. */
     const val PRIZE_OVERLAY = 12
     const val PRIZE_TABLE_OVERLAY_OFFSET = 0x34C04

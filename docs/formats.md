@@ -124,6 +124,32 @@ Add an entry here whenever a layout, offset or quirk is confirmed.
   DSPRE's `MoveData` and the move editing guide of the DS Pokémon Hacking wiki, `CONTEST_TYPE` values as in the decomp
   (`constants/pokemon.h`). **[UNVERIFIED]** in game: only the byte layout is checked against the ROM.
 
+## Starters (ARM9, chooser overlay, scripts, text)
+
+- Not a table: the chooser code of the decompressed ARM9 builds `{CHIKORITA, CYNDAQUIL, TOTODILE}` (decomp `choose_starter.c`). The three
+  species are u32 literal-pool words 4 bytes apart (vanilla at 0x108514: 152, 155, 158); the pool is found by the 8 bytes `03 03 1A 12 01 23 00 00`
+  that follow it 13 bytes later (exactly one match). Level (5) is a byte at 0x960E2 followed by `22 20`; the held item (0) is a byte at 0x960FE
+  followed by `20 09 90 60 19 06 21 09 AA D8 F7 9A FD 06 98 EC 35` (one byte: items above 255 do not fit). Held item and level places from
+  DSPRE's `RomInfo`, checked against the ROM.
+- Overlay 61 (the chooser app, decomp `choose_starter_app.c` `sSpecies`) keeps its own table of three u32 species, 32 bytes after the pattern
+  `00 04 00 0C 10 BD ...` (found once, vanilla 152, 155, 158 at overlay offset 6808).
+- The rival's counter-pick: script files 7, 23, 96, 110, 819, 850 and 866 of `a/0/1/2` each contain once the commands
+  `CE 00 0C 80 | 11 00 0C 80 <u16 first species> | 1C 00 05 <s32 jump>`; the block the jump reaches (jump + position + 17) starts with `11` and
+  compares with the second species at +4. All seven match in the ROM (second branch at +31 each).
+- The chooser text (bank 190): messages 1 to 3 ask about each starter and 4 to 6 describe it, with the species name and the type name
+  ("Professor Elm: So, you like CHIKORITA, the Grass-type Pokémon?"); editing a starter swaps those two words. Changing the three back restores
+  every byte (`RealRomRecordsTest.startersMatchTheGameFollowEditsAndRevertCleanly`). **[UNVERIFIED]** in game.
+
+## Hidden items (ARM9)
+
+- Table in the decompressed ARM9 at 0xFA558, 8-byte entries: item u16, quantity u8, a byte and a u16 that are 0 in every vanilla entry
+  (kept as read), index u16. The byte at 0x405E4 is the number of entries the game reads, the byte at 0x405E8 how many fit. Vanilla
+  HeartGold English: 231 entries, capacity 231 (full), first entries Potion #0, Nugget #1, Nugget #225, Potion #2, last #230. Offsets from
+  DSPRE's `RomInfo`, layout from the decomp's `HiddenItemData`; all checked against the ROM (`RealRomRecordsTest`).
+- A spot is script 8000 + index (`_std_hidden_item` = 8000 in `std_script.h`) with the "picked up" flag 800 + index
+  (`HIDDEN_ITEMS_FLAG_BASE`); indexes are not in table order (#225 is third). Shortening the table clears the dropped slots and nothing else.
+  **[UNVERIFIED]** in game.
+
 ## Trainers (`a/0/5/5` headers, `a/0/5/6` parties)
 
 - 738 trainers; both NARCs have 738 files. Header is 20 bytes: type (bit 0 custom moves, bit 1 held items), class,

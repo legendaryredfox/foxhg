@@ -224,6 +224,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.EGG_MOVES -> Loading(project, "egg moves", { model.recordEditor(EditorKind.EGG_MOVES, project, EggMoves.SPEC, { "%03d".format(it) }, 0) }) { editor ->
             EggMoveEditor(editor, modifier.padding(16.dp))
         }
+        selected == EditorKind.STARTERS -> Loading(project, "starters", { StarterEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+            StarterEditor(editor, modifier.padding(16.dp))
+        }
         selected == EditorKind.TRADES -> Loading(project, "trades", { model.recordEditor(EditorKind.TRADES, project, NpcTrade.SPEC, RecordEditorModel.tradeLabel(project.names), 0) }) { editor ->
             TradeEditor(editor, modifier.padding(16.dp))
         }
@@ -232,6 +235,10 @@ private fun Content(model: AppModel, modifier: Modifier) {
         }
         selected == EditorKind.ITEMS -> Loading(project, "items", { model.recordEditor(EditorKind.ITEMS, project, ItemData.SPEC, RecordEditorModel.itemLabel(project.names), 1) }) { editor ->
             ItemEditor(editor, modifier.padding(16.dp))
+        }
+        selected == EditorKind.HIDDEN_ITEMS -> Loading(project, "hidden items", { HiddenItemEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.HIDDEN_ITEMS]?.let(m::select) } }) { editor ->
+            KeepSelection(model, EditorKind.HIDDEN_ITEMS, editor.selectedIndex)
+            HiddenItemEditor(editor, modifier.padding(16.dp))
         }
         selected == EditorKind.TRAINERS -> Loading(project, "trainers", { TrainerEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.TRAINERS]?.let(m::select) } }) { editor ->
             KeepSelection(model, EditorKind.TRAINERS, editor.selectedIndex)

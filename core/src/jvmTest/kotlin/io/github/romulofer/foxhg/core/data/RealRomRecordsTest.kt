@@ -4,8 +4,6 @@ import io.github.romulofer.foxhg.core.FoxResult
 import io.github.romulofer.foxhg.core.data.eggmove.EggMoves
 import io.github.romulofer.foxhg.core.data.event.EventFile
 import io.github.romulofer.foxhg.core.data.event.OverworldSprites
-import io.github.romulofer.foxhg.core.game.HgssLayout
-import io.github.romulofer.foxhg.core.narc.Narc
 import io.github.romulofer.foxhg.core.data.evolution.EvolutionData
 import io.github.romulofer.foxhg.core.data.evolution.EvolutionMethod
 import io.github.romulofer.foxhg.core.data.evolution.TradeEvolutions
@@ -25,6 +23,10 @@ import io.github.romulofer.foxhg.core.data.map.MapUsages
 import io.github.romulofer.foxhg.core.data.map.TileTypes
 import io.github.romulofer.foxhg.core.data.move.MoveData
 import io.github.romulofer.foxhg.core.data.tmhm.TmHmTable
+import io.github.romulofer.foxhg.core.data.hiddenitem.HiddenItems
+import io.github.romulofer.foxhg.core.data.starter.Starters
+import io.github.romulofer.foxhg.core.game.HgssLayout
+import io.github.romulofer.foxhg.core.narc.Narc
 import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassGenders
 import io.github.romulofer.foxhg.core.script.ScriptEntry
 import io.github.romulofer.foxhg.core.script.ScriptText
@@ -168,6 +170,63 @@ class RealRomRecordsTest {
         assertContentEquals(plain, table.applyTo(plain))
         TrainerClassGenders.save(project, table.with(2, 1)).ok()
         assertEquals(1, TrainerClassGenders.load(project).ok().genders[2])
+    }
+
+    @Test
+    fun hiddenItemsMatchTheGameAndSaveBack() = withProject { project ->
+        val table = HiddenItems.load(project).ok()
+        val items = project.names!!.items
+        assertEquals(231, table.entries.size)
+        assertEquals(231, table.capacity, "the vanilla table is full")
+        assertEquals(listOf("Potion" to 0, "Nugget" to 1, "Nugget" to 225), table.entries.take(3).map { items[it.item] to it.index })
+        assertEquals(8000, table.entries[0].script)
+        assertEquals(231, table.entries.map { it.index }.toSet().size, "every spot has its own index")
+        assertTrue(table.entries.all { it.quantity >= 1 && it.unknown3 == 0 && it.unknown4 == 0 })
+        val plain = project.readArm9().ok()
+        assertContentEquals(plain, table.applyTo(plain), "an unedited table writes back the same ARM9")
+
+        HiddenItems.save(project, table.with(0, table.entries[0].copy(item = 3, quantity = 5))).ok()
+        assertEquals(3 to 5, HiddenItems.load(project).ok().entries[0].let { it.item to it.quantity })
+        HiddenItems.save(project, HiddenItems.load(project).ok().removed(230)).ok()
+        val shorter = HiddenItems.load(project).ok()
+        assertEquals(230, shorter.entries.size)
+        val after = project.readArm9().ok()
+        val slot = 0xFA558 + 230 * 8
+        assertTrue((0 until 8).all { after[slot + it] == 0.toByte() }, "the dropped slot is cleared")
+        project.revertAll()
+    }
+
+    @Test
+    fun startersMatchTheGameFollowEditsAndRevertCleanly() = withProject { project ->
+        assertEquals(Starters.VANILLA, Starters.load(project).ok())
+        val names = project.names!!
+        val before = project.read("a/0/1/2")!!
+
+        val report = Starters.change(project, Starters(listOf(1, 4, 7), heldItem = 17, level = 12)).ok()
+        assertEquals(Starters(listOf(1, 4, 7), 17, 12), Starters.load(project).ok())
+        assertEquals(7, report.rivalScriptsPatched, "all seven rival scripts follow")
+        assertTrue(report.textPatched && report.chooserPatched)
+
+        val scripts = Narc.parse(project.read("a/0/1/2")!!).ok().files
+        for (id in HgssLayout.RIVAL_SCRIPT_FILES) {
+            val d = scripts[id]
+            val at = (0..d.size - 13).first { i -> d[i] == 0xCE.toByte() && d[i + 1] == 0.toByte() && d[i + 2] == 0x0C.toByte() && d[i + 3] == 0x80.toByte() && d[i + 8] == 1.toByte() }
+            assertEquals(4, d[at + 17 + (d[at + 13].toInt() and 0xFF) + 4].toInt(), "script $id compares the second branch with the new second species")
+        }
+        val text = TextArchive.load(project).ok().records[190]
+        assertTrue(text.entries[1].text().contains(names.species[1]), text.entries[1].text())
+        assertTrue(text.entries[2].text().contains(names.species[4]) && text.entries[2].text().contains("Fire-type"))
+        assertTrue(text.entries[6].text().contains(names.species[7]) && text.entries[6].text().contains("Water-type"))
+        assertTrue(!text.entries[1].text().contains("CHIKORITA"))
+
+        Starters.change(project, Starters.VANILLA).ok()
+        assertEquals(Starters.VANILLA, Starters.load(project).ok())
+        assertContentEquals(before, project.read("a/0/1/2")!!, "the scripts are back to the original bytes")
+        assertTrue(!project.isDirty, "changing the starters back leaves nothing edited: ${project.editedPaths} ${project.editedOverlays} ${project.editedArm9 != null}")
+
+        assertTrue(Starters.change(project, Starters(listOf(0, 4, 7), 0, 5)) is FoxResult.Err)
+        assertTrue(Starters.change(project, Starters(listOf(1, 4, 7), 300, 5)) is FoxResult.Err)
+        assertTrue(!project.isDirty, "a refused change writes nothing")
     }
 
     @Test

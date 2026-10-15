@@ -2,6 +2,8 @@ package io.github.romulofer.foxhg.app
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
@@ -11,6 +13,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTextInput
 import io.github.romulofer.foxhg.core.FoxResult
 import io.github.romulofer.foxhg.core.data.encounter.EncounterData
+import io.github.romulofer.foxhg.core.data.hiddenitem.HiddenItems
+import io.github.romulofer.foxhg.core.data.starter.Starters
 import io.github.romulofer.foxhg.core.data.mapheader.MapHeader
 import io.github.romulofer.foxhg.core.data.mapheader.MapHeaderTable
 import io.github.romulofer.foxhg.core.data.matrix.GameMatrix
@@ -86,6 +90,60 @@ class ListEditorsUiEndToEndTest {
         buildAndReopen(model) { rebuilt ->
             assertContentEquals(rebuilt.read("a/1/3/6"), rebuilt.read("a/0/3/7"), "HeartGold now equals the SoulSilver table")
         }
+    }
+
+    @Test
+    fun editingRemovingAndAddingBackAHiddenItemOnItsScreen() = withHeartGoldApp { model, project ->
+        val table = { (HiddenItems.load(project) as FoxResult.Ok).value }
+        assertEquals(231, table().entries.size)
+        open("Hidden items")
+        onNodeWithTag("number:Quantity").typeNumber(3)
+        waitForIdle()
+        assertEquals(3, table().entries[0].quantity, "the quantity went into the ARM9")
+        onNodeWithTag("number:Index").typeNumber(1)
+        waitForIdle()
+        assertEquals(0, table().entries[0].index, "index 1 belongs to the second spot, so it is refused")
+
+        onNodeWithTag("hidden-add").assertIsNotEnabled()
+        tap(onNodeWithTag("hidden-remove"), inScrollPane = false)
+        waitForIdle()
+        assertEquals(230, table().entries.size)
+        onNodeWithTag("hidden-add").assertIsEnabled()
+        tap(onNodeWithTag("hidden-add"), inScrollPane = false)
+        waitForIdle()
+        assertEquals(231, table().entries.size)
+        assertEquals(0, table().entries.last().index, "the new spot takes the smallest free index (the removed one)")
+        onNodeWithTag("hidden-add").assertIsNotEnabled()
+
+        buildAndReopen(model) { rebuilt ->
+            val reread = (HiddenItems.load(rebuilt) as FoxResult.Ok).value
+            assertEquals(231, reread.entries.size)
+            assertEquals(1, reread.entries[0].index, "the first spot was removed, so the old second one leads")
+            assertEquals(0, reread.entries.last().index, "and the spot added back is last")
+        }
+    }
+
+    @Test
+    fun changingTheStartersOnTheirScreenUpdatesWhatFollowsAndRestoresCleanly() = withHeartGoldApp { model, project ->
+        open("Starters")
+        pick("Ball 1", "BULBASAUR")
+        waitForIdle()
+        assertEquals(listOf(1, 155, 158), Starters.load(project).let { (it as FoxResult.Ok).value.species })
+        onNodeWithText("Updated the starters, the chooser cries, the rival's counter-pick in 7 scripts and the professor's text").assertIsDisplayed()
+        onNodeWithTag("number:Level").typeNumber(9)
+        waitForIdle()
+        assertEquals(9, (Starters.load(project) as FoxResult.Ok).value.level)
+
+        buildAndReopen(model) { rebuilt ->
+            val reread = (Starters.load(rebuilt) as FoxResult.Ok).value
+            assertEquals(Starters(listOf(1, 155, 158), 0, 9), reread, "the change survives a build")
+        }
+
+        tap(onNodeWithTag("starter-restore"), inScrollPane = false)
+        onNodeWithTag("number:Level").typeNumber(5)
+        waitForIdle()
+        assertEquals(Starters.VANILLA, (Starters.load(project) as FoxResult.Ok).value)
+        assertFalse(project.isDirty, "back to the original three, level 5: nothing is edited")
     }
 
     @Test
