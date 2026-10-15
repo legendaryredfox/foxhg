@@ -3,8 +3,10 @@ package io.github.romulofer.foxhg.app
 import io.github.romulofer.foxhg.core.FoxResult
 import io.github.romulofer.foxhg.core.nds.FileRomSource
 import io.github.romulofer.foxhg.core.project.RomProject
+import io.github.romulofer.foxhg.core.script.LevelTrigger
 import io.github.romulofer.foxhg.core.script.ScriptEntry
 import io.github.romulofer.foxhg.core.script.ScriptText
+import io.github.romulofer.foxhg.core.script.VariableTrigger
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.test.Test
@@ -51,12 +53,19 @@ class ScriptEditorEndToEndTest {
             editor.edit("script_1:\n    End\n")
             assertTrue(editor.files.selected is ScriptEntry.Raw, "raw files are never rewritten from text")
 
+            val levelIndex = editor.files.records.indexOfFirst { it is ScriptEntry.Level }
+            val level = (editor.files.records[levelIndex] as ScriptEntry.Level).file
+            editor.select(levelIndex)
+            val edited = level.copy(triggers = level.triggers + LevelTrigger(4, 9)).withVariableTriggers(level.variableTriggers + VariableTrigger(0x4123, 5, 2)).aligned()
+            editor.files.update { ScriptEntry.Level(edited) }
+
             app.build(built)
             assertNull(app.error, app.error)
             FileRomSource(built).use { source ->
                 val reopened = (RomProject.open(source) as FoxResult.Ok).value
                 val entry = (ScriptEntry.load(reopened) as FoxResult.Ok).value.records[index] as ScriptEntry.Script
                 assertTrue(ScriptText.toText(entry.file).contains("SetFlag 999"))
+                assertEquals(ScriptEntry.Level(edited), (ScriptEntry.load(reopened) as FoxResult.Ok).value.records[levelIndex], "the level script edit survives the build")
                 val untouched = (ScriptEntry.load(reopened) as FoxResult.Ok).value.records[index + 1]
                 assertEquals(untouched, (ScriptEntry.load(project) as FoxResult.Ok).value.records[index + 1])
             }

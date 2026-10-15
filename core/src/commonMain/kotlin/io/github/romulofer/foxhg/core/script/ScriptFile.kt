@@ -316,8 +316,8 @@ internal class ByteBuf {
 }
 
 /**
- * A file of the script NARC as the editor holds it: a [Script] that parsed and writes back exactly, or [Raw] bytes
- * kept untouched (level scripts, empty files and the few script files whose layout cannot be reproduced yet).
+ * A file of the script NARC as the editor holds it: a [Script] or a [Level] script that parsed and writes back exactly,
+ * or [Raw] bytes kept untouched (empty files and the few files whose layout cannot be reproduced yet).
  */
 sealed interface ScriptEntry {
     fun toBytes(): ByteArray
@@ -325,6 +325,12 @@ sealed interface ScriptEntry {
     class Script(val file: ScriptFile) : ScriptEntry {
         override fun toBytes() = file.toBytes()
         override fun equals(other: Any?) = other is Script && file == other.file
+        override fun hashCode() = file.hashCode()
+    }
+
+    class Level(val file: LevelScript) : ScriptEntry {
+        override fun toBytes() = file.toBytes()
+        override fun equals(other: Any?) = other is Level && file == other.file
         override fun hashCode() = file.hashCode()
     }
 
@@ -338,7 +344,13 @@ sealed interface ScriptEntry {
         fun parse(bytes: ByteArray): FoxResult<ScriptEntry> = FoxResult.Ok(
             when (val r = ScriptFile.parse(bytes)) {
                 is FoxResult.Ok -> Script(r.value)
-                is FoxResult.Err -> Raw(bytes, if (r.message.contains("no 0xFD13")) "Level script file (no script header): not decoded yet" else r.message)
+                is FoxResult.Err -> when {
+                    !r.message.contains("no 0xFD13") -> Raw(bytes, r.message)
+                    else -> when (val level = LevelScript.parse(bytes)) {
+                        is FoxResult.Ok -> Level(level.value)
+                        is FoxResult.Err -> Raw(bytes, level.message)
+                    }
+                }
             },
         )
 

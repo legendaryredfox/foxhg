@@ -183,9 +183,10 @@ class RealRomRecordsTest {
         val scripts = table.records.filterIsInstance<ScriptEntry.Script>()
         assertEquals(965, table.records.size)
         assertEquals(492, scripts.size, "script files that parse and write back exactly")
+        val levels = table.records.filterIsInstance<ScriptEntry.Level>()
         val raw = table.records.filterIsInstance<ScriptEntry.Raw>()
-        assertEquals(468, raw.count { it.reason.startsWith("Level script file") }, "level scripts have no script header")
-        assertEquals(473, raw.size, "the rest: 3 empty files and 2 odd script files kept as raw bytes")
+        assertEquals(468, levels.size, "every level script parses and writes back exactly")
+        assertEquals(5, raw.size, "3 empty files and 2 odd script files stay raw bytes")
         for (s in scripts) {
             val back = ScriptText.parse(ScriptText.toText(s.file)).ok()
             assertEquals(s.file, back, "text form of a script file must read back to the same file")

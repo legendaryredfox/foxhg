@@ -234,7 +234,7 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
 
 - 965 files. A script file starts with one u32 per script (offset relative to the end of that u32), then the u16 `0xFD13`;
   then the code of every script and function, movement lists among it, zero padding. 492 files parse; 468 have no `0xFD13`
-  header and are **level scripts** (a separate format, **not decoded yet**; map headers index both kinds); 3 are empty; 2 stay raw
+  header and are **level scripts** (see below; map headers index both kinds); 3 are empty; 2 stay raw
   (one has the `0xFD13` marker twice, one has a movement list at an odd offset).
 - Command = u16 opcode + parameters whose sizes come from the command table (`scripts/gen-scrcmd.py`, from the MIT-licensed
   scrcmd-database; 853 commands). Variable-length: `0x190-0x192` (u8 mode, u16 more if mode 2), `0x1D1` and `0x1E9`
@@ -248,3 +248,11 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
 - Because scripts share code and fall through into each other, the model is one flat list of items (labels, commands,
   movement steps, padding) in file order, not a list of scripts. Text form: `script_N:` / `function_N:` / `action_N:` labels,
   `Name arg, arg` lines, `.pad N`; see `ScriptText`.
+
+## Level scripts (files of `a/0/1/2` without the 0xFD13 header)
+
+- Entries `u8 type, u32 value`, type 2 map change, 3 screen reset, 4 game load: value = script number of the map's own script
+  file (header.script). Type 1 marks variable triggers: its value is 5 * (number of entries after it) + 1, i.e. it points past the
+  `00` that ends the list; it can sit anywhere among the entries (468 files: 2 types, marker first, middle or last).
+  The list ends with a single `00`. If a type 1 entry exists, `u16 variable, u16 value, u16 script` triples follow, ended by `u16 0`.
+  Zero bytes pad the file to 4 bytes. All 468 files round trip; 3 of the script NARC's 5 raw files are empty ones.
