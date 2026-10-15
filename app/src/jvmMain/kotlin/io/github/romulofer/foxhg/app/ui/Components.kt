@@ -353,7 +353,14 @@ fun EditorHeader(id: String, name: String, modifier: Modifier = Modifier, traili
 
 /** Multi-line text input in the same style as the fields; [invalid] draws the error border. */
 @Composable
-fun TextArea(value: String, onChange: (String) -> Unit, invalid: Boolean, modifier: Modifier = Modifier, minHeight: androidx.compose.ui.unit.Dp = 160.dp) {
+fun TextArea(
+    value: String,
+    onChange: (String) -> Unit,
+    invalid: Boolean,
+    modifier: Modifier = Modifier,
+    minHeight: androidx.compose.ui.unit.Dp = 160.dp,
+    transformation: androidx.compose.ui.text.input.VisualTransformation = androidx.compose.ui.text.input.VisualTransformation.None,
+) {
     val shape = MaterialTheme.shapes.small
     val border = if (invalid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline
     BasicTextField(
@@ -361,6 +368,7 @@ fun TextArea(value: String, onChange: (String) -> Unit, invalid: Boolean, modifi
         onValueChange = onChange,
         textStyle = Fox.mono.copy(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+        visualTransformation = transformation,
         modifier = modifier.heightIn(min = minHeight).background(MaterialTheme.colorScheme.surface, shape).border(1.dp, border, shape).padding(12.dp),
     )
 }

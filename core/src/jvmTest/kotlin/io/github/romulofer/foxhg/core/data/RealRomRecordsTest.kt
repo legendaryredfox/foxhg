@@ -12,6 +12,8 @@ import io.github.romulofer.foxhg.core.data.item.ItemData
 import io.github.romulofer.foxhg.core.data.move.MoveData
 import io.github.romulofer.foxhg.core.data.tmhm.TmHmTable
 import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassGenders
+import io.github.romulofer.foxhg.core.script.ScriptEntry
+import io.github.romulofer.foxhg.core.script.ScriptText
 import io.github.romulofer.foxhg.core.text.TextArchive
 import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassPrizes
 import io.github.romulofer.foxhg.core.nds.FileRomSource
@@ -172,5 +174,21 @@ class RealRomRecordsTest {
         assertEquals(listOf(1034, 2667, 1317, 195), listOf(files.sumOf { it.spawnables.size }, files.sumOf { it.overworlds.size }, files.sumOf { it.warps.size }, files.sumOf { it.triggers.size }))
         assertTrue(files.all { it.trailing.isEmpty() }, "no bytes after the last record in vanilla")
         assertEquals(10, files.flatMap { it.overworlds }.count { it.isAlias })
+    }
+
+    @Test
+    fun scriptFilesRoundTripAndTheirTextToo() = withProject { project ->
+        val table = ScriptEntry.load(project).ok()
+        table.assertNarcRoundTrips(project)
+        val scripts = table.records.filterIsInstance<ScriptEntry.Script>()
+        assertEquals(965, table.records.size)
+        assertEquals(492, scripts.size, "script files that parse and write back exactly")
+        val raw = table.records.filterIsInstance<ScriptEntry.Raw>()
+        assertEquals(468, raw.count { it.reason.startsWith("Level script file") }, "level scripts have no script header")
+        assertEquals(473, raw.size, "the rest: 3 empty files and 2 odd script files kept as raw bytes")
+        for (s in scripts) {
+            val back = ScriptText.parse(ScriptText.toText(s.file)).ok()
+            assertEquals(s.file, back, "text form of a script file must read back to the same file")
+        }
     }
 }

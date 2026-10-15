@@ -229,3 +229,22 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
   height, z, expected value, variable). No bytes follow the last record in vanilla; round trip exact over all files.
 - x/y are positions on the whole matrix, 32 tiles per cell (`x / 32` is the cell column). Warps may target header 4095 (0x0FFF),
   which is not a map header. Overworld types seen: 0 normal (2260), 1 trainer (403), 4 (3), 7 (1); none of type 3.
+
+## Script files (`a/0/1/2`)
+
+- 965 files. A script file starts with one u32 per script (offset relative to the end of that u32), then the u16 `0xFD13`;
+  then the code of every script and function, movement lists among it, zero padding. 492 files parse; 468 have no `0xFD13`
+  header and are **level scripts** (a separate format, **not decoded yet**; map headers index both kinds); 3 are empty; 2 stay raw
+  (one has the `0xFD13` marker twice, one has a movement list at an odd offset).
+- Command = u16 opcode + parameters whose sizes come from the command table (`scripts/gen-scrcmd.py`, from the MIT-licensed
+  scrcmd-database; 853 commands). Variable-length: `0x190-0x192` (u8 mode, u16 more if mode 2), `0x1D1` and `0x1E9`
+  (u16 mode picks 0-2 more u16). Jumps hold an i32 relative to the end of the parameter: `0x16 GoTo`, `0x1A Call` (param 0),
+  `0x17/0x18/0x19/0x1C/0x1D` (param 1, after a u8), `0x5E ApplyMovement` (param 1, after a u16, goes to a movement list).
+  `0x02 End`, `0x16 GoTo` and `0x1B Return` end a chunk of code.
+- A movement list is `(u16 id, u16 count)` pairs ending with id `0xFE` (4 bytes, count 0). Lists sit among the code and must
+  be halfword aligned (a zero byte pads before them). Some lists, and some code (an unconditional `GoTo` after another), are
+  referenced by nothing; the parser finds them by following jumps first, then walking the body in order, guessing that a
+  movement list starts where code cannot. Whatever it guesses must write back to the same bytes, or the file stays raw.
+- Because scripts share code and fall through into each other, the model is one flat list of items (labels, commands,
+  movement steps, padding) in file order, not a list of scripts. Text form: `script_N:` / `function_N:` / `action_N:` labels,
+  `Name arg, arg` lines, `.pad N`; see `ScriptText`.

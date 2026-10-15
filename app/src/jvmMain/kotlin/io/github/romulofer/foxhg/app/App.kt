@@ -205,6 +205,11 @@ private fun Content(model: AppModel, modifier: Modifier) {
             val editor = remember(project) { RecordEditorModel(project, EventFile.SPEC, labels::label, model::projectChanged) }
             EventEditor(editor, labels, modifier.padding(16.dp))
         }
+        selected == EditorKind.SCRIPTS -> {
+            val labels = remember(project) { ScriptLabels(project) }
+            val editor = remember(project) { ScriptEditorModel(project, labels, model::projectChanged) }
+            ScriptEditor(editor, labels, modifier.padding(16.dp))
+        }
         selected == EditorKind.TEXT -> {
             val editor = remember(project) { MessageEditorModel(project, onChanged = model::projectChanged) }
             MessageEditor(editor, modifier.padding(16.dp))

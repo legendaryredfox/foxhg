@@ -80,6 +80,7 @@ fun <T> RecordListDetail(
     modifier: Modifier = Modifier,
     flagged: (Int) -> Boolean = { false },
     rowDetail: (Int) -> String? = { null },
+    onSelect: (Int) -> Unit = { },
     detail: @Composable (T) -> Unit,
 ) {
     model.loadError?.let {
@@ -94,7 +95,7 @@ fun <T> RecordListDetail(
             onSearch = { model.search = it },
             placeholder = "Search…",
             label = model::label,
-            onSelect = model::select,
+            onSelect = { model.select(it); onSelect(it) },
             isEdited = model::isEdited,
             flagged = flagged,
             detail = rowDetail,

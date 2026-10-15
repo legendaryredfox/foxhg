@@ -15,6 +15,6 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     HEADERS("World", "Map headers", implemented = true),
     MATRICES("World", "Matrices", implemented = true),
     EVENTS("World", "Events", implemented = true),
-    SCRIPTS("Scripts and text", "Scripts"),
+    SCRIPTS("Scripts and text", "Scripts", implemented = true),
     TEXT("Scripts and text", "Text archives", implemented = true),
 }
