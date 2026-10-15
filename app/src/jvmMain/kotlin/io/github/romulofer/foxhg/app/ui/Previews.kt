@@ -3,9 +3,16 @@ package io.github.romulofer.foxhg.app.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
@@ -15,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toComposeImageBitmap
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -33,6 +41,10 @@ class IconBitmaps(private val icons: Icons) {
 
     fun pokemon(species: Int): ImageBitmap? = cache.getOrPut("p$species") { bitmap(icons.pokemon(species)) }
     fun item(item: Int): ImageBitmap? = cache.getOrPut("i$item") { bitmap(icons.item(item)) }
+    fun overworld(spriteEntry: Int, facing: Int): ImageBitmap? = cache.getOrPut("o$spriteEntry/$facing") { bitmap(icons.overworld(spriteEntry, facing)) }
+    fun front(species: Int, shiny: Boolean): ImageBitmap? = cache.getOrPut("f$species/$shiny") { bitmap(icons.pokemonFront(species, shiny)) }
+    fun back(species: Int, shiny: Boolean): ImageBitmap? = cache.getOrPut("k$species/$shiny") { bitmap(icons.pokemonBack(species, shiny)) }
+    fun trainerClass(trainerClass: Int): ImageBitmap? = cache.getOrPut("t$trainerClass") { bitmap(icons.trainerClass(trainerClass)) }
 }
 
 /** The pictures of the open project; null when nothing is open (previews are then left out). */
@@ -42,9 +54,9 @@ val LocalIcons: ProvidableCompositionLocal<IconBitmaps?> = compositionLocalOf { 
 fun ProvideIcons(icons: IconBitmaps?, content: @Composable () -> Unit) = CompositionLocalProvider(LocalIcons provides icons, content = content)
 
 @Composable
-private fun Picture(bitmap: ImageBitmap?, size: Dp) {
-    Canvas(Modifier.size(size)) {
-        if (bitmap != null) drawImage(bitmap, IntOffset.Zero, IntSize(bitmap.width, bitmap.height), IntOffset.Zero, IntSize(this.size.width.toInt(), this.size.height.toInt()), filterQuality = FilterQuality.None)
+private fun Picture(bitmap: ImageBitmap?, size: Dp, quality: FilterQuality = FilterQuality.None) {
+    Canvas(Modifier.size(size).testTag(if (bitmap != null) "preview:image" else "preview:none")) {
+        if (bitmap != null) drawImage(bitmap, IntOffset.Zero, IntSize(bitmap.width, bitmap.height), IntOffset.Zero, IntSize(this.size.width.toInt(), this.size.height.toInt()), filterQuality = quality)
     }
 }
 
@@ -62,6 +74,42 @@ fun ItemIcon(item: Int, size: Dp = 26.dp) {
     Picture(icons.item(item), size)
 }
 
+/** The front picture of a trainer class (80x80, scaled smoothly because it is drawn smaller than it is). */
+@Composable
+fun TrainerClassIcon(trainerClass: Int, size: Dp = 26.dp) {
+    val icons = LocalIcons.current ?: return
+    Picture(icons.trainerClass(trainerClass), size, FilterQuality.Medium)
+}
+
+/** The battle pictures of a species, front and back, with a switch to see the shiny colours. */
+@Composable
+fun PokemonPortraits(species: Int, size: Dp = 88.dp) {
+    val icons = LocalIcons.current ?: return
+    var shiny by remember(species) { mutableStateOf(false) }
+    val front = icons.front(species, shiny)
+    val back = icons.back(species, shiny)
+    if (front == null && back == null) return
+    Row(Modifier.testTag("portraits"), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Picture(front, size)
+        Picture(back, size)
+        ToggleChip("Shiny", shiny, { shiny = it })
+    }
+}
+
+/** The front picture of a species (80x80 scaled down), for rows that show one Pokémon. */
+@Composable
+fun PokemonFront(species: Int, size: Dp = 56.dp) {
+    val icons = LocalIcons.current ?: return
+    Picture(icons.front(species, false), size, FilterQuality.Medium)
+}
+
+/** The overworld sprite of an event's sprite entry, facing 0 up, 1 down, 2 left, 3 right. Nothing when the entry has no 2D sprite. */
+@Composable
+fun OverworldIcon(spriteEntry: Int, facing: Int = 1, size: Dp = 26.dp) {
+    val icons = LocalIcons.current ?: return
+    Picture(icons.overworld(spriteEntry, facing), size)
+}
+
 /** A square of [color] with a thin border, for things that have a colour instead of a picture (tile types). */
 @Composable
 fun Swatch(color: Color, size: Dp = 18.dp) {
@@ -72,6 +120,12 @@ fun Swatch(color: Color, size: Dp = 18.dp) {
 @Composable
 fun SpeciesPicker(label: String, selected: Int, species: List<String>, onSelect: (Int) -> Unit, modifier: Modifier = Modifier.then(Modifier)) {
     PickerField(label, selected, species, onSelect, modifier, leading = { PokemonIcon(it, 22.dp) })
+}
+
+/** A trainer class picker that shows each class' picture. */
+@Composable
+fun TrainerClassPicker(label: String, selected: Int, classes: List<String>, onSelect: (Int) -> Unit, modifier: Modifier = Modifier.then(Modifier)) {
+    PickerField(label, selected, classes, onSelect, modifier, leading = { TrainerClassIcon(it, 26.dp) })
 }
 
 /** An item picker that shows each item's icon. */

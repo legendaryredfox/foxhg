@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -23,6 +24,13 @@ import androidx.compose.ui.input.pointer.isPrimaryPressed
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.toComposeImageBitmap
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import io.github.romulofer.foxhg.app.ui.Chip
 import io.github.romulofer.foxhg.app.ui.EditorHeader
@@ -39,7 +47,10 @@ import io.github.romulofer.foxhg.core.data.event.OverworldEvent
 import io.github.romulofer.foxhg.core.data.event.Spawnable
 import io.github.romulofer.foxhg.core.data.event.Trigger
 import io.github.romulofer.foxhg.core.data.event.Warp
+import io.github.romulofer.foxhg.core.data.map.Building
+import io.github.romulofer.foxhg.core.graphics.Camera3d
 import io.github.romulofer.foxhg.core.data.map.Collision
+import io.github.romulofer.foxhg.core.data.map.FixedPos
 import io.github.romulofer.foxhg.core.data.map.MapFile
 import io.github.romulofer.foxhg.core.data.map.MapUsage
 import io.github.romulofer.foxhg.core.data.map.MapUsages
@@ -55,6 +66,7 @@ class MapEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
     private val names = project.names
     private val events = RecordEditorModel(project, EventFile.SPEC, { "%03d".format(it) }, onChanged)
     val eventLabels = EventLabels(project)
+    val pictures = MapPictures(project)
 
     val maps = RecordEditorModel(project, MapFile.SPEC, ::label, onChanged)
 
@@ -69,6 +81,56 @@ class MapEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
     var showBuildings by mutableStateOf(true)
     var usageIndex by mutableStateOf(0)
     var hover: Pair<Int, Int>? by mutableStateOf(null)
+
+    /** The building selected in the 3D view or the list, by its place in the map's building list. */
+    var selectedBuilding: Int? by mutableStateOf(null)
+
+    /** "Select" picks buildings by clicking them in the 3D view; "Move here" puts the selected one where you click. */
+    var moveBuildings by mutableStateOf(false)
+
+    /** What the 3D view draws over the scene. */
+    /** FOXHG_MAP_3D=collision starts with the collision overlay on (for screenshots). */
+    var show3dCollision by mutableStateOf(System.getenv("FOXHG_MAP_3D")?.contains("collision") == true)
+    var show3dEvents by mutableStateOf(true)
+    var show3dSurface by mutableStateOf(System.getenv("FOXHG_MAP_3D")?.contains("surface") == true)
+
+    /** Where the 3D view looks from; back to the default when another map is selected. */
+    var camera by mutableStateOf(Camera3d())
+
+    private fun buildings(): List<Building> = maps.selected?.buildings ?: emptyList()
+
+    private fun setBuildings(list: List<Building>) = maps.update { it.withBuildings(list) }
+
+    fun updateBuilding(index: Int, change: (Building) -> Building) {
+        val list = buildings()
+        if (index in list.indices) setBuildings(list.toMutableList().also { it[index] = change(list[index]) })
+    }
+
+    /** A new building of [modelId] at ([x], [z]) tiles from the map's centre, standing on the ground (y = 0); it is selected. */
+    fun addBuilding(modelId: Int, x: Double, z: Double) {
+        val list = buildings()
+        val template = list.lastOrNull()
+        val added = Building(
+            modelId.toLong(), FixedPos.of(x), FixedPos.of(template?.y?.value ?: 0.0), FixedPos.of(z),
+            0, 0, 0, 16, 16, 16, List(8) { 0 },
+        )
+        setBuildings(list + added)
+        selectedBuilding = list.size
+    }
+
+    fun duplicateBuilding(index: Int) {
+        val list = buildings()
+        val original = list.getOrNull(index) ?: return
+        setBuildings(list + original.copy(x = FixedPos.of(original.x.value + 1), z = FixedPos.of(original.z.value + 1)))
+        selectedBuilding = list.size
+    }
+
+    fun removeBuilding(index: Int) {
+        val list = buildings()
+        if (index !in list.indices) return
+        setBuildings(list.filterIndexed { i, _ -> i != index })
+        selectedBuilding = null
+    }
 
     fun usagesOf(map: Int): List<MapUsage> = usages.of(map)
 
@@ -153,6 +215,8 @@ class MapEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
 
     fun select(map: Int) {
         usageIndex = 0
+        selectedBuilding = null
+        camera = Camera3d()
         selectedEvent = null
         maps.select(map)
     }
@@ -174,9 +238,14 @@ class MapEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
 
 @Composable
 fun MapEditor(model: MapEditorModel, modifier: Modifier = Modifier) {
-    RecordListDetail(model.maps, modifier, rowDetail = { model.usagesOf(it).size.takeIf { n -> n > 1 }?.let { n -> "×$n" } }, onSelect = model::select) { map ->
+    RecordListDetail(
+        model.maps, modifier,
+        rowDetail = { model.usagesOf(it).size.takeIf { n -> n > 1 }?.let { n -> "×$n" } },
+        onSelect = model::select,
+        leading = { i -> AsyncMapPicture(i) { model.pictures.ofMap(i) } },
+    ) { map ->
         val index = model.maps.selectedIndex
-        EditorHeader(index.toString(), nameOf(model.maps.label(index)))
+        EditorHeader(index.toString(), nameOf(model.maps.label(index)), trailing = { AsyncMapPicture(index, 96.dp) { model.pictures.ofMap(index) } })
         val usages = model.usagesOf(index)
         val usage = model.usage(index)
         if (usages.size > 1) {
@@ -203,12 +272,12 @@ fun MapEditor(model: MapEditorModel, modifier: Modifier = Modifier) {
             MapLegend(model, map)
         }
         if (model.tool == MapTool.EVENTS) EventPanel(model, usage)
-        SectionCard("Buildings", subtitle = "3D models placed on the map; they are only listed here", actions = { Chip(map.buildings.size.toString()) }) {
-            if (map.buildings.isEmpty()) Text("None.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            map.buildings.forEachIndexed { i, b ->
-                Text("%02d  model %d at (%.2f, %.2f, %.2f)".format(i, b.modelId, b.x.value, b.y.value, b.z.value), style = io.github.romulofer.foxhg.app.ui.Fox.mono)
-            }
+        // Whether the map has a scene is found out in the background: it decodes the terrain model the first time.
+        val hasScene by androidx.compose.runtime.produceState(false, index) { value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { model.pictures.hasScene(index) } }
+        if (hasScene) {
+            SectionCard("3D view", subtitle = "The map as the game draws it, without animation. Drag turns, right drag pans, Ctrl + wheel zooms, a click selects a building") { Map3dView(model, index) }
         }
+        BuildingCard(model, map)
     }
 }
 
@@ -231,8 +300,9 @@ internal fun typeColor(type: Int): Color {
 private fun MapCanvas(model: MapEditorModel, map: MapFile, usage: MapUsage?) {
     val events = model.eventsOf(usage)
     val outline = MaterialTheme.colorScheme.outline
+    val icons = io.github.romulofer.foxhg.app.ui.LocalIcons.current
     Canvas(
-        Modifier.size((CELL * MapFile.SIZE).dp).testTag("map-canvas").pointerInput(model, map, usage) {
+        Modifier.size((CELL * MapFile.SIZE).dp).clipToBounds().testTag("map-canvas").pointerInput(model, map, usage) {
             awaitPointerEventScope {
                 while (true) {
                     val event = awaitPointerEvent()
@@ -284,7 +354,16 @@ private fun MapCanvas(model: MapEditorModel, map: MapFile, usage: MapUsage?) {
         }
         if (model.showEvents && events != null && usage != null) {
             fun cellOf(x: Int, y: Int): Offset? = if (x / MapFile.SIZE == usage.x && y / MapFile.SIZE == usage.y) Offset((x % MapFile.SIZE) * cell, (y % MapFile.SIZE) * cell) else null
-            for (o in events.overworlds) cellOf(o.x, o.y)?.let { drawCircle(if (o.type == 1) Color(0xFFE53E3E) else Color(0xFF2B6CB0), cell * 0.32f, it + Offset(cell / 2, cell / 2)) }
+            for (o in events.overworlds) cellOf(o.x, o.y)?.let {
+                val sprite = icons?.overworld(o.spriteEntry, o.orientation)
+                val tint = if (o.type == 1) Color(0xFFE53E3E) else Color(0xFF2B6CB0)
+                if (sprite == null) drawCircle(tint, cell * 0.32f, it + Offset(cell / 2, cell / 2))
+                else {
+                    // A 32x32 sprite spans two cells, with the feet on the cell's lower middle; a ring keeps trainers recognisable.
+                    drawCircle(tint, cell * 0.42f, it + Offset(cell / 2, cell / 2), style = Stroke(1.5f))
+                    drawImage(sprite, IntOffset.Zero, IntSize(sprite.width, sprite.height), IntOffset((it.x - cell / 2).toInt(), (it.y - cell * 1.1f).toInt()), IntSize((cell * 2).toInt(), (cell * 2).toInt()), filterQuality = FilterQuality.None)
+                }
+            }
             for (w in events.warps) cellOf(w.x, w.y)?.let { drawRect(Color(0xFF6B46C1), it + Offset(cell * 0.15f, cell * 0.15f), Size(cell * 0.7f, cell * 0.7f)) }
             for (t in events.triggers) cellOf(t.x, t.y)?.let { drawRect(Color(0xFF2F855A), it, Size(cell * t.width.coerceAtLeast(1), cell * t.height.coerceAtLeast(1)), style = Stroke(2f)) }
             for (s in events.spawnables) cellOf(s.x, s.y)?.let { drawCircle(Color(0xFF975A16), cell * 0.18f, it + Offset(cell / 2, cell / 2), style = Stroke(2f)) }

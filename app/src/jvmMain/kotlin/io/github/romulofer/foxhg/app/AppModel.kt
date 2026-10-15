@@ -9,6 +9,7 @@ import io.github.romulofer.foxhg.core.nds.FileRomSink
 import io.github.romulofer.foxhg.core.nds.FileRomSource
 import io.github.romulofer.foxhg.core.nds.NdsHeader
 import io.github.romulofer.foxhg.core.nds.readNdsHeader
+import io.github.romulofer.foxhg.core.project.EditTarget
 import io.github.romulofer.foxhg.core.project.ProjectStore
 import io.github.romulofer.foxhg.core.project.RomProject
 import java.nio.file.Files
@@ -23,6 +24,9 @@ sealed interface AppDialog {
 
     /** Work that is not saved anywhere would be lost by [then]; ask what to do first. */
     class UnsavedWork(val then: () -> Unit) : AppDialog
+
+    /** The settings window; [notice] says why it opened by itself. */
+    class Settings(val notice: String? = null) : AppDialog
 
     /** The ROM of the project in [projectDir] is gone; ask where it went. */
     class RelinkRom(val projectDir: Path, val message: String) : AppDialog
@@ -46,7 +50,49 @@ class AppModel(
     private val recents: Recents = Recents.default(),
     private val scheduler: Scheduler = swingScheduler,
     private val autosaveDelayMillis: Long = 700,
+    private val settingsStore: SettingsStore = SettingsStore.default(),
 ) {
+    var settings: AppSettings by mutableStateOf(settingsStore.load())
+        private set
+
+    /** A job running in the background, with how far along it is (0..1, null when it cannot say). The window shows it and blocks editing meanwhile. */
+    class Task(val title: String, val fraction: Double?)
+
+    var task: Task? by mutableStateOf(null)
+        private set
+    private var worker: Thread? = null
+
+    /**
+     * Runs [work] on a background thread under the progress window. [work] reports its progress with the function it is
+     * given. Does nothing while another task runs; an exception in [work] is shown as an error.
+     */
+    fun startTask(title: String, work: (report: (Double) -> Unit) -> Unit) {
+        if (task != null) return
+        task = Task(title, 0.0)
+        var last = -1.0
+        val thread = Thread({
+            try {
+                work { f -> if (f - last >= 0.005 || f >= 1.0) { last = f; task = Task(title, f.coerceIn(0.0, 1.0)) } }
+            } catch (e: Throwable) {
+                fail("$title failed: ${e.message ?: e::class.simpleName}")
+            } finally {
+                task = null
+            }
+        }, "foxhg-task")
+        thread.isDaemon = true
+        worker = thread
+        thread.start()
+    }
+
+    /** Waits for the running task (tests, and closing the window). */
+    fun awaitTask(timeoutMillis: Long = 120_000) { worker?.join(timeoutMillis) }
+
+    /** Keeps [new] and writes it to the settings file; a file that cannot be written is reported but the settings still apply this session. */
+    fun updateSettings(new: AppSettings) {
+        settings = new
+        if (!settingsStore.save(new)) fail("Could not save the settings file")
+    }
+
     var recent: List<RecentEntry> by mutableStateOf(recents.load())
         private set
     var romPath: Path? by mutableStateOf(null)
@@ -62,12 +108,19 @@ class AppModel(
     var status: String? by mutableStateOf(null)
     var selected: EditorKind? by mutableStateOf(null)
     var dialog: AppDialog? by mutableStateOf(null)
-    var autosave: Boolean by mutableStateOf(true)
+    var autosave: Boolean by mutableStateOf(settings.autosave)
 
     /** Bumped whenever an editor writes to the project, so views of [RomProject.isDirty] refresh. */
     var revision: Int by mutableIntStateOf(0)
         private set
     private var savedRevision: Int by mutableIntStateOf(0)
+
+    /** Bumped by [undo] and [redo]: the editors rebuild their state from the project when it changes. */
+    var undoEpoch: Int by mutableIntStateOf(0)
+        private set
+
+    /** The record each editor had selected, so rebuilding an editor (undo, switching screens) keeps the place. */
+    val selectionMemory = HashMap<EditorKind, Int>()
 
     private var source: FileRomSource? = null
     private var pendingSave: AutoCloseable? = null
@@ -158,7 +211,13 @@ class AppModel(
         return openProject(directory)
     }
 
+    /** Writes the edits and the undo history of the open project when either is not on disk yet. */
+    private fun flushProject() {
+        if (projectDir != null && (hasUnsavedWork || project?.historyDirty == true)) saveProject()
+    }
+
     private fun attach(newProject: RomProject, newSource: FileRomSource, rom: Path, projectDir: Path?) {
+        flushProject()
         cancelPendingSave()
         source?.close()
         source = newSource
@@ -168,8 +227,36 @@ class AppModel(
         this.projectDir = projectDir
         error = null
         selected = null
+        selectionMemory.clear()
         revision++
         savedRevision = revision
+    }
+
+    // --- undo ------------------------------------------------------------------------------------------------------
+
+    val canUndo: Boolean get() = revision >= 0 && project?.canUndo == true
+    val canRedo: Boolean get() = revision >= 0 && project?.canRedo == true
+
+    /** Name of the next undo step for the menu, e.g. "Undo a/0/1/7". */
+    val undoLabel: String get() = if (revision >= 0) project?.undoTargets?.let(::describe)?.let { "Undo $it" } ?: "Undo" else "Undo"
+    val redoLabel: String get() = if (revision >= 0) project?.redoTargets?.let(::describe)?.let { "Redo $it" } ?: "Redo" else "Redo"
+
+    private fun describe(targets: List<EditTarget>): String? = when {
+        targets.isEmpty() -> null
+        targets.size == 1 -> targets[0].label
+        else -> "${targets.size} files"
+    }
+
+    fun undo() = step("Undid", project?.undo())
+
+    fun redo() = step("Redid", project?.redo())
+
+    private fun step(verb: String, targets: List<EditTarget>?) {
+        if (targets == null) return
+        undoEpoch++
+        projectChanged()
+        error = null
+        status = "$verb change to ${describe(targets)}"
     }
 
     // --- saving ----------------------------------------------------------------------------------------------------
@@ -179,16 +266,19 @@ class AppModel(
         revision++
         if (autosave && projectDir != null) {
             cancelPendingSave()
-            pendingSave = scheduler(autosaveDelayMillis) { pendingSave = null; saveProject() }
+            pendingSave = scheduler(autosaveDelayMillis) { pendingSave = null; saveProject(withHistory = false) }
         }
     }
 
-    /** Writes the open project's edits into its folder. */
-    fun saveProject(): Boolean {
+    /**
+     * Writes the open project's edits into its folder. The undo history can be large, so autosave leaves it out
+     * ([withHistory] false) and it is written by explicit saves, when the project closes or another one opens.
+     */
+    fun saveProject(withHistory: Boolean = true): Boolean {
         val dir = projectDir ?: return false
         val p = project ?: return false
         cancelPendingSave()
-        return when (val r = ProjectStore.save(dir, p)) {
+        return when (val r = ProjectStore.save(dir, p, withHistory)) {
             is FoxResult.Ok -> {
                 savedRevision = revision
                 error = null
@@ -241,27 +331,76 @@ class AppModel(
 
     // --- building --------------------------------------------------------------------------------------------------
 
+    /** Where Run writes the ROM it starts: a file in the temporary folder, named after the project or ROM. */
+    internal fun runTarget(): Path {
+        val name = (projectName ?: romPath?.fileName?.toString()?.removeSuffix(".nds") ?: "rom").filter { it.isLetterOrDigit() || it in "-_." }
+        return Path.of(System.getProperty("java.io.tmpdir"), "foxhg-run", "$name.nds")
+    }
+
+    /** Builds the ROM and starts it in the emulator set in the settings; opens the settings first when none is set. */
+    fun run() {
+        if (project == null) return
+        val command = settings.emulatorCommand.trim()
+        if (command.isEmpty()) {
+            dialog = AppDialog.Settings("Set the emulator command to use Run. Use {rom} where the ROM goes.")
+            return
+        }
+        val target = runTarget()
+        try {
+            Files.createDirectories(target.parent)
+        } catch (e: java.io.IOException) {
+            fail("Cannot write to ${target.parent}: ${e.message}")
+            return
+        }
+        startTask("Building the ROM to run") { report ->
+            build(target, keepBackup = false, report = report)
+            if (error != null) return@startTask
+            Emulator.launcher(Emulator.command(command, target))?.let { fail("Cannot start the emulator: $it"); return@startTask }
+            status = "Started the emulator with $target"
+        }
+    }
+
+    /** [build] in the background, with the progress window. */
+    fun buildInBackground(target: Path) = startTask("Building ${target.fileName}") { report -> build(target, report = report) }
+
     /** Writes the ROM with every edit applied to [target]. The opened ROM is not modified. */
-    fun build(target: Path) {
+    fun build(target: Path, keepBackup: Boolean = true, report: (Double) -> Unit = {}) {
         val project = project ?: return
         if (target.toAbsolutePath() == romPath?.toAbsolutePath()) {
             fail("Choose a different file than the ROM you opened")
             return
         }
+        // A file that is there already is not lost: it is kept next to the new one as <name>.bak (the one before that goes).
+        val backup = target.resolveSibling(target.fileName.toString() + ".bak")
+        var kept = false
+        if (keepBackup && Files.exists(target)) {
+            try {
+                Files.move(target, backup, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                kept = true
+            } catch (e: java.io.IOException) {
+                fail("Cannot keep a backup of $target: ${e.message}")
+                return
+            }
+        }
         FileRomSink(target).use { sink ->
-            when (val result = project.build(sink)) {
+            when (val result = project.build(sink, report)) {
                 is FoxResult.Ok -> {
                     error = null
-                    status = "Built $target"
+                    status = if (kept) "Built $target (the previous file is ${backup.fileName})" else "Built $target"
                 }
-                is FoxResult.Err -> fail(result.message)
+                is FoxResult.Err -> {
+                    // A failed build must not cost the user the file that was there.
+                    if (kept) runCatching { Files.move(backup, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING) }
+                    fail(result.message)
+                }
             }
         }
     }
 
     /** Flushes a pending autosave and releases the ROM file. */
     fun close() {
-        if (projectDir != null && hasUnsavedWork) saveProject()
+        awaitTask()
+        flushProject()
         cancelPendingSave()
         source?.close()
         source = null

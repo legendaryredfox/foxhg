@@ -14,6 +14,7 @@ import io.github.romulofer.foxhg.core.project.RomProject
 /** State of the Map headers editor. Edits go into the project's ARM9 (where the header table lives). */
 class MapHeaderEditorModel(private val project: RomProject, private val onChanged: () -> Unit = {}) {
     val names: GameNames? = project.names
+    val pictures = MapPictures(project)
     private var headers: List<MapHeader> = emptyList()
     private val original: List<MapHeader> = MapHeaderTable.original(project)
 

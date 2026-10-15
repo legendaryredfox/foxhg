@@ -24,6 +24,7 @@ import io.github.romulofer.foxhg.app.ui.Chip
 import io.github.romulofer.foxhg.app.ui.EditorHeader
 import io.github.romulofer.foxhg.app.ui.FieldFlow
 import io.github.romulofer.foxhg.app.ui.NumberField
+import io.github.romulofer.foxhg.app.ui.OverworldIcon
 import io.github.romulofer.foxhg.app.ui.PickerField
 import io.github.romulofer.foxhg.app.ui.SectionCard
 import io.github.romulofer.foxhg.core.FoxResult
@@ -72,6 +73,7 @@ fun EventEditor(model: RecordEditorModel<EventFile>, labels: EventLabels, modifi
             EventSection("Overworld objects", "NPCs, trainers and item balls", file.overworlds, { model.update { f -> f.copy(overworlds = it) } },
                 summary = { "${if (it.isAlias) "Alias of" else "Object"} ${it.id}, sprite ${it.spriteEntry}, script ${it.script}" },
                 create = { file.overworlds.lastOrNull()?.copy(id = (file.overworlds.maxOfOrNull { o -> o.id } ?: 0) + 1) ?: OverworldEvent(1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0) },
+                leading = { OverworldIcon(it.spriteEntry, it.orientation, 32.dp) },
             ) { o, set -> OverworldForm(o, set) }
             EventSection("Warps", "Doors and exits to another map header", file.warps, { model.update { f -> f.copy(warps = it) } },
                 summary = { "To header ${it.header} (${labels.mapName(it.header)}), anchor ${it.anchor}" },
@@ -98,6 +100,7 @@ private fun <T> EventSection(
     onChange: (List<T>) -> Unit,
     summary: (T) -> String,
     create: () -> T,
+    leading: (@Composable (T) -> Unit)? = null,
     form: @Composable (T, (T) -> Unit) -> Unit,
 ) {
     var open by remember { mutableStateOf<Int?>(null) }
@@ -107,6 +110,7 @@ private fun <T> EventSection(
             Row(Modifier.fillMaxWidth().clickable { open = if (open == i) null else i }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(if (open == i) "▾" else "▸", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("%02d".format(i), style = io.github.romulofer.foxhg.app.ui.Fox.mono, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                leading?.invoke(item)
                 Text(summary(item), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                 TextButton(onClick = { onChange(items + item); open = items.size }) { Text("Duplicate") }
                 TextButton(onClick = { onChange(items.filterIndexed { k, _ -> k != i }); open = null }) { Text("Remove") }
@@ -127,6 +131,7 @@ internal fun PositionFields(x: Int, y: Int, onX: (Int) -> Unit, onY: (Int) -> Un
 @Composable
 internal fun OverworldForm(o: OverworldEvent, set: (OverworldEvent) -> Unit) = FieldFlow {
     NumberField("Object id", o.id, 0..65535, { set(o.copy(id = it)) })
+    OverworldIcon(o.spriteEntry, o.orientation, 40.dp)
     NumberField("Sprite entry", o.spriteEntry, 0..65535, { set(o.copy(spriteEntry = it)) })
     NumberField("Script (65535 = alias)", o.script, 0..65535, { set(o.copy(script = it)) }, Modifier.width(170.dp))
     NumberField("Type", o.type, 0..65535, { set(o.copy(type = it)) })

@@ -118,6 +118,37 @@ fun NumberField(
     }
 }
 
+/** A compact decimal field for coordinates. Typing is free; the value is applied when it parses and lies in [range]. */
+@Composable
+fun DecimalField(
+    label: String,
+    value: Double,
+    range: ClosedFloatingPointRange<Double>,
+    onChange: (Double) -> Unit,
+    modifier: Modifier = Modifier.width(96.dp),
+    tag: String = label,
+) {
+    var text by remember(value) { mutableStateOf(java.math.BigDecimal(value).setScale(3, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()) }
+    val parsed = text.toDoubleOrNull()
+    val invalid = parsed == null || parsed !in range
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        if (label.isNotEmpty() || invalid) FieldLabel(label, invalid, "${range.start}–${range.endInclusive}")
+        BasicTextField(
+            value = text,
+            onValueChange = { new ->
+                text = new.filter { it.isDigit() || it == '.' || it == '-' }.take(10)
+                text.toDoubleOrNull()?.takeIf { it in range }?.let(onChange)
+            },
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            decorationBox = { inner -> Box(fieldModifier(invalid).padding(horizontal = 10.dp), contentAlignment = Alignment.CenterStart) { inner() } },
+            modifier = Modifier.fillMaxWidth().testTag("decimal:$tag"),
+        )
+    }
+}
+
 /** Pick an id by name from [options] (index = id) in a searchable popup. Ids beyond the list show as `#id`. */
 @Composable
 fun PickerField(
@@ -214,7 +245,7 @@ private fun PickerPopup(selected: Int, options: List<String>, onSelect: (Int) ->
 
 /** Compact search input with a placeholder and a clear button. */
 @Composable
-fun SearchBox(value: String, onChange: (String) -> Unit, placeholder: String, modifier: Modifier = Modifier) {
+fun SearchBox(value: String, onChange: (String) -> Unit, placeholder: String, modifier: Modifier = Modifier, focusRequester: FocusRequester? = null) {
     BasicTextField(
         value = value,
         onValueChange = onChange,
@@ -232,7 +263,7 @@ fun SearchBox(value: String, onChange: (String) -> Unit, placeholder: String, mo
                 }
             }
         },
-        modifier = modifier.testTag("search:$placeholder"),
+        modifier = (if (focusRequester != null) modifier.focusRequester(focusRequester) else modifier).testTag("search:$placeholder"),
     )
 }
 

@@ -20,6 +20,7 @@ class RecordEditorModel<T>(
     private val label: (Int) -> String,
     private val onChanged: () -> Unit = {},
     firstIndex: Int = 0,
+    private val onSelected: (Int) -> Unit = {},
 ) {
     val names: GameNames? = project.names
     private var table: NarcRecords<T>? = null
@@ -57,7 +58,10 @@ class RecordEditorModel<T>(
     }
 
     fun select(index: Int) {
-        if (index in 0 until recordCount) selectedIndex = index
+        if (index in 0 until recordCount) {
+            selectedIndex = index
+            onSelected(index)
+        }
     }
 
     fun update(change: (T) -> T) {

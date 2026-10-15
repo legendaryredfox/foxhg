@@ -3,6 +3,9 @@ package io.github.romulofer.foxhg.core.data
 import io.github.romulofer.foxhg.core.FoxResult
 import io.github.romulofer.foxhg.core.data.eggmove.EggMoves
 import io.github.romulofer.foxhg.core.data.event.EventFile
+import io.github.romulofer.foxhg.core.data.event.OverworldSprites
+import io.github.romulofer.foxhg.core.game.HgssLayout
+import io.github.romulofer.foxhg.core.narc.Narc
 import io.github.romulofer.foxhg.core.data.evolution.EvolutionData
 import io.github.romulofer.foxhg.core.data.evolution.EvolutionMethod
 import io.github.romulofer.foxhg.core.data.evolution.TradeEvolutions
@@ -10,6 +13,10 @@ import io.github.romulofer.foxhg.core.data.learnset.Learnset
 import io.github.romulofer.foxhg.core.data.learnset.LearnsetEntry
 import io.github.romulofer.foxhg.core.data.item.ItemData
 import io.github.romulofer.foxhg.core.graphics.Icons
+import io.github.romulofer.foxhg.core.data.map.FixedPos
+import io.github.romulofer.foxhg.core.graphics.Camera3d
+import io.github.romulofer.foxhg.core.graphics.Render3d
+import io.github.romulofer.foxhg.core.graphics.MapScenes
 import io.github.romulofer.foxhg.core.sound.Sounds
 import io.github.romulofer.foxhg.core.data.map.Collision
 import io.github.romulofer.foxhg.core.data.map.MapFile
@@ -228,6 +235,8 @@ class RealRomRecordsTest {
         val maps = MapFile.load(project).ok().records
         val usages = MapUsages(project)
         val events = EventFile.load(project).ok().records
+        val shown = usages.headers.indices.count { h -> usages.mapOf(h)?.let { m -> usages.of(m).any { it.header == h } } == true }
+        assertTrue(shown in 300..400, "most map headers show a map (355 in this ROM), $shown do")
         var npcs = 0
         var walkable = 0
         maps.indices.forEach { map ->
@@ -259,6 +268,176 @@ class RealRomRecordsTest {
         fun count(rows: IntRange, test: (Int) -> Boolean) = rows.sumOf { y -> (0 until 32).count { x -> pokeBall.argb[y * 32 + x].let { it ushr 24 != 0 && test(it) } } }
         assertTrue(count(4..14) { (it shr 16 and 0xFF) > (it and 0xFF) + 60 } > 20, "the upper half has red")
         assertTrue(count(17..28) { (it and 0xFF) > 150 && (it shr 16 and 0xFF) > 150 && (it shr 8 and 0xFF) > 150 } > 20, "the lower half has white")
+    }
+
+    @Test
+    fun overworldSpritesDecodeFromTheSpriteTable() = withProject { project ->
+        val table = (OverworldSprites.load(project) as FoxResult.Ok).value
+        assertEquals(901, table.entries.size)
+        assertEquals(0, table.entries[1]!!.spriteFile)
+        val icons = Icons(project)
+        val boy = icons.overworld(1, 1)!!
+        assertEquals(listOf(32, 32), listOf(boy.width, boy.height))
+        assertTrue(boy.opaqueColors >= 5, "a character has several colours, got ${boy.opaqueColors}")
+        assertTrue(boy != icons.overworld(1, 0)!! && boy != icons.overworld(1, 2)!!, "facings differ")
+        assertEquals(null, icons.overworld(60000, 1))
+        val missing = table.entries.keys.filter { icons.overworld(it, 1) == null }
+        assertTrue(missing.size < 20, "nearly every sprite entry decodes, ${missing.size} do not: ${missing.take(10)}")
+        // Every sprite file the table names exists.
+        val files = (Narc.parse(project.read(HgssLayout.OVERWORLD_SPRITES)!!) as FoxResult.Ok).value.files.size
+        assertTrue(table.entries.values.all { it.spriteFile < files })
+    }
+
+    @Test
+    fun mapScenesRenderTheTerrainAndBuildings() = withProject { project ->
+        val scenes = MapScenes(project)
+        val usages = MapUsages(project)
+        val maps = MapFile.load(project).ok().records
+        val used = maps.indices.filter { usages.of(it).isNotEmpty() }
+        val pictures = used.associateWith { scenes.render(it, 4) }
+        val missing = pictures.filterValues { it == null }.keys
+        assertTrue(missing.size < used.size / 20, "nearly every used map renders, ${missing.size} of ${used.size} do not: ${missing.take(10)}")
+        val covered = pictures.values.filterNotNull().map { img -> img.argb.count { it ushr 24 != 0 } * 100 / img.argb.size }
+        assertTrue(covered.count { it >= 50 } > covered.size / 2, "most maps are mostly covered by terrain: ${covered.sorted().take(5)}...")
+        val first = pictures[0]!!
+        assertEquals(listOf(128, 128), listOf(first.width, first.height))
+        assertTrue(first.opaqueColors > 30, "New Bark Town has many colours, got ${first.opaqueColors}")
+        System.getenv("FOXHG_DUMP_DIR")?.let { dir ->
+            for (m in listOf(0, 1, 4, 100, 200, 300)) {
+                val img = scenes.render(m, 8) ?: continue
+                val out = java.awt.image.BufferedImage(img.width, img.height, java.awt.image.BufferedImage.TYPE_INT_ARGB)
+                out.setRGB(0, 0, img.width, img.height, img.argb, 0, img.width)
+                javax.imageio.ImageIO.write(out, "png", java.io.File(dir, "map$m.png"))
+            }
+        }
+    }
+
+    @Test
+    fun aMapRendersInPerspectiveFromAnyCamera() = withProject { project ->
+        val scenes = MapScenes(project)
+        val meshes = scenes.scene(0)!!
+        assertTrue(meshes.sumOf { it.vertices.size / 15 } > 1000, "New Bark Town has many triangles")
+        val top = scenes.render3d(0, Camera3d(pitch = 1.5, distance = 30.0), 480, 360)!!.image
+        val low = scenes.render3d(0, Camera3d(yaw = 0.8, pitch = 0.35, distance = 22.0), 480, 360)!!.image
+        assertEquals(listOf(480, 360), listOf(top.width, top.height))
+        fun covered(img: io.github.romulofer.foxhg.core.graphics.RgbaImage) = img.argb.count { it ushr 24 != 0 } * 100 / img.argb.size
+        assertTrue(covered(top) > 40, "seen from above the map fills much of the picture, ${covered(top)}%")
+        assertTrue(low.opaqueColors > 30 && top != low)
+        assertTrue(scenes.render3d(0, Camera3d(distance = 2.0), 64, 48) != null, "a camera inside the scene does not crash")
+        System.getenv("FOXHG_DUMP_DIR")?.let { dir ->
+            val views = listOf(
+                Camera3d(), Camera3d(yaw = 0.8, pitch = 0.4, distance = 26.0), Camera3d(yaw = 2.5, pitch = 0.25, distance = 20.0),
+            )
+            val sheet = java.awt.image.BufferedImage(views.size * 480, 360, java.awt.image.BufferedImage.TYPE_INT_ARGB)
+            views.forEachIndexed { k, cam ->
+                val img = scenes.render3d(0, cam, 480, 360)!!.image
+                for (j in 0 until 360) for (i in 0 until 480) sheet.setRGB(k * 480 + i, j, if (img.argb[j * 480 + i] ushr 24 != 0) img.argb[j * 480 + i] else 0xFF87CEEB.toInt())
+            }
+            javax.imageio.ImageIO.write(sheet, "png", java.io.File(dir, "view3d.png"))
+        }
+    }
+
+    @Test
+    fun clickingTheSceneFindsTheBuildingAndThePointUnderIt() = withProject { project ->
+        val scenes = MapScenes(project)
+        val map = MapFile.load(project).ok().records[0]
+        // Every building position round-trips through the fixed point numbers.
+        for (m in MapFile.load(project).ok().records) for (b in m.buildings) {
+            assertEquals(b.x, FixedPos.of(b.x.value)); assertEquals(b.y, FixedPos.of(b.y.value)); assertEquals(b.z, FixedPos.of(b.z.value))
+        }
+        val index = map.buildings.indexOfFirst { it.modelId == 22L } // a house
+        assertTrue(index >= 0)
+        val house = map.buildings[index]
+        val camera = Camera3d(pitch = 1.5, distance = 30.0, targetX = house.x.value, targetZ = house.z.value)
+        val picture = scenes.render3d(0, camera, 400, 300, highlight = index)!!
+        assertEquals(index, picture.tagAt(200, 150), "the house stands in the middle of the picture")
+        val point = picture.pointAt(200, 150)!!
+        assertTrue(kotlin.math.abs(point[0] - house.x.value) < 4 && kotlin.math.abs(point[2] - house.z.value) < 4, "the point under the pointer is on the house: ${point.toList()}")
+        assertTrue(picture.tagAt(5, 5) == -1 || picture.tagAt(5, 5) == Render3d.NOTHING || picture.tagAt(5, 5) >= 0)
+        assertEquals(null, picture.pointAt(-1, 0))
+        val moved = scenes.render3d(0, camera, 400, 300, map.buildings.filterIndexed { i, _ -> i != index })!!
+        assertTrue(moved.tagAt(200, 150) != index, "a removed building is gone")
+        assertTrue(scenes.renderBuilding(22, 96, 96)!!.opaqueColors > 8, "a building model renders alone")
+        assertEquals(null, scenes.renderBuilding(100000, 96, 96))
+    }
+
+    @Test
+    fun theWalkingSurfaceOfEveryMapRoundTripsAndFlatPlatesMatchTheTerrain() = withProject { project ->
+        val maps = MapFile.load(project).ok().records
+        var plates = 0
+        maps.forEachIndexed { i, m ->
+            val bdhc = (m.walkingSurface() as? FoxResult.Ok)?.value ?: error("map $i has no readable BDHC")
+            assertContentEquals(m.bdhc, bdhc.toBytes(), "map $i writes back exactly")
+            plates += bdhc.plates.size
+            assertTrue(bdhc.plates.all { it.corner1 < bdhc.points.size && it.corner2 < bdhc.points.size && it.slope < bdhc.slopes.size && it.height < bdhc.heights.size }, "map $i: plates point at real data")
+            assertTrue(bdhc.stripes.all { it.first + it.count <= bdhc.plateIndices.size }, "map $i: stripes stay inside the index list")
+        }
+        assertTrue(plates > 5000, "many plates, $plates")
+
+        // On the surface of New Bark Town the flat plates say where the ground is; the terrain model agrees.
+        val bdhc = (maps[0].walkingSurface() as FoxResult.Ok).value
+        val ground = MapScenes(project).heightGrid(0)
+        var agree = 0
+        var tested = 0
+        for (plate in bdhc.plates) {
+            val h = bdhc.flatHeight(plate) ?: continue
+            val r = bdhc.rectangle(plate)!!
+            val tx = ((r[0] + r[2]) / 2 + 16).toInt().coerceIn(0, 31)
+            val tz = ((r[1] + r[3]) / 2 + 16).toInt().coerceIn(0, 31)
+            tested++
+            if (kotlin.math.abs(ground[tz * 32 + tx] - h) < 0.3) agree++
+        }
+        assertTrue(tested > 5 && agree * 100 / tested >= 80, "flat plates sit on the terrain: $agree of $tested")
+    }
+
+    @Test
+    fun battleSpritesAndFormIconsDecode() = withProject { project ->
+        val icons = Icons(project)
+        for (record in 1..507) {
+            val front = icons.pokemonFront(record)
+            val back = icons.pokemonBack(record)
+            assertTrue(front != null && back != null, "record $record has battle pictures")
+            assertEquals(listOf(80, 80), listOf(front!!.width, front.height))
+            assertTrue(front.opaqueColors >= 3 && back!!.opaqueColors >= 3, "record $record: ${front.opaqueColors} and ${back.opaqueColors} colours")
+        }
+        assertTrue(icons.pokemonFront(25) != icons.pokemonFront(25, shiny = true), "a shiny Pikachu has other colours")
+        assertTrue(icons.pokemonFront(25) != icons.pokemonBack(25))
+        assertTrue(icons.pokemonFront(386) != icons.pokemonFront(496), "Deoxys attack differs from normal")
+        assertEquals(null, icons.pokemonFront(508))
+        for (record in 494..507) {
+            val icon = icons.pokemon(record)
+            assertTrue(icon != null && icon.opaqueColors >= 3, "record $record has an icon")
+        }
+        assertTrue(icons.pokemon(496) != icons.pokemon(386), "Deoxys attack has its own icon")
+        assertTrue(icons.pokemonIcon(201, form = 5) != icons.pokemonIcon(201, form = 0), "Unown letters differ")
+        assertEquals(null, icons.pokemon(508))
+        System.getenv("FOXHG_DUMP_DIR")?.let { dir ->
+            val records = (494..507).toList()
+            val sheet = java.awt.image.BufferedImage(records.size * 80, 80 * 3 + 32 + 80, java.awt.image.BufferedImage.TYPE_INT_ARGB)
+            fun draw(img: io.github.romulofer.foxhg.core.graphics.RgbaImage?, x: Int, y: Int) {
+                if (img != null) for (j in 0 until img.height) for (i in 0 until img.width) if (img.argb[j * img.width + i] ushr 24 != 0) sheet.setRGB(x + i, y + j, img.argb[j * img.width + i])
+            }
+            records.forEachIndexed { k, r ->
+                draw(icons.pokemon(r), k * 80, 0)
+                draw(icons.pokemonFront(r), k * 80, 32)
+                draw(icons.pokemonBack(r), k * 80, 112)
+                draw(icons.pokemonFront(r, shiny = true), k * 80, 192)
+            }
+            javax.imageio.ImageIO.write(sheet, "png", java.io.File(dir, "forms.png"))
+        }
+    }
+
+    @Test
+    fun trainerClassPicturesDecodeFromTheirCells() = withProject { project ->
+        val icons = Icons(project)
+        val classes = (0 until 129).map { icons.trainerClass(it) }
+        assertTrue(classes.all { it != null }, "every class has a front picture")
+        val first = classes[0]!!
+        assertEquals(listOf(80, 80), listOf(first.width, first.height))
+        assertTrue(first.opaqueColors >= 8, "a trainer has many colours, got ${first.opaqueColors}")
+        assertTrue(first != classes[1]!!, "classes differ")
+        assertTrue(classes.all { it!!.opaqueColors >= 4 })
+        assertEquals(null, icons.trainerClass(1000))
     }
 
     @Test

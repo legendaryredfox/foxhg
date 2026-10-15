@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 
 class AppModelTest {
     private fun withFile(bytes: ByteArray, block: (Path) -> Unit) {
-        val file = Files.createTempFile("foxhg", ".nds")
+        val file = tempFile("foxhg", ".nds")
         try {
             Files.write(file, bytes)
             block(file)

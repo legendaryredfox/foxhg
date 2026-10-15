@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.romulofer.foxhg.app.ui.PokemonPortraits
 import io.github.romulofer.foxhg.app.ui.ItemPicker
 import io.github.romulofer.foxhg.app.ui.CryButton
 import io.github.romulofer.foxhg.app.ui.EditorHeader
@@ -56,7 +57,7 @@ private fun Form(model: PersonalEditorModel, p: PersonalData) {
     val types = names?.types ?: emptyList()
     val abilities = names?.abilities ?: emptyList()
     val items = names?.items ?: emptyList()
-    EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = { CryButton(model.selectedIndex) })
+    EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = { CryButton(model.selectedIndex); PokemonPortraits(model.selectedIndex) })
 
     SectionCard("Base stats", subtitle = "Total ${p.baseStatTotal}") {
         StatRow("HP", p.baseHp) { v -> model.update { it.copy(baseHp = v) } }

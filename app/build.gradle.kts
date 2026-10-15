@@ -29,6 +29,8 @@ compose.desktop {
     application {
         mainClass = "io.github.romulofer.foxhg.app.MainKt"
         jvmArgs += "--enable-native-access=ALL-UNNAMED"
+        // extra JVM flags for `:app:run`, e.g. scripts/live-click-test.sh points user.home at a temporary folder
+        System.getenv("FOXHG_JVM_ARGS")?.takeIf { it.isNotBlank() }?.let { jvmArgs += it.split(" ") }
 
         nativeDistributions {
             targetFormats(TargetFormat.Deb, TargetFormat.Msi, TargetFormat.Dmg)
@@ -36,6 +38,11 @@ compose.desktop {
             packageVersion = "0.1.0"
             description = "Nintendo DS Pokémon ROM editor."
             modules("java.prefs")
+            linux {
+                menuGroup = "Development"
+                appCategory = "Development"
+                shortcut = true
+            }
         }
     }
 }

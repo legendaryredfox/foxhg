@@ -5,7 +5,6 @@ import io.github.romulofer.foxhg.core.data.personal.PersonalTable
 import io.github.romulofer.foxhg.core.nds.FileRomSource
 import io.github.romulofer.foxhg.core.project.RomProject
 import java.nio.file.Files
-import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -14,16 +13,11 @@ import kotlin.test.assertTrue
 
 /** The whole path: open the real ROM, edit through the view model, build, reopen and read the change back. */
 class PersonalEditorEndToEndTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
-
     @Test
     fun editBuildAndReadBack() {
-        if (!Files.exists(romPath)) {
-            println("SKIPPED: no ROM at ${romPath.toAbsolutePath()}")
-            return
-        }
+        if (!romAvailable()) return
         val app = testModel()
-        val built = Files.createTempFile("foxhg-e2e", ".nds")
+        val built = tempFile("foxhg-e2e", ".nds")
         try {
             app.openRom(romPath)
             assertNull(app.error)

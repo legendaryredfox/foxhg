@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.romulofer.foxhg.app.ui.PokemonPortraits
 import io.github.romulofer.foxhg.app.ui.Chip
 import io.github.romulofer.foxhg.app.ui.EditorHeader
 import io.github.romulofer.foxhg.app.ui.PokemonIcon
@@ -53,7 +54,7 @@ fun EggMoveEditor(model: RecordEditorModel<EggMoves>, modifier: Modifier = Modif
         DetailPane {
             val moves = model.names?.moves ?: emptyList()
             val list = eggs.movesOf(species)
-            EditorHeader(species.toString(), nameOf(label(species)))
+            EditorHeader(species.toString(), nameOf(label(species)), trailing = { PokemonPortraits(species) })
             SectionCard(
                 "Egg moves",
                 subtitle = if (eggs.overLimit) "Over the limit: the game only finds species whose header is within the first ${EggMoves.SCAN_LIMIT} words" else "Only moves the parents can pass down appear here",

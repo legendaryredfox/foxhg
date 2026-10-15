@@ -13,6 +13,15 @@ import io.github.romulofer.foxhg.core.u32
 /** Position on a map: a 16.16 fixed point number stored as `u16 fraction, s16 whole`. */
 data class FixedPos(val fraction: Int, val whole: Int) {
     val value: Double get() = whole + fraction / 65536.0
+
+    companion object {
+        /** The nearest position to [value] that fits (whole part -32768..32767). */
+        fun of(value: Double): FixedPos {
+            val clamped = value.coerceIn(-32768.0, 32767.99998)
+            val whole = kotlin.math.floor(clamped).toInt()
+            return FixedPos(((clamped - whole) * 65536.0).toInt().coerceIn(0, 65535), whole)
+        }
+    }
 }
 
 /**
@@ -73,6 +82,9 @@ class MapFile(
 ) {
     fun type(x: Int, y: Int): Int = permissions[(y * SIZE + x) * 2].toInt() and 0xFF
     fun collision(x: Int, y: Int): Int = permissions[(y * SIZE + x) * 2 + 1].toInt() and 0xFF
+
+    /** The walking surface in [bdhc], decoded; the section itself is kept as bytes. */
+    fun walkingSurface(): FoxResult<Bdhc> = Bdhc.parse(bdhc)
 
     fun withTile(x: Int, y: Int, type: Int? = null, collision: Int? = null): MapFile {
         val p = permissions.copyOf()

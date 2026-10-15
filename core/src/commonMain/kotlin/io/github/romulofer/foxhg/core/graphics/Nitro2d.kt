@@ -11,6 +11,10 @@ class RgbaImage(val width: Int, val height: Int, val argb: IntArray) {
     /** The rows from [top] to [top] + [rows]. */
     fun crop(top: Int, rows: Int): RgbaImage = RgbaImage(width, rows, argb.copyOfRange(top * width, (top + rows) * width))
 
+    /** The part from column [left] and row [top], [columns] wide and [rows] tall. */
+    fun crop(left: Int, top: Int, columns: Int, rows: Int): RgbaImage =
+        RgbaImage(columns, rows, IntArray(columns * rows) { argb[(top + it / columns) * width + left + it % columns] })
+
     val opaqueColors: Int get() = argb.filter { it ushr 24 != 0 }.toSet().size
 
     override fun equals(other: Any?) = other is RgbaImage && width == other.width && height == other.height && argb.contentEquals(other.argb)
@@ -100,4 +104,93 @@ internal fun findSection(bytes: ByteArray, signature: String): Int? {
         p += length
     }
     return null
+}
+
+/** One sprite part of an NCER cell: a [width] x [height] block of tiles drawn at ([x], [y]) from the cell's origin. */
+class Oam(val x: Int, val y: Int, val width: Int, val height: Int, val tile: Int, val palette: Int)
+
+/**
+ * NCER ("RECN"): cells, each a list of [Oam] parts, and the tile boundary shift ([mapping]) that turns an OAM tile
+ * number into a position in the NCGR (tile number * 32 << mapping bytes).
+ */
+class Ncer(val cells: List<List<Oam>>, val mapping: Int) {
+    /**
+     * Draws [cell] from the tiles of [graphic] (an NCGR file) with [palette] (a 256 colour NCLR is read in groups of 16
+     * for 4-bit graphics). The picture is as large as the parts' bounding box; null if the cell or graphic is unusable.
+     */
+    fun render(cell: Int, graphic: ByteArray, nclr: Nclr): RgbaImage? {
+        val parts = cells.getOrNull(cell)?.takeIf { it.isNotEmpty() } ?: return null
+        val chars = findSection(graphic, "RAHC") ?: return null
+        val bpp = when (graphic.u32(chars + 12).toInt()) { 3 -> 4; 4 -> 8; else -> return null }
+        val length = graphic.u32(chars + 24).toInt()
+        val start = chars + 8 + graphic.u32(chars + 28).toInt()
+        val end = minOf(graphic.size, start + length)
+        val left = parts.minOf { it.x }
+        val top = parts.minOf { it.y }
+        val width = parts.maxOf { it.x + it.width } - left
+        val height = parts.maxOf { it.y + it.height } - top
+        val out = IntArray(width * height)
+        val tileBytes = bpp * 8
+        for (part in parts) {
+            val colors = if (bpp == 4) nclr.palette16(part.palette) else nclr.colors
+            val base = start + (part.tile shl mapping) * 32
+            for (ty in 0 until part.height / 8) for (tx in 0 until part.width / 8) {
+                val tileStart = base + (ty * (part.width / 8) + tx) * tileBytes
+                for (p in 0 until 64) {
+                    val at = if (bpp == 4) tileStart + p / 2 else tileStart + p
+                    if (at >= end) continue
+                    val raw = graphic[at].toInt() and 0xFF
+                    val index = if (bpp == 4) (raw shr ((p % 2) * 4)) and 0xF else raw
+                    if (index == 0) continue
+                    val px = part.x - left + tx * 8 + p % 8
+                    val py = part.y - top + ty * 8 + p / 8
+                    out[py * width + px] = colors.getOrElse(index) { 0 }
+                }
+            }
+        }
+        return RgbaImage(width, height, out)
+    }
+
+    companion object {
+        private val SIZES = arrayOf(
+            arrayOf(8 to 8, 16 to 16, 32 to 32, 64 to 64),
+            arrayOf(16 to 8, 32 to 8, 32 to 16, 64 to 32),
+            arrayOf(8 to 16, 8 to 32, 16 to 32, 32 to 64),
+        )
+
+        fun parse(bytes: ByteArray): FoxResult<Ncer> {
+            if (bytes.size < 0x20 || bytes.decodeToString(0, 4) != "RECN") return FoxResult.Err("Not an NCER file")
+            val section = findSection(bytes, "KBEC") ?: return FoxResult.Err("NCER has no cell bank")
+            val cellCount = bytes.u16(section + 8)
+            val hasBounds = bytes.u16(section + 10) and 1 != 0
+            val cellsAt = section + 8 + bytes.u32(section + 12).toInt()
+            val mapping = bytes.u32(section + 16).toInt()
+            val cellSize = if (hasBounds) 16 else 8
+            val oamAt = cellsAt + cellCount * cellSize
+            val cells = (0 until cellCount).map { c ->
+                val at = cellsAt + c * cellSize
+                if (at + 8 > bytes.size) return FoxResult.Err("NCER cell $c is outside the file")
+                val count = bytes.u16(at)
+                val first = oamAt + bytes.u32(at + 4).toInt()
+                if (first + count * 6 > bytes.size) return FoxResult.Err("NCER cell $c has OAMs outside the file")
+                (0 until count).map { i ->
+                    val attr0 = bytes.u16(first + i * 6)
+                    val attr1 = bytes.u16(first + i * 6 + 2)
+                    val attr2 = bytes.u16(first + i * 6 + 4)
+                    val shape = attr0 shr 14
+                    if (shape > 2) return FoxResult.Err("NCER cell $c has an OAM with an invalid shape")
+                    val (w, h) = SIZES[shape][attr1 shr 14]
+                    Oam(
+                        x = (attr1 and 0x1FF).let { if (it > 0xFF) it - 0x200 else it },
+                        y = (attr0 and 0xFF).let { if (it > 0x7F) it - 0x100 else it },
+                        width = w,
+                        height = h,
+                        tile = attr2 and 0x3FF,
+                        palette = attr2 shr 12,
+                    )
+                }
+            }
+            return FoxResult.Ok(Ncer(cells, mapping))
+        }
+    }
 }

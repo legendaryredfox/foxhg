@@ -21,6 +21,7 @@ object ProjectStore {
     private const val FILES = "files"
     private const val OVERLAYS = "overlays"
     private const val ARM9_FILE = "arm9.bin" // the decompressed ARM9 image, only when edited
+    private const val HISTORY_FILE = "history.bin" // the undo and redo steps, see UndoSnapshot
 
     fun isProject(directory: Path): Boolean = directory.resolve(PROPERTIES).exists()
 
@@ -78,7 +79,7 @@ object ProjectStore {
         atomicWrite(directory.resolve(PROPERTIES), properties.entries.joinToString("") { "${it.key}=${it.value}\n" }.encodeToByteArray())
     }
 
-    fun save(directory: Path, project: RomProject): FoxResult<Unit> = try {
+    fun save(directory: Path, project: RomProject, withHistory: Boolean = true): FoxResult<Unit> = try {
         if (!isProject(directory)) return FoxResult.Err("$directory is not a foxhg project")
         val filesDir = directory.resolve(FILES)
         Files.createDirectories(filesDir)
@@ -97,6 +98,12 @@ object ProjectStore {
             Files.list(overlaysDir).use { stream ->
                 stream.filter { it.isRegularFile() && it.fileName.toString().removeSuffix(".bin").toIntOrNull() !in overlays }.forEach { it.deleteIfExists() }
             }
+        }
+        if (withHistory && project.historyDirty) {
+            val snapshot = project.historySnapshot()
+            val file = directory.resolve(HISTORY_FILE)
+            if (snapshot.undo.isEmpty() && snapshot.redo.isEmpty()) file.deleteIfExists() else atomicWrite(file, snapshot.toBytes())
+            project.markHistorySaved()
         }
         // Reverted files must disappear too, or they would come back on the next load.
         Files.walk(filesDir).use { stream ->
@@ -138,6 +145,10 @@ object ProjectStore {
         when (val project = RomProject.open(source, edits, arm9, overlays)) {
             is FoxResult.Ok -> {
                 properties["compressArm9"]?.toBooleanStrictOrNull()?.let { project.value.compressArm9 = it }
+                // The undo history is a convenience: a missing, damaged or out-of-date file just means no history.
+                directory.resolve(HISTORY_FILE).takeIf { it.exists() }?.let { file ->
+                    (UndoSnapshot.parse(Files.readAllBytes(file)) as? FoxResult.Ok)?.let { project.value.restoreHistory(it.value) }
+                }
                 FoxResult.Ok(Loaded(project.value, source, romPath))
             }
             is FoxResult.Err -> {

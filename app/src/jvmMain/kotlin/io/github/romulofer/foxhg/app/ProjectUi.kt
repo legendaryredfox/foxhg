@@ -15,6 +15,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -27,6 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
+import io.github.romulofer.foxhg.app.ui.ToggleChip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.romulofer.foxhg.app.ui.Fox
@@ -46,6 +49,9 @@ fun ProjectMenu(model: AppModel) {
             item("Open project…         Ctrl+O") { Actions.openProject(model) }
             item("Open ROM without a project…") { Actions.openRom(model) }
             HorizontalDivider()
+            item("${model.undoLabel}     Ctrl+Z", enabled = model.canUndo) { model.undo() }
+            item("${model.redoLabel}     Ctrl+Shift+Z", enabled = model.canRedo) { model.redo() }
+            HorizontalDivider()
             item("Save                         Ctrl+S", enabled = model.project != null && (model.projectDir == null || model.hasUnsavedWork)) { Actions.save(model) }
             item("Save as project…", enabled = model.project != null) { Actions.saveAs(model) }
             DropdownMenuItem(
@@ -53,6 +59,8 @@ fun ProjectMenu(model: AppModel) {
                 enabled = model.projectDir != null,
                 onClick = { model.autosave = !model.autosave },
             )
+            HorizontalDivider()
+            item("Settings…") { model.dialog = AppDialog.Settings() }
             if (model.recent.isNotEmpty()) {
                 HorizontalDivider()
                 Text("Recent", Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -67,12 +75,14 @@ fun ProjectMenu(model: AppModel) {
 /** Dialogs that sit on top of the window; shown according to [AppModel.dialog]. */
 @Composable
 fun AppDialogs(model: AppModel) {
+    model.task?.let { ProgressDialog(it) }
     when (val d = model.dialog) {
         null -> {}
         AppDialog.NewProject -> ProjectDialog(model, askRom = true, then = null)
         is AppDialog.SaveProjectAs -> ProjectDialog(model, askRom = false, then = d.then)
         is AppDialog.UnsavedWork -> UnsavedWorkDialog(model, d)
         is AppDialog.RelinkRom -> RelinkDialog(model, d)
+        is AppDialog.Settings -> SettingsDialog(model, d)
     }
 }
 
@@ -157,6 +167,62 @@ private fun RelinkDialog(model: AppModel, d: AppDialog.RelinkRom) {
     )
 }
 
+/** Shown over the window while a background task runs; it cannot be dismissed, so nothing is edited meanwhile. */
+@Composable
+private fun ProgressDialog(task: AppModel.Task) {
+    AlertDialog(
+        onDismissRequest = {},
+        title = { Text(task.title) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.testTag("progress")) {
+                val fraction = task.fraction
+                if (fraction == null) LinearProgressIndicator(Modifier.fillMaxWidth()) else LinearProgressIndicator(progress = { fraction.toFloat() }, modifier = Modifier.fillMaxWidth())
+                Text(if (fraction == null) "Working…" else "${(fraction * 100).toInt()} %", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        },
+        confirmButton = {},
+    )
+}
+
+@Composable
+private fun SettingsDialog(model: AppModel, d: AppDialog.Settings) {
+    var theme by remember { mutableStateOf(model.settings.theme) }
+    var emulator by remember { mutableStateOf(model.settings.emulatorCommand) }
+    var autosave by remember { mutableStateOf(model.settings.autosave) }
+    AlertDialog(
+        onDismissRequest = { model.dialog = null },
+        title = { Text("Settings") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                d.notice?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error) }
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Theme", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ThemeChoice.entries.forEach { ToggleChip(it.label, theme == it, { _ -> theme = it }) }
+                    }
+                }
+                LabeledText("Emulator command (Run)", emulator) { emulator = it }
+                Text(
+                    "Where the ROM goes is {rom}; without it the ROM is added at the end. For example: desmume {rom}  or  retroarch -L /path/to/desmume_libretro.so {rom}",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ToggleChip("Autosave projects", autosave, { autosave = it })
+                    Text("for projects you open next", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                model.updateSettings(AppSettings(theme, emulator.trim(), autosave))
+                model.autosave = autosave
+                model.dialog = null
+            }, modifier = Modifier.testTag("settings-save")) { Text("Save") }
+        },
+        dismissButton = { TextButton(onClick = { model.dialog = null }) { Text("Cancel") } },
+    )
+}
+
 @Composable
 private fun LabeledText(label: String, value: String, onChange: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -174,7 +240,7 @@ private fun LabeledText(label: String, value: String, onChange: (String) -> Unit
                     verticalAlignment = Alignment.CenterVertically,
                 ) { inner() }
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag("field:$label"),
         )
     }
 }

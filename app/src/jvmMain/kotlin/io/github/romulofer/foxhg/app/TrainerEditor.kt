@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.romulofer.foxhg.app.ui.PokemonFront
 import io.github.romulofer.foxhg.app.ui.SpeciesPicker
 import io.github.romulofer.foxhg.app.ui.ItemPicker
 import io.github.romulofer.foxhg.app.ui.Chip
@@ -28,6 +29,8 @@ import io.github.romulofer.foxhg.app.ui.EditorHeader
 import io.github.romulofer.foxhg.app.ui.FieldFlow
 import io.github.romulofer.foxhg.app.ui.NumberField
 import io.github.romulofer.foxhg.app.ui.PickerField
+import io.github.romulofer.foxhg.app.ui.TrainerClassIcon
+import io.github.romulofer.foxhg.app.ui.TrainerClassPicker
 import io.github.romulofer.foxhg.app.ui.SectionCard
 import io.github.romulofer.foxhg.app.ui.ToggleChip
 import io.github.romulofer.foxhg.core.data.trainer.Trainer
@@ -53,6 +56,7 @@ fun TrainerEditor(model: TrainerEditorModel, modifier: Modifier = Modifier) {
                 isEdited = model::isEdited,
                 width = 300.dp,
                 detail = { model.className(it) },
+                leading = { TrainerClassIcon(model.classOf(it), 26.dp) },
             )
             model.selected?.let { t -> DetailPane { Detail(model, t) } }
         }
@@ -82,11 +86,14 @@ private fun ReplaceSpeciesCard(model: TrainerEditorModel) {
 private fun Detail(model: TrainerEditorModel, trainer: Trainer) {
     val names = model.names
     val h = trainer.header
-    EditorHeader(model.selectedIndex.toString(), model.name(model.selectedIndex), trailing = { Chip(model.className(model.selectedIndex) ?: "") })
+    EditorHeader(model.selectedIndex.toString(), model.name(model.selectedIndex), trailing = {
+        Chip(model.className(model.selectedIndex) ?: "")
+        TrainerClassIcon(h.trainerClass, 64.dp)
+    })
 
     SectionCard("Trainer") {
         FieldFlow {
-            PickerField("Class", h.trainerClass, names?.trainerClasses ?: emptyList(), { v -> model.update { it.withHeader(it.header.copy(trainerClass = v)) } }, Modifier.width(220.dp))
+            TrainerClassPicker("Class", h.trainerClass, names?.trainerClasses ?: emptyList(), { v -> model.update { it.withHeader(it.header.copy(trainerClass = v)) } }, Modifier.width(220.dp))
             NumberField("AI flags", h.aiFlags.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), 0..Int.MAX_VALUE, { v -> model.update { it.withHeader(it.header.copy(aiFlags = v.toLong())) } }, Modifier.width(130.dp))
             NumberField("Double battle", h.doubleBattle.coerceAtMost(255).toInt(), 0..255, { v -> model.update { it.withHeader(it.header.copy(doubleBattle = v.toLong())) } }, Modifier.width(120.dp))
         }
@@ -129,6 +136,7 @@ private fun MonCard(model: TrainerEditorModel, trainer: Trainer, slot: Int, mon:
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Chip("${slot + 1}", emphasis = true)
+                PokemonFront(mon.species)
                 Text(names?.species?.getOrNull(mon.species) ?: "#${mon.species}", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                 TextButton(onClick = { model.removeMon(slot) }) { Text("Remove") }
             }

@@ -24,6 +24,20 @@ object HgssLayout {
     const val POKEMON_ICONS = "a/0/2/0"
     /** Pairs of an NCGR and an NCLR per item; which files belong to which item is in the generated icon table. */
     const val ITEM_ICONS = "a/0/1/8"
+    /** Trainer class front pictures, five files per class (see [io.github.romulofer.foxhg.core.graphics.Icons.trainerClass]). */
+    const val TRAINER_FRONT_SPRITES = "a/0/5/8"
+    /** Texture archives of the overworld sprites, picked through the sprite table of overlay 1. */
+    const val OVERWORLD_SPRITES = "a/0/8/1"
+    /** Per area: u16 building texture set, u16 map texture set, u16 dynamic texture type, u8 indoor/outdoor, u8 light. */
+    const val AREA_DATA = "a/0/4/2"
+    /** Map terrain texture sets (NSBTX), picked by the area data. */
+    const val MAP_TEXTURES = "a/0/4/4"
+    /** Models (NSBMD with their own textures) of the buildings placed on maps, by `Building.modelId`. */
+    const val BUILDING_MODELS = "a/0/4/0"
+    /** Battle pictures, six files per species 0..493: back (female, male), front (female, male), palette, shiny palette. Scrambled, see `Icons`. */
+    const val POKEMON_SPRITES = "a/0/0/4"
+    /** Battle pictures of eggs and alternate forms ("otherpoke"): pairs of back and front pictures, then palettes. */
+    const val ALTERNATE_POKEMON_SPRITES = "a/1/1/4"
     const val MATRICES = "a/0/4/1"
     const val SCRIPTS = "a/0/1/2"
     const val EVENTS = "a/0/3/2"

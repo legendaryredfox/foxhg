@@ -103,9 +103,9 @@ private fun Detail(model: EncounterEditorModel, d: EncounterData) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Bottom) {
                 Text("%2d · %2d%%".format(i + 1, EncounterData.LAND_SLOT_PERCENT[i]), Modifier.width(62.dp).padding(bottom = 9.dp), style = Fox.mono, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 NumberField(if (i == 0) "Level" else "", d.landLevels[i], 1..100, { v -> editor.update { it.copy(landLevels = it.landLevels.set(i, v)) } }, Modifier.width(72.dp))
-                PickerField(if (i == 0) "Morning" else "", d.landMorning[i], species, { v -> editor.update { it.copy(landMorning = it.landMorning.set(i, v)) } }, Modifier.weight(1f))
-                PickerField(if (i == 0) "Day" else "", d.landDay[i], species, { v -> editor.update { it.copy(landDay = it.landDay.set(i, v)) } }, Modifier.weight(1f))
-                PickerField(if (i == 0) "Night" else "", d.landNight[i], species, { v -> editor.update { it.copy(landNight = it.landNight.set(i, v)) } }, Modifier.weight(1f))
+                SpeciesPicker(if (i == 0) "Morning" else "", d.landMorning[i], species, { v -> editor.update { it.copy(landMorning = it.landMorning.set(i, v)) } }, Modifier.weight(1f))
+                SpeciesPicker(if (i == 0) "Day" else "", d.landDay[i], species, { v -> editor.update { it.copy(landDay = it.landDay.set(i, v)) } }, Modifier.weight(1f))
+                SpeciesPicker(if (i == 0) "Night" else "", d.landNight[i], species, { v -> editor.update { it.copy(landNight = it.landNight.set(i, v)) } }, Modifier.weight(1f))
             }
         }
     }
@@ -140,7 +140,7 @@ private fun SlotCard(title: String, slots: List<EncounterSlot>, species: List<St
                 Text("${i + 1}", Modifier.width(22.dp).padding(bottom = 9.dp), style = Fox.mono, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 NumberField(if (i == 0) "Min" else "", s.levelMin, 1..100, { v -> onChange(slots.set(i, s.copy(levelMin = v))) }, Modifier.width(72.dp))
                 NumberField(if (i == 0) "Max" else "", s.levelMax, 1..100, { v -> onChange(slots.set(i, s.copy(levelMax = v))) }, Modifier.width(72.dp))
-                PickerField(if (i == 0) "Species" else "", s.species, species, { v -> onChange(slots.set(i, s.copy(species = v))) }, Modifier.width(260.dp))
+                SpeciesPicker(if (i == 0) "Species" else "", s.species, species, { v -> onChange(slots.set(i, s.copy(species = v))) }, Modifier.width(260.dp))
             }
         }
     }

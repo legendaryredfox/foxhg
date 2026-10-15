@@ -6,7 +6,6 @@ import io.github.romulofer.foxhg.core.data.map.MapFile
 import io.github.romulofer.foxhg.core.nds.FileRomSource
 import io.github.romulofer.foxhg.core.project.RomProject
 import java.nio.file.Files
-import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -15,16 +14,11 @@ import kotlin.test.assertTrue
 
 /** Paints tiles through the map editor model on the real ROM, builds, reopens, reads back. Skips without the ROM. */
 class MapEditorEndToEndTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
-
     @Test
     fun paintedTilesSurviveABuild() {
-        if (!Files.exists(romPath)) {
-            println("SKIPPED: no ROM at ${romPath.toAbsolutePath()}")
-            return
-        }
+        if (!romAvailable()) return
         val app = testModel()
-        val built = Files.createTempFile("foxhg-e2e-map", ".nds")
+        val built = tempFile("foxhg-e2e-map", ".nds")
         try {
             app.openRom(romPath)
             val project = app.project!!
@@ -72,16 +66,11 @@ class MapEditorEndToEndTest {
 
 /** Moves, adds, edits and removes events through the map editor model, builds, reopens, reads back. */
 class MapEventsEndToEndTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
-
     @Test
     fun eventEditsOnTheMapSurviveABuild() {
-        if (!Files.exists(romPath)) {
-            println("SKIPPED: no ROM at ${romPath.toAbsolutePath()}")
-            return
-        }
+        if (!romAvailable()) return
         val app = testModel()
-        val built = Files.createTempFile("foxhg-e2e-mapevents", ".nds")
+        val built = tempFile("foxhg-e2e-mapevents", ".nds")
         try {
             app.openRom(romPath)
             val project = app.project!!

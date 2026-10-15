@@ -11,7 +11,6 @@ import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassPrizes
 import io.github.romulofer.foxhg.core.nds.FileRomSource
 import io.github.romulofer.foxhg.core.project.RomProject
 import java.nio.file.Files
-import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -19,16 +18,11 @@ import kotlin.test.assertTrue
 
 /** Edits through the item, egg move, TM/HM and trainer class models on the real ROM, builds, reopens, reads back. */
 class NewEditorsEndToEndTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
-
     @Test
     fun itemEggMoveTmAndClassEditsSurviveABuild() {
-        if (!Files.exists(romPath)) {
-            println("SKIPPED: no ROM at ${romPath.toAbsolutePath()}")
-            return
-        }
+        if (!romAvailable()) return
         val app = testModel()
-        val built = Files.createTempFile("foxhg-e2e-new", ".nds")
+        val built = tempFile("foxhg-e2e-new", ".nds")
         try {
             app.openRom(romPath)
             val project = app.project!!

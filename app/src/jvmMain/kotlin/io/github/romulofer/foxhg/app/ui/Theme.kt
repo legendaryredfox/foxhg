@@ -97,9 +97,9 @@ private fun defaultDark(): Boolean = when (System.getenv("FOXHG_THEME")?.lowerca
 }
 
 @Composable
-fun FoxTheme(dark: Boolean = defaultDark(), content: @Composable () -> Unit) {
+fun FoxTheme(dark: Boolean? = null, content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = if (dark) DarkColors else LightColors,
+        colorScheme = if (dark ?: defaultDark()) DarkColors else LightColors,
         typography = FoxTypography,
         shapes = FoxShapes,
         content = content,

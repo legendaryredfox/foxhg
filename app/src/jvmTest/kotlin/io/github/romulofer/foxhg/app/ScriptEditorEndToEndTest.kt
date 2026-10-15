@@ -8,7 +8,6 @@ import io.github.romulofer.foxhg.core.script.ScriptEntry
 import io.github.romulofer.foxhg.core.script.ScriptText
 import io.github.romulofer.foxhg.core.script.VariableTrigger
 import java.nio.file.Files
-import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -17,16 +16,11 @@ import kotlin.test.assertTrue
 
 /** Edits a script as text through the editor model on the real ROM, builds, reopens, reads back. Skips without the ROM. */
 class ScriptEditorEndToEndTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
-
     @Test
     fun scriptTextEditsSurviveABuildAndBadTextIsNotWritten() {
-        if (!Files.exists(romPath)) {
-            println("SKIPPED: no ROM at ${romPath.toAbsolutePath()}")
-            return
-        }
+        if (!romAvailable()) return
         val app = testModel()
-        val built = Files.createTempFile("foxhg-e2e-script", ".nds")
+        val built = tempFile("foxhg-e2e-script", ".nds")
         try {
             app.openRom(romPath)
             val project = app.project!!

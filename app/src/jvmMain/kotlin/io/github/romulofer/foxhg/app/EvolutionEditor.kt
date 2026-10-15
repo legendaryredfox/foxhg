@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.romulofer.foxhg.app.ui.PokemonPortraits
 import io.github.romulofer.foxhg.app.ui.SpeciesPicker
 import io.github.romulofer.foxhg.app.ui.ItemPicker
 import io.github.romulofer.foxhg.app.ui.EditorHeader
@@ -68,7 +69,7 @@ private fun Detail(model: RecordEditorModel<EvolutionData>, data: EvolutionData)
     val items = names?.items ?: emptyList()
     val moves = names?.moves ?: emptyList()
     val methods = EvolutionMethod.entries.map { it.label }
-    EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)))
+    EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = { PokemonPortraits(model.selectedIndex) })
     SectionCard("Evolutions", subtitle = "Up to ${EvolutionData.SLOTS} ways to evolve. Leave the method on None to unuse a slot.") {
         data.slots.forEachIndexed { slot, entry ->
             val method = entry.known

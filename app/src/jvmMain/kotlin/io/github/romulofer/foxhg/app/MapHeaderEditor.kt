@@ -39,6 +39,7 @@ fun MapHeaderEditor(model: MapHeaderEditorModel, modifier: Modifier = Modifier) 
             onSelect = model::select,
             isEdited = model::isEdited,
             detail = { i -> model.all.getOrNull(i)?.let { "matrix ${it.matrix}" } },
+            leading = { i -> AsyncMapPicture(i) { model.pictures.ofHeader(i) } },
         )
         model.selected?.let { h -> DetailPane { Detail(model, h) } }
     }
@@ -48,6 +49,7 @@ fun MapHeaderEditor(model: MapHeaderEditorModel, modifier: Modifier = Modifier) 
 private fun Detail(model: MapHeaderEditorModel, h: MapHeader) {
     val locations = model.names?.locations ?: emptyList()
     EditorHeader(model.selectedIndex.toString(), model.locationName(model.selectedIndex), trailing = {
+        AsyncMapPicture(model.selectedIndex, 96.dp) { model.pictures.ofHeader(model.selectedIndex) }
         if (h.wildEncounterFile != MapHeader.NO_ENCOUNTERS) Chip("Wild: ${nameOf(model.encounterAreas.label(h.wildEncounterFile))}")
     })
 

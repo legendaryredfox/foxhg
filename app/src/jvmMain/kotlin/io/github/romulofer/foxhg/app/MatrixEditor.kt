@@ -18,6 +18,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.produceState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.platform.testTag
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,12 +43,16 @@ import io.github.romulofer.foxhg.core.data.mapheader.MapHeader
 import io.github.romulofer.foxhg.core.data.matrix.GameMatrix
 
 /** Matrix editor state: the generic record model plus which maps (by header) use each matrix. */
-class MatrixEditorModel(val records: RecordEditorModel<GameMatrix>, val usedBy: Map<Int, List<String>>, val headerNames: List<String>)
+class MatrixEditorModel(val records: RecordEditorModel<GameMatrix>, val usedBy: Map<Int, List<String>>, val headerNames: List<String>, val pictures: MapPictures)
 
 @Composable
 fun MatrixEditor(model: MatrixEditorModel, modifier: Modifier = Modifier) {
     val editor = model.records
-    RecordListDetail(editor, modifier, rowDetail = { i -> editor.records.getOrNull(i)?.let { "${it.width}×${it.height}" } }) { matrix ->
+    RecordListDetail(
+        editor, modifier,
+        rowDetail = { i -> editor.records.getOrNull(i)?.let { "${it.width}×${it.height}" } },
+        leading = { i -> editor.records.getOrNull(i)?.let { MapPicture(model.pictures.ofMatrix(it), 26.dp) } },
+    ) { matrix ->
         val index = editor.selectedIndex
         var cell by remember(index) { mutableStateOf(0 to 0) }
         val (cx, cy) = cell.let { (x, y) -> minOf(x, matrix.width - 1) to minOf(y, matrix.height - 1) }
@@ -52,6 +61,24 @@ fun MatrixEditor(model: MatrixEditorModel, modifier: Modifier = Modifier) {
         EditorHeader(index.toString(), matrix.name, trailing = { Chip("${matrix.width} × ${matrix.height}") })
         if (users.isNotEmpty()) {
             Text("Used by: " + users.distinct().take(6).joinToString(", ") + if (users.distinct().size > 6) " …" else "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+
+        SectionCard("Overview", subtitle = "The tiles of every cell, as in the Maps editor") {
+            val schematic = model.pictures.ofMatrix(matrix)
+            // The rendered scenes replace the schematic when they are ready.
+            var progress by remember(matrix) { mutableStateOf(0f) }
+            var rendering by remember(matrix) { mutableStateOf(true) }
+            val bitmap by produceState(schematic, matrix) {
+                rendering = true
+                value = withContext(Dispatchers.Default) { model.pictures.sceneOfMatrix(matrix) { done, total -> progress = done.toFloat() / total } }
+                rendering = false
+            }
+            if (rendering && matrix.width * matrix.height > 4) {
+                androidx.compose.material3.LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().testTag("matrix-progress"))
+                Text("Rendering the maps… ${(progress * 100).toInt()} %", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            val width = minOf(720f, schematic.width * 2f)
+            MapPicture(bitmap, width.dp, (width * schematic.height / schematic.width).dp)
         }
 
         SectionCard("Grid", subtitle = "Each cell is a map file. Click a cell to edit it; empty cells have no map.") {

@@ -41,6 +41,8 @@ class TrainerEditorModel(private val project: RomProject, private val onChanged:
 
     fun name(index: Int): String = names?.trainerNames?.getOrNull(index)?.takeIf { it.isNotBlank() } ?: "Trainer $index"
 
+    fun classOf(index: Int): Int = trainers.getOrNull(index)?.header?.trainerClass ?: 0
+
     fun className(index: Int): String? = trainers.getOrNull(index)?.header?.trainerClass?.let { names?.trainerClasses?.getOrNull(it) }
 
     fun label(index: Int): String {

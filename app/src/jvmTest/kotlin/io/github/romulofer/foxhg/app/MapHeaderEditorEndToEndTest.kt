@@ -6,7 +6,6 @@ import io.github.romulofer.foxhg.core.data.mapheader.MapHeaderTable
 import io.github.romulofer.foxhg.core.nds.FileRomSource
 import io.github.romulofer.foxhg.core.project.RomProject
 import java.nio.file.Files
-import java.nio.file.Path
 import kotlin.io.path.deleteRecursively
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,15 +16,10 @@ import kotlin.test.assertTrue
 /** Edits map headers through the view model on the real ROM (project, autosave, build, reopen). Skips without the ROM. */
 @OptIn(kotlin.io.path.ExperimentalPathApi::class)
 class MapHeaderEditorEndToEndTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
-
     @Test
     fun headerEditsAreSavedInTheProjectAndBuiltIntoTheRom() {
-        if (!Files.exists(romPath)) {
-            println("SKIPPED: no ROM at ${romPath.toAbsolutePath()}")
-            return
-        }
-        val dir = Files.createTempDirectory("foxhg-headers")
+        if (!romAvailable()) return
+        val dir = tempDir("foxhg-headers")
         try {
             val manual = ManualScheduler()
             val app = testModel(manual)

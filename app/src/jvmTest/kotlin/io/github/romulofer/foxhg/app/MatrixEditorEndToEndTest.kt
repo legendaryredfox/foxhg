@@ -5,7 +5,6 @@ import io.github.romulofer.foxhg.core.data.matrix.GameMatrix
 import io.github.romulofer.foxhg.core.nds.FileRomSource
 import io.github.romulofer.foxhg.core.project.RomProject
 import java.nio.file.Files
-import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -13,16 +12,11 @@ import kotlin.test.assertTrue
 
 /** Edits a matrix through the generic record model on the real ROM, builds, reopens, reads back. Skips without the ROM. */
 class MatrixEditorEndToEndTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
-
     @Test
     fun matrixEditsSurviveABuild() {
-        if (!Files.exists(romPath)) {
-            println("SKIPPED: no ROM at ${romPath.toAbsolutePath()}")
-            return
-        }
+        if (!romAvailable()) return
         val app = testModel()
-        val built = Files.createTempFile("foxhg-matrix", ".nds")
+        val built = tempFile("foxhg-matrix", ".nds")
         try {
             app.openRom(romPath)
             val project = app.project!!

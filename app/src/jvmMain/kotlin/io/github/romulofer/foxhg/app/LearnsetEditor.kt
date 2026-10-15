@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.romulofer.foxhg.app.ui.PokemonPortraits
 import io.github.romulofer.foxhg.app.ui.Chip
 import io.github.romulofer.foxhg.app.ui.EditorHeader
 import io.github.romulofer.foxhg.app.ui.PokemonIcon
@@ -25,7 +26,7 @@ import io.github.romulofer.foxhg.core.data.learnset.LearnsetEntry
 fun LearnsetEditor(model: RecordEditorModel<Learnset>, modifier: Modifier = Modifier) {
     RecordListDetail(model, modifier, leading = { PokemonIcon(it) }) { learnset ->
         val moves = model.names?.moves ?: emptyList()
-        EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)))
+        EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = { PokemonPortraits(model.selectedIndex) })
         SectionCard(
             "Level-up moves",
             subtitle = if (learnset.overLimit) "Over the limit: the game reads only the first ${Learnset.MAX_ENTRIES}" else "Learned in this order as the level is reached",

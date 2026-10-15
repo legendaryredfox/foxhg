@@ -4,7 +4,6 @@ import io.github.romulofer.foxhg.core.FoxResult
 import io.github.romulofer.foxhg.core.data.personal.PersonalTable
 import io.github.romulofer.foxhg.core.project.ProjectStore
 import java.nio.file.Files
-import java.nio.file.Path
 import kotlin.io.path.deleteRecursively
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,8 +16,6 @@ import kotlin.test.assertTrue
 /** Creating, autosaving, closing, reopening and relinking projects through the model. */
 @OptIn(kotlin.io.path.ExperimentalPathApi::class)
 class ProjectLifecycleTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
-
     private fun editPikachu(app: AppModel, hp: Int) {
         val editor = PersonalEditorModel(app.project!!, onChanged = app::projectChanged)
         editor.select(25)
@@ -30,11 +27,8 @@ class ProjectLifecycleTest {
 
     @Test
     fun editsAreAutosavedAndComeBackWhenTheProjectIsReopened() {
-        if (!Files.exists(romPath)) {
-            println("SKIPPED: no ROM at ${romPath.toAbsolutePath()}")
-            return
-        }
-        val dir = Files.createTempDirectory("foxhg-lifecycle")
+        if (!romAvailable()) return
+        val dir = tempDir("foxhg-lifecycle")
         try {
             val manual = ManualScheduler()
             val first = testModel(manual)
@@ -72,7 +66,7 @@ class ProjectLifecycleTest {
     @Test
     fun withAutosaveOffNothingIsWrittenUntilSaveIsCalled() {
         if (!Files.exists(romPath)) return
-        val dir = Files.createTempDirectory("foxhg-noauto")
+        val dir = tempDir("foxhg-noauto")
         try {
             val manual = ManualScheduler()
             val app = testModel(manual)
@@ -92,7 +86,7 @@ class ProjectLifecycleTest {
     @Test
     fun aBareRomSessionAsksBeforeDiscardingAndCanBecomeAProject() {
         if (!Files.exists(romPath)) return
-        val dir = Files.createTempDirectory("foxhg-bare")
+        val dir = tempDir("foxhg-bare")
         try {
             val app = testModel()
             app.openRom(romPath)
@@ -123,7 +117,7 @@ class ProjectLifecycleTest {
 
     @Test
     fun aProjectWhoseRomWentMissingOffersToRelink() {
-        val dir = Files.createTempDirectory("foxhg-missing")
+        val dir = tempDir("foxhg-missing")
         try {
             val projectDir = dir.resolve("p")
             assertIs<FoxResult.Ok<*>>(ProjectStore.create(projectDir, dir.resolve("gone.nds")))
@@ -140,7 +134,7 @@ class ProjectLifecycleTest {
 
     @Test
     fun newProjectRefusesAnExistingProjectAndBadNames() {
-        val dir = Files.createTempDirectory("foxhg-names")
+        val dir = tempDir("foxhg-names")
         try {
             assertNull(AppModel.projectFolder(dir, ""))
             assertNull(AppModel.projectFolder(dir, "a/b"))
@@ -159,7 +153,7 @@ class ProjectLifecycleTest {
 
     @Test
     fun recentsRememberKindsAndIgnoreMissingPaths() {
-        val dir = Files.createTempDirectory("foxhg-recents-test")
+        val dir = tempDir("foxhg-recents-test")
         try {
             val recents = Recents(dir.resolve("r.txt"))
             val rom = Files.createFile(dir.resolve("a.nds"))
@@ -172,6 +166,55 @@ class ProjectLifecycleTest {
             assertEquals(listOf(RecentKind.PROJECT), recents.load().map { it.kind }, "paths that vanished are dropped")
             Files.writeString(dir.resolve("old.txt"), "${proj.toAbsolutePath()}\n")
             assertEquals(RecentKind.ROM, Recents(dir.resolve("old.txt")).load().single().kind, "a legacy line is a ROM")
+        } finally {
+            dir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun theUndoHistoryIsKeptWhenTheProjectIsClosedAndReopened() {
+        if (!romAvailable()) return
+        val dir = tempDir("foxhg-history")
+        try {
+            val manual = ManualScheduler()
+            val first = testModel(manual)
+            val projectDir = dir.resolve("hack")
+            assertTrue(first.newProject(romPath, projectDir))
+            val original = pikachuHp(first)
+            editPikachu(first, 111)
+            manual.runPending() // autosave: the files are written, the history is not
+            assertFalse(Files.exists(projectDir.resolve("history.bin")), "autosave leaves the (large) history out")
+            first.project!!.clock = { 10_000L } // a later moment, so the second edit is a new step
+            editPikachu(first, 222)
+            first.close()
+            assertTrue(Files.exists(projectDir.resolve("history.bin")), "closing writes it")
+
+            val second = testModel()
+            assertTrue(second.openProject(projectDir))
+            assertEquals(222, pikachuHp(second))
+            assertTrue(second.canUndo, "the history came back")
+            second.undo()
+            assertEquals(111, pikachuHp(second), "the last step is undone")
+            second.undo()
+            assertEquals(original, pikachuHp(second), "and the one before it")
+            assertFalse(second.project!!.isDirty)
+            second.redo()
+            assertEquals(111, pikachuHp(second))
+            second.saveProject() // an explicit save writes the history again
+            second.close()
+
+            val third = testModel()
+            assertTrue(third.openProject(projectDir))
+            assertEquals(111, pikachuHp(third))
+            assertTrue(third.canRedo && third.canUndo, "undo and redo both survive a second round")
+
+            // an edit made outside foxhg makes the history stale: it is dropped
+            third.close()
+            Files.delete(projectDir.resolve("files/a/0/0/2"))
+            val fourth = testModel()
+            assertTrue(fourth.openProject(projectDir))
+            assertFalse(fourth.canUndo || fourth.canRedo, "the files no longer match the history")
+            fourth.close()
         } finally {
             dir.deleteRecursively()
         }

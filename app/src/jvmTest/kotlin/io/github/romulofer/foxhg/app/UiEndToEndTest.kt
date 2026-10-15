@@ -45,51 +45,7 @@ import kotlin.test.assertTrue
  */
 @OptIn(ExperimentalTestApi::class)
 class UiEndToEndTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
-
-    /** Opens the ROM in a fresh model, shows the app at a normal window size and runs [block]; skips without the ROM. */
-    private fun withApp(block: DesktopComposeUiTest.(AppModel, RomProject) -> Unit) {
-        if (!Files.exists(romPath)) {
-            println("SKIPPED: no ROM at ${romPath.toAbsolutePath()}")
-            return
-        }
-        val model = testModel()
-        model.openRom(romPath)
-        val project = model.project!!
-        try {
-            runDesktopComposeUiTest(width = 1280, height = 900) {
-                setContent { App(model) }
-                waitForIdle()
-                block(model, project)
-            }
-        } finally {
-            model.close()
-        }
-    }
-
-    private fun DesktopComposeUiTest.open(title: String) {
-        onNodeWithTag("nav:$title").performClick()
-        waitForIdle()
-    }
-
-    private fun DesktopComposeUiTest.clickFirstText(text: String, substring: Boolean = false) {
-        onAllNodesWithText(text, substring = substring).onFirst().performClick()
-        waitForIdle()
-    }
-
-    private fun SemanticsNodeInteraction.editableText(): String =
-        fetchSemanticsNode().config.getOrNull(SemanticsProperties.EditableText)?.text ?: ""
-
-    private fun buildAndReopen(model: AppModel, check: (RomProject) -> Unit) {
-        val built = Files.createTempFile("foxhg-ui-e2e", ".nds")
-        try {
-            model.build(built)
-            assertNull(model.error, model.error)
-            FileRomSource(built).use { source -> check((RomProject.open(source) as FoxResult.Ok).value) }
-        } finally {
-            Files.deleteIfExists(built)
-        }
-    }
+    private fun withApp(block: DesktopComposeUiTest.(AppModel, RomProject) -> Unit) = withHeartGoldApp(block = block)
 
     @Test
     fun everyScreenOpensWithRealDataFromTheRom() = withApp { _, _ ->

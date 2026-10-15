@@ -48,7 +48,7 @@ data class Spawnable(
 /** An NPC, trainer or item ball (32 bytes). A script of 0xFFFF marks an alias of another object. */
 data class OverworldEvent(
     val id: Int,
-    /** Row of the overworld sprite table this object uses. */
+    /** Entry (key, not position) of the overworld sprite table of overlay 1 this object uses; see [OverworldSprites]. */
     val spriteEntry: Int,
     val movement: Int,
     /** 0 normal, 1 trainer, 3 item. */

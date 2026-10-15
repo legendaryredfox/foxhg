@@ -313,3 +313,117 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
 - Events of a map cell are the ones of its header's event file whose position is inside the cell (x / 32, y / 32 equal the matrix
   cell). Moving an event keeps it in its cell. Triggers cover `width x height` tiles from their position. New events copy the last
   event of their kind (objects get the next free object id); an event file shared by several headers is edited for all of them.
+
+## Trainer class pictures (`a/0/5/8`, `trfgra`)
+
+- 645 files = 129 classes x 5, in class order (the class id of the trainer header is the index): `NCGR` (4 bit, 3200 bytes of tiles,
+  width -1), `NCLR` (256 colours; the 4 bit graphic uses palette 0 of 16), `NCER`, `NANR`, then a second `NCGR` (the other frame
+  sheet, not decoded).
+- The picture is cell 0 of the NCER: 6 OAM parts (a 64x64 block plus 16x32 and 16x16 strips) placed around an origin, bounding
+  box 80x80. NCER `KBEC` section: u16 cell count, u16 bank type (bit 0 = cells carry 8 bytes of bounds, so 16 bytes per cell,
+  else 8), u32 offset of the cells, u32 mapping shift; a cell is u16 OAM count, u16 attributes, u32 offset into the OAM list; an OAM is
+  three u16 (attr0: y 8 bit signed, shape in bits 14-15; attr1: x 9 bit signed, size in bits 14-15; attr2: tile in bits 0-9, palette
+  in bits 12-15). Tile `n` of an OAM is at byte `(n << mapping) * 32` of the NCGR data (mapping is 1 here: tiles are numbered in
+  steps of 2); the tiles of one OAM follow each other row by row. Verified by eye on classes 0-3, 10, 20, 50, 100 and in the app
+  (Silver = Rival, Wade = Bug Catcher).
+
+## Undo journal (app)
+
+- Edits live in `RomProject`; every write, revert, ARM9 and overlay change is journaled as (target, bytes before, bytes after).
+  Writes to the same target less than 1 s apart merge into one step (typing in a field); `revertAll` is one step; 200 steps are
+  kept; a new edit clears redo. After undo/redo the open editor is rebuilt from the project (selection of the record editors is
+  kept in `AppModel.selectionMemory`; other editors go back to their first record).
+
+## Overworld sprites (`a/0/8/1`, sprite table in overlay 1)
+
+- The "sprite entry" of an overworld event is a key of the table, not a row. The table is in overlay 1 (decompressed); the pointer
+  to it sits at RAM address 0x021F92FC (English; overlay 1 loads at 0x021E5900 here), a main memory address (top byte 2). Entries
+  are three u16 (entry, sprite file, properties) up to a 0xFFFF entry id: 901 entries, ids 1..1049, sprite files 0..862. Properties
+  are flags we do not read (20007 on 585 entries, 0 on 182, 21000 on 34). Entry 1 -> file 0 (a baby boy), 1037-1039 -> the three legendary beasts.
+- Sprite files are `BTX0` texture archives (32x32, 16 colour textures, 1 palette, colour 0 transparent). 16 textures per
+  character: the facing picks the texture: <= 4 textures `facing`, <= 8 `facing * 2`, <= 16 `0, 11, 2, 4`, more `0, 27, 2, 4` (facing
+  0 up, 1 down, 2 left, 3 right, as DSPRE's event editor does). BTX0: `u16` block count at 0xE, block offsets from 0x10; `TEX0` block:
+  texture data offset at +0x14, palette dictionary at +0x34, palette data at +0x38, texture dictionary at +0x3C. A dictionary is
+  a 16 byte head (count at +1) and 4 bytes per entry, then entries: textures `u16 offset >> 3, u16 params, u32` (format bits
+  10-12, width `8 << bits 4-6`, height `8 << bits 7-9`, bit 13 colour 0 transparent), palettes `u16 offset >> 3, u16`; names
+  (16 bytes each) follow. Formats 1, 2, 3, 4, 6, 7 decode; 5 (block compressed) does not and gives no picture. Verified by eye.
+
+## Map thumbnails (app)
+
+- A thumbnail is one pixel per tile of the 32x32 permissions (tile type colour, blocked tiles darkened), a schematic of the walkable
+  layout. The real scene is the NSBMD terrain, buildings and textures (3D), which is not read yet.
+
+## Map scenes: NSBMD models and the area data chain
+
+- The `model` of a map file (`a/0/6/5`) is a `BMD0` file with only an `MDL0` block (no textures). Textures come from the area of
+  the map: map header `areaData` -> file of `a/0/4/2` (8 bytes: u16 building texture set, u16 map texture set, u16 dynamic
+  texture type, u8 indoor/outdoor, u8 light) -> file `map texture set` of `a/0/4/4` (a `BTX0`). Buildings (`Building.modelId`) are
+  files of `a/0/4/0`: `BMD0` with `MDL0` **and** their own `TEX0` (339 of 340), so the building texture set of the area data is not
+  needed for the picture. A matrix cell that uses a map decides which header (and so which area) the map is drawn with.
+- `BMD0`/`BTX0` header: `u16` block count at 0xE, `u32` block offsets from 0x10. A Nitro dictionary (used everywhere below): 8 byte
+  head (count at +1), a tree of 4 bytes per entry plus one, `u16` entry size and `u16` total, the entries, then 16 byte names.
+- `MDL0`: dictionary of models at +8 (entries `u32` offset from the block). Model: `u32` at +4 render commands (SBC), +8 material
+  set, +0xC shape set (all relative to the model), `s32` position scale at +0x1C (fx32; 64 for maps, 4..64 for buildings), node
+  dictionary at +0x40. World size: model units are 1/16 tile, so a map spans 32 * 16 = 512 units centred on the origin, and a
+  building's position in the map file (tiles from the centre) is added after dividing by 16.
+- Materials: dictionary, each entry an offset to a struct with polygon attributes at +0xC (alpha bits 16-20, 31 = opaque) and
+  texture image parameters at +0x14 (bit 16/17 repeat S/T, 18/19 flip S/T). The material set starts with two `u16`: offsets of the
+  texture-name and palette-name dictionaries; their entries are `u32` (bits 0-15 offset to a list of material indices, 16-23 the length,
+  bit 24 no binding). Materials without a texture name are not drawn (animated water and so on).
+- Nodes: record = `u16` flags (bit 0 no translation, 1 no rotation, 2 no scale, 3 compressed rotation: pivot in bits 4-7, sign
+  flags in bits 8-10), `s16` rotation[0][0] (fx16), then translation 3 x fx32, rotation (8 x fx16, or two for compressed) and
+  scale 3 x fx32 (+ 3 unused). A vertex is scaled by the node scale, rotated (row vector) and multiplied by the position scale, then
+  offset by the translation; children compose with the parent (scale multiplies, translation is scaled and rotated by the parent).
+- SBC bytecode (`op & 0x1F`): 1 end, 2 NODE (2 bytes), 3 MTX (1), 4 MAT (1), 5 SHP (1), 6 NODEDESC (node, parent, flags +1 store +1
+  restore), 7/8 billboards, 9 NODEMIX (2 + 3n), 0xA CALLDL (8). MAT sets the material, SHP draws the shape with the current node and
+  material.
+- Shape struct: display list offset (from the struct) at +8, size at +0xC. A display list packs four geometry commands per word
+  followed by their parameter words; used: 0x22 TEXCOORD (two fx16 with 4 fraction bits, in texels), 0x23 VTX_16, 0x24 VTX_10 (fx 1.3.6),
+  0x25-0x27 VTX_XY/XZ/YZ, 0x28 VTX_DIFF (fx 1.3.12 deltas), 0x40 BEGIN_VTXS (0 triangles, 1 quads, 2 triangle strip, 3 quad strip), 0x41
+  END; the others are skipped by their parameter counts. Verified: terrain and buildings of New Bark Town, Route 29, Cherrygrove and a
+  gym look right; 676 maps render in about 5 s.
+- Not drawn: translucent faces (shadows, alpha < 31) and the building models using the texture `wind` (a weather effect that is
+  thin streaks in its static pose), lighting, animated water, building rotation and scale.
+
+## Pokémon pictures
+
+- Icons (`a/0/2/0`): file 0 palettes, file `naix` the 32x64 icon; `naix = species + 7` for 0..493. Egg 501 (Manaphy egg 502),
+  Deoxys forms 503-505, Unown letters 507-533 (`form + 507 - 1`), Burmy 534-535, Wormadam 536-537, Shellos 538, Gastrodon 539,
+  Giratina origin 540, Shaymin sky 541, Rotom 542-546, Castform 547-549, Cherrim 550-551 (from `GetMonIconNaixEx`). The palette is
+  `sPokemonPalNoBySpeciesAndForm[slot]` with slot = species, 494/495 for eggs, 496 + form - 1 Deoxys, 499 Unown, 527 Burmy, 529
+  Wormadam, 531 Shellos, 532 Gastrodon, 533 Giratina, 534 Shaymin, 535 Rotom. Personal data records above 493 are 494 egg,
+  495 Manaphy egg, 496-498 Deoxys, 499-500 Wormadam, 501 Giratina origin, 502 Shaymin sky, 503-507 Rotom.
+- Battle pictures (`a/0/0/4`, 6 files per species 0..493): back female, back male, front female, front male, palette, shiny
+  palette. Species with one gender have an empty file for the other. Each picture is an NCGR (4 bit, flag 1 = rows not tiles,
+  20 x 10 tiles = 160 x 80: two 80 x 80 frames side by side, the first is used) whose tile data is **scrambled**: a 16 bit
+  stream cipher, `key = first u16`, for each u16 word `word ^= key & 0xFFFF; key = key * 1103515245 + 24691` (32 bit). The
+  palette is 16 colours.
+- Alternate forms and eggs (`a/1/1/4`, "otherpoke"): NCGR pairs (back, front) in the order of the decomp's `otherpoke.txt`
+  (index 0 Deoxys normal back ... 152/153 Giratina origin, 136/137 Shaymin sky, 140-149 Rotom, 80-83 Wormadam sandy and trash,
+  132/133 the two eggs, one picture each), then from index 158 palettes in normal / shiny pairs per form group (Deoxys 158 for all
+  four forms, Wormadam 176/178/180, Shaymin 232/234, Rotom 236..246, Giratina 248/250, eggs 230/231). Same scrambling.
+
+## 3D view (app)
+
+- World units are tiles with the map's centre as origin, y up, z towards the south (a building's `x`, `y`, `z` in the map file are in
+  these units). `Rasterizer3d` projects with a vertical field of view of 0.7 rad, clips at 0.2 tiles, interpolates `1/w`, `s/w` and `t/w`
+  and shades flat with `0.6 + 0.4 * |n . L|`, `L` = (0.35, 0.85, 0.4); the models' own normals and light settings are not used yet.
+
+## Project folder: history.bin
+
+- `FHGH`, u32 version 1, u32 undo steps, u32 redo steps; then every undo step (oldest first) and every redo step (next redo last): u32
+  changes, each u8 kind (0 file, 1 ARM9, 2 overlay), the path (u16 length + UTF-8) or the overlay id (u32), then the bytes before and
+  after (u8 present, u32 length, bytes). Written when the project is saved explicitly or closed; deleted when the history is empty;
+  ignored when damaged or when the newest undo step does not end in the current file contents.
+
+## BDHC (walking surface, last section of a map file)
+
+- `BDHC`, then u16 counts: points, slopes, heights, plates, stripes, plate indices (the six counts fill bytes 4..15); then points (8 bytes: s32 x,
+  s32 z, 16.16 fixed point, tiles from the middle of the map), slopes (12 bytes: s32 x, up, z in 4096ths; flat = (0, 4096, 0), 45 degrees =
+  (0, 2896, 2896)), heights (s32, 16.16, **negated**), plates (4 x u16: two corner points, slope, height), stripes (8 bytes: s32 z, u16
+  count, u16 first index) and plate indices (u16, the plates of every stripe one after the other). Section size = 16 + 8p + 12s + 4h + 8pl +
+  8st + 2i exactly, for all 676 maps; round trip exact.
+- A flat plate's ground height is the negative of its stored height: New Bark Town's plates say -1.0 where the terrain model is at 1.0, and
+  80 % or more of the flat plates match the model within 0.3 tiles (a test). Sloped plates (stairs, ramps, slopes of the 45 degree kind) are
+  not drawn: their plane formula is not confirmed (a slope plate of the lab's roof area does not match the terrain at all).
+- Stripes are rows of the lookup grid, 7 for New Bark Town, with the z of the row start; their plates are listed in the index list.

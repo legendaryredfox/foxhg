@@ -18,7 +18,7 @@ import java.nio.file.Path
 /**
  * `foxhg [project-folder | rom.nds] [--editor=PERSONAL|LEARNSET|EVOLUTIONS|MOVES|TRAINERS|ENCOUNTERS|...]`
  *
- * Shortcuts: Ctrl+N new project, Ctrl+O open project, Ctrl+Shift+O open a ROM only, Ctrl+S save, Ctrl+B build ROM.
+ * Shortcuts: Ctrl+N new project, Ctrl+O open project, Ctrl+Shift+O open a ROM only, Ctrl+S save, Ctrl+B build ROM, Ctrl+Z undo, Ctrl+Shift+Z or Ctrl+Y redo, Ctrl+F focus the list search; Up/Down/PageUp/PageDown move through a list.
  */
 fun main(args: Array<String>) = application {
     val model = remember(args) { AppModel().also { applyLaunchArguments(it, args) } }
@@ -28,18 +28,7 @@ fun main(args: Array<String>) = application {
         if (model.hasUnsavedWork) append(" •")
     }
     Window(
-        onPreviewKeyEvent = { e ->
-            if (e.type == KeyEventType.KeyDown && (e.isCtrlPressed || e.isMetaPressed)) {
-                when {
-                    e.key == Key.N -> { Actions.newProject(model); true }
-                    e.key == Key.O && e.isShiftPressed -> { Actions.openRom(model); true }
-                    e.key == Key.O -> { Actions.openProject(model); true }
-                    e.key == Key.S -> { Actions.save(model); true }
-                    e.key == Key.B -> { Actions.build(model); true }
-                    else -> false
-                }
-            } else false
-        },
+        onPreviewKeyEvent = { e -> Actions.shortcut(model, e) },
         onCloseRequest = { Actions.quit(model, ::exitApplication) },
         title = title,
         state = rememberWindowState(size = DpSize(1180.dp, 760.dp)),

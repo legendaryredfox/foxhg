@@ -31,7 +31,8 @@ object NdsBuilder {
     const val ALIGNMENT = 0x200L
     private const val CAPACITY_UNIT = 0x20000L
 
-    fun build(rom: NdsRom, source: RomSource, edits: RomEdits, sink: RomSink): FoxResult<Unit> {
+    /** [progress] is told how far along the build is, 0.0 to 1.0, as the ROM is copied. */
+    fun build(rom: NdsRom, source: RomSource, edits: RomEdits, sink: RomSink, progress: (Double) -> Unit = {}): FoxResult<Unit> {
         if (edits.arm9 != null) {
             val view = when (val v = Arm9ReplacedSource.create(rom, source, edits.arm9)) {
                 is FoxResult.Ok -> v.value
@@ -41,17 +42,17 @@ object NdsBuilder {
                 is FoxResult.Ok -> r.value
                 is FoxResult.Err -> return FoxResult.Err("Rebuilt layout is invalid: ${r.message}")
             }
-            return build(shifted, view, RomEdits(edits.files), sink, force = true)
+            return build(shifted, view, RomEdits(edits.files), sink, force = true, progress)
         }
-        return build(rom, source, edits, sink, force = false)
+        return build(rom, source, edits, sink, force = false, progress)
     }
 
-    private fun build(rom: NdsRom, source: RomSource, edits: RomEdits, sink: RomSink, force: Boolean): FoxResult<Unit> {
+    private fun build(rom: NdsRom, source: RomSource, edits: RomEdits, sink: RomSink, force: Boolean, progress: (Double) -> Unit): FoxResult<Unit> {
         for (id in edits.files.keys) {
             if (id < 0 || id >= rom.fileCount) return FoxResult.Err("File id $id is not in the ROM")
         }
-        copy(source, sink)
-        if (edits.isEmpty && !force) return FoxResult.Ok(Unit)
+        copy(source, sink, progress)
+        if (edits.isEmpty && !force) return FoxResult.Ok(Unit.also { progress(1.0) })
 
         val header = rom.header
         val fat = source.read(header.fileAllocationTable.offset, header.fileAllocationTable.size.toInt())
@@ -96,6 +97,7 @@ object NdsBuilder {
         headerBytes.putU16(Crc16.HEADER_CRC_OFFSET, Crc16.compute(headerBytes, 0, Crc16.HEADER_CRC_LENGTH))
         sink.write(0, headerBytes)
         sink.extendTo(CAPACITY_UNIT shl capacity)
+        progress(1.0)
         return FoxResult.Ok(Unit)
     }
 
@@ -124,13 +126,15 @@ object NdsBuilder {
         sink.write(region.offset, table)
     }
 
-    private fun copy(source: RomSource, sink: RomSink) {
+    /** Copying is almost all of the work; it reports up to 0.95 and the file edits finish the rest. */
+    private fun copy(source: RomSource, sink: RomSink, progress: (Double) -> Unit) {
         val chunk = 1 shl 20
         var offset = 0L
         while (offset < source.size) {
             val n = minOf(chunk.toLong(), source.size - offset).toInt()
             sink.write(offset, source.read(offset, n))
             offset += n
+            progress(0.95 * offset / source.size)
         }
     }
 

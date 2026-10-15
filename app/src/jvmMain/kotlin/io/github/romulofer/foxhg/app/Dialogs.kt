@@ -5,7 +5,17 @@ import java.awt.Frame
 import java.nio.file.Path
 import javax.swing.JFileChooser
 
-internal fun pickFile(title: String, mode: Int, extension: String): Path? {
+/** The file and folder choosers the app opens. Tests swap them, since a native dialog cannot be driven from a test. */
+internal object Choosers {
+    var file: (title: String, mode: Int, extension: String) -> Path? = ::nativePickFile
+    var directory: (title: String, start: Path?) -> Path? = ::nativeChooseDirectory
+}
+
+internal fun pickFile(title: String, mode: Int, extension: String): Path? = Choosers.file(title, mode, extension)
+
+internal fun chooseDirectory(title: String, start: Path? = null): Path? = Choosers.directory(title, start)
+
+private fun nativePickFile(title: String, mode: Int, extension: String): Path? {
     val dialog = FileDialog(null as Frame?, title, mode).apply {
         if (mode == FileDialog.LOAD) setFilenameFilter { _, name -> name.endsWith(extension, ignoreCase = true) }
         isVisible = true
@@ -16,7 +26,7 @@ internal fun pickFile(title: String, mode: Int, extension: String): Path? {
 }
 
 /** Folder chooser (the AWT file dialog cannot choose folders on Linux). */
-internal fun chooseDirectory(title: String, start: Path? = null): Path? {
+private fun nativeChooseDirectory(title: String, start: Path?): Path? {
     val chooser = JFileChooser(start?.toFile()).apply {
         dialogTitle = title
         fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
