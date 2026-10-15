@@ -2,6 +2,7 @@ package io.github.romulofer.foxhg.app
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
@@ -10,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -26,6 +28,7 @@ import io.github.romulofer.foxhg.app.ui.FieldFlow
 import io.github.romulofer.foxhg.app.ui.NumberField
 import io.github.romulofer.foxhg.app.ui.PickerField
 import io.github.romulofer.foxhg.app.ui.SectionCard
+import io.github.romulofer.foxhg.app.ui.Swatch
 import io.github.romulofer.foxhg.app.ui.ToggleChip
 import io.github.romulofer.foxhg.core.FoxResult
 import io.github.romulofer.foxhg.core.data.event.EventFile
@@ -112,7 +115,7 @@ fun MapEditor(model: MapEditorModel, modifier: Modifier = Modifier) {
             }
             FieldFlow {
                 ToggleChip("Paint type", model.paintType, { model.paintType = it })
-                PickerField("Type", model.brushType, TileTypes.all.map { "${it.id}  ${it.label}" }, { model.brushType = it }, Modifier.width(260.dp))
+                PickerField("Type", model.brushType, TileTypes.all.map { "${it.id}  ${it.label}" }, { model.brushType = it }, Modifier.width(280.dp), leading = { Swatch(typeColor(it)) })
                 ToggleChip("Paint collision", model.paintCollision, { model.paintCollision = it })
                 NumberField("Collision", model.brushCollision, 0..255, { model.brushCollision = it }, Modifier.width(110.dp))
                 ToggleChip("Walk", model.brushCollision == 0, { model.brushCollision = 0 })
@@ -132,7 +135,7 @@ fun MapEditor(model: MapEditorModel, modifier: Modifier = Modifier) {
 
 private const val CELL = 18f
 
-private fun typeColor(type: Int): Color {
+internal fun typeColor(type: Int): Color {
     val info = TileTypes.info(type)
     val name = info.name ?: ""
     return when {
@@ -212,13 +215,21 @@ private fun MapLegend(model: MapEditorModel, map: MapFile) {
             val (x, y) = hover
             val info = TileTypes.info(map.type(x, y))
             Text("Tile $x, $y", style = MaterialTheme.typography.titleSmall)
-            Text("Type ${info.id}: ${info.label}", style = MaterialTheme.typography.bodySmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Swatch(typeColor(info.id))
+                Text("Type ${info.id}: ${info.label}", style = MaterialTheme.typography.bodySmall)
+            }
             Text("Collision 0x%02X%s".format(map.collision(x, y), if (Collision.isBlocked(map.collision(x, y))) " (blocked)" else ""), style = MaterialTheme.typography.bodySmall)
             if (info.surfable || info.encounters) Text(listOfNotNull("surfable".takeIf { info.surfable }, "wild encounters".takeIf { info.encounters }).joinToString(", "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else Text("Point at a tile.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         val used = (0 until MapFile.SIZE * MapFile.SIZE).map { map.type(it % MapFile.SIZE, it / MapFile.SIZE) }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.take(8)
         Text("Most used types", style = MaterialTheme.typography.titleSmall)
-        used.forEach { (t, n) -> Text("$n × ${TileTypes.info(t).label}", style = MaterialTheme.typography.bodySmall) }
+        used.forEach { (t, n) ->
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Swatch(typeColor(t), 14.dp)
+                Text("$n × ${TileTypes.info(t).label}", style = MaterialTheme.typography.bodySmall)
+            }
+        }
         Text("Markers: blue NPC, red trainer, purple warp, green trigger, brown sign, orange building.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

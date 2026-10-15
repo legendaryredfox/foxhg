@@ -9,6 +9,7 @@ import io.github.romulofer.foxhg.core.data.evolution.TradeEvolutions
 import io.github.romulofer.foxhg.core.data.learnset.Learnset
 import io.github.romulofer.foxhg.core.data.learnset.LearnsetEntry
 import io.github.romulofer.foxhg.core.data.item.ItemData
+import io.github.romulofer.foxhg.core.graphics.Icons
 import io.github.romulofer.foxhg.core.data.map.Collision
 import io.github.romulofer.foxhg.core.data.map.MapFile
 import io.github.romulofer.foxhg.core.data.map.MapUsages
@@ -231,5 +232,23 @@ class RealRomRecordsTest {
         }
         assertTrue(npcs > 1000, "many NPCs sit on a map cell we can find, found $npcs")
         assertTrue(walkable * 100 / npcs >= 90, "NPCs stand on walkable tiles: $walkable of $npcs (row-major axes)")
+    }
+
+    @Test
+    fun iconsDecodeToRealPictures() = withProject { project ->
+        val icons = Icons(project)
+        val bulbasaur = icons.pokemon(1)!!
+        assertEquals(listOf(32, 32), listOf(bulbasaur.width, bulbasaur.height))
+        assertTrue(bulbasaur.opaqueColors >= 4, "an icon has several colours, got ${bulbasaur.opaqueColors}")
+        assertTrue(bulbasaur != icons.pokemon(4)!!, "different species have different icons")
+        val pokeBall = icons.item(4)!!
+        assertEquals(listOf(32, 32), listOf(pokeBall.width, pokeBall.height))
+        assertTrue(pokeBall.opaqueColors >= 3)
+        assertTrue((1..493).all { icons.pokemon(it) != null }, "every species has an icon")
+        assertTrue((1..536).count { icons.item(it) != null } > 500, "nearly every item has an icon")
+        // A Poké Ball is red above and white below.
+        fun count(rows: IntRange, test: (Int) -> Boolean) = rows.sumOf { y -> (0 until 32).count { x -> pokeBall.argb[y * 32 + x].let { it ushr 24 != 0 && test(it) } } }
+        assertTrue(count(4..14) { (it shr 16 and 0xFF) > (it and 0xFF) + 60 } > 20, "the upper half has red")
+        assertTrue(count(17..28) { (it and 0xFF) > 150 && (it shr 16 and 0xFF) > 150 && (it shr 8 and 0xFF) > 150 } > 20, "the lower half has white")
     }
 }

@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.romulofer.foxhg.app.ui.Chip
 import io.github.romulofer.foxhg.app.ui.EditorHeader
+import io.github.romulofer.foxhg.app.ui.PokemonIcon
 import io.github.romulofer.foxhg.app.ui.PickerField
 import io.github.romulofer.foxhg.app.ui.SectionCard
 import io.github.romulofer.foxhg.core.data.eggmove.EggMoves
@@ -47,6 +48,7 @@ fun EggMoveEditor(model: RecordEditorModel<EggMoves>, modifier: Modifier = Modif
             onSelect = { species = it },
             isEdited = { false },
             detail = { s -> eggs.movesOf(s).size.takeIf { it > 0 }?.toString() },
+            leading = { PokemonIcon(it) },
         )
         DetailPane {
             val moves = model.names?.moves ?: emptyList()

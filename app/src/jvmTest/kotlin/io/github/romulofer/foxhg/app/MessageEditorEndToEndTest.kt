@@ -31,12 +31,22 @@ class MessageEditorEndToEndTest {
             val project = app.project!!
             val editor = MessageEditorModel(project, app::projectChanged)
 
+            editor.banks.search = "great ball"
+            val matches = editor.bankRows()
+            assertTrue(TextBanks.ITEMS in matches, "a bank is found by the text of its messages")
+            assertTrue(matches.size < editor.banks.recordCount, "other banks are filtered out")
+            editor.selectBank(TextBanks.ITEMS)
+            assertEquals("great ball", editor.messageSearch, "the bank search carries over to the message list")
+            editor.banks.search = ""
             editor.selectBank(TextBanks.ITEMS)
             editor.selectMessage(3)
             assertEquals("Great Ball", editor.draft)
             assertFalse(editor.isMessageEdited(3))
             editor.edit("Mega Ball")
             assertNull(editor.draftError)
+            editor.banks.search = "mega ball"
+            assertTrue(TextBanks.ITEMS in editor.bankRows(), "the search sees edited text")
+            editor.banks.search = ""
             assertTrue(editor.isMessageEdited(3) && editor.isBankEdited(TextBanks.ITEMS))
 
             editor.edit("Mega {NOPE} Ball")

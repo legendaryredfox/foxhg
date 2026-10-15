@@ -33,7 +33,10 @@ import io.github.romulofer.foxhg.app.ui.FoxTheme
 import io.github.romulofer.foxhg.app.ui.SectionCard
 import io.github.romulofer.foxhg.core.data.evolution.EvolutionData
 import io.github.romulofer.foxhg.core.data.learnset.Learnset
+import io.github.romulofer.foxhg.app.ui.IconBitmaps
+import io.github.romulofer.foxhg.app.ui.ProvideIcons
 import io.github.romulofer.foxhg.core.data.eggmove.EggMoves
+import io.github.romulofer.foxhg.core.graphics.Icons
 import io.github.romulofer.foxhg.core.data.event.EventFile
 import io.github.romulofer.foxhg.core.data.item.ItemData
 import io.github.romulofer.foxhg.core.data.move.MoveData
@@ -157,6 +160,8 @@ private fun StatusBar(model: AppModel) {
 private fun Content(model: AppModel, modifier: Modifier) {
     val project = model.project
     val selected = model.selected
+    val icons = remember(project) { project?.let { IconBitmaps(Icons(it)) } }
+    ProvideIcons(icons) {
     when {
         project == null -> EmptyState(model, modifier)
         selected == null -> Welcome(model, modifier)
@@ -235,6 +240,7 @@ private fun Content(model: AppModel, modifier: Modifier) {
             EncounterEditor(editor, modifier.padding(16.dp))
         }
         else -> Box(modifier, contentAlignment = Alignment.Center) { Text("${selected.title} is not implemented yet (docs/plan.md)", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    }
     }
 }
 

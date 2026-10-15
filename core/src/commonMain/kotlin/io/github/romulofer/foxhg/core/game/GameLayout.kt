@@ -18,6 +18,10 @@ object HgssLayout {
     const val MOVES = "a/0/1/1"
     const val ITEMS = "a/0/1/7"
     const val MAPS = "a/0/6/5"
+    /** File 0 is the palette (16 palettes of 16 colours), file `species + 7` the 32x64 icon (two frames). */
+    const val POKEMON_ICONS = "a/0/2/0"
+    /** Pairs of an NCGR and an NCLR per item; which files belong to which item is in the generated icon table. */
+    const val ITEM_ICONS = "a/0/1/8"
     const val MATRICES = "a/0/4/1"
     const val SCRIPTS = "a/0/1/2"
     const val EVENTS = "a/0/3/2"

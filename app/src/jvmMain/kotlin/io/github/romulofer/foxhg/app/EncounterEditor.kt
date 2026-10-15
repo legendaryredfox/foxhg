@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.romulofer.foxhg.app.ui.SpeciesPicker
 import io.github.romulofer.foxhg.app.ui.Chip
 import io.github.romulofer.foxhg.app.ui.EditorHeader
 import io.github.romulofer.foxhg.app.ui.FieldFlow
@@ -117,16 +118,16 @@ private fun Detail(model: EncounterEditorModel, d: EncounterData) {
 
     SectionCard("Swarms and special", subtitle = "Species id 0 means none") {
         FieldFlow {
-            PickerField("Grass swarm", d.swarmLand, species, { v -> editor.update { it.copy(swarmLand = v) } }, Modifier.width(200.dp))
-            PickerField("Surf swarm", d.swarmSurf, species, { v -> editor.update { it.copy(swarmSurf = v) } }, Modifier.width(200.dp))
-            PickerField("Night fishing", d.nightFish, species, { v -> editor.update { it.copy(nightFish = v) } }, Modifier.width(200.dp))
-            PickerField("Fishing swarm", d.swarmFish, species, { v -> editor.update { it.copy(swarmFish = v) } }, Modifier.width(200.dp))
+            SpeciesPicker("Grass swarm", d.swarmLand, species, { v -> editor.update { it.copy(swarmLand = v) } }, Modifier.width(200.dp))
+            SpeciesPicker("Surf swarm", d.swarmSurf, species, { v -> editor.update { it.copy(swarmSurf = v) } }, Modifier.width(200.dp))
+            SpeciesPicker("Night fishing", d.nightFish, species, { v -> editor.update { it.copy(nightFish = v) } }, Modifier.width(200.dp))
+            SpeciesPicker("Fishing swarm", d.swarmFish, species, { v -> editor.update { it.copy(swarmFish = v) } }, Modifier.width(200.dp))
         }
     }
     SectionCard("Radio", subtitle = "Pokémon cries heard when tuning the Pokégear radio") {
         FieldFlow {
-            for (i in 0 until 2) PickerField("Hoenn ${i + 1}", d.hoennSounds[i], species, { v -> editor.update { it.copy(hoennSounds = it.hoennSounds.set(i, v)) } }, Modifier.width(200.dp))
-            for (i in 0 until 2) PickerField("Sinnoh ${i + 1}", d.sinnohSounds[i], species, { v -> editor.update { it.copy(sinnohSounds = it.sinnohSounds.set(i, v)) } }, Modifier.width(200.dp))
+            for (i in 0 until 2) SpeciesPicker("Hoenn ${i + 1}", d.hoennSounds[i], species, { v -> editor.update { it.copy(hoennSounds = it.hoennSounds.set(i, v)) } }, Modifier.width(200.dp))
+            for (i in 0 until 2) SpeciesPicker("Sinnoh ${i + 1}", d.sinnohSounds[i], species, { v -> editor.update { it.copy(sinnohSounds = it.sinnohSounds.set(i, v)) } }, Modifier.width(200.dp))
         }
     }
 }

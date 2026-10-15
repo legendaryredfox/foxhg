@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -110,7 +111,15 @@ fun NumberField(label: String, value: Int, range: IntRange, onChange: (Int) -> U
 
 /** Pick an id by name from [options] (index = id) in a searchable popup. Ids beyond the list show as `#id`. */
 @Composable
-fun PickerField(label: String, selected: Int, options: List<String>, onSelect: (Int) -> Unit, modifier: Modifier = Modifier.width(200.dp)) {
+fun PickerField(
+    label: String,
+    selected: Int,
+    options: List<String>,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier.width(200.dp),
+    /** A picture or swatch drawn in front of an option (and of the selected one in the field). */
+    leading: (@Composable (Int) -> Unit)? = null,
+) {
     var open by remember { mutableStateOf(false) }
     val source = remember { MutableInteractionSource() }
     val hovered by source.collectIsHoveredAsState()
@@ -121,6 +130,7 @@ fun PickerField(label: String, selected: Int, options: List<String>, onSelect: (
                 fieldModifier(false, hovered || open).hoverable(source).clickable { open = true }.padding(horizontal = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                leading?.let { it(selected); Spacer(Modifier.width(6.dp)) }
                 Text(
                     options.getOrNull(selected) ?: "#$selected",
                     style = MaterialTheme.typography.bodyMedium,
@@ -131,7 +141,7 @@ fun PickerField(label: String, selected: Int, options: List<String>, onSelect: (
                 Text("%d".format(selected), style = Fox.mono, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("  ▾", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (open) PickerPopup(selected, options, onSelect = { onSelect(it); open = false }, onDismiss = { open = false })
+            if (open) PickerPopup(selected, options, onSelect = { onSelect(it); open = false }, onDismiss = { open = false }, leading = leading)
         }
     }
 }
@@ -146,7 +156,7 @@ private class BelowAnchor : PopupPositionProvider {
 }
 
 @Composable
-private fun PickerPopup(selected: Int, options: List<String>, onSelect: (Int) -> Unit, onDismiss: () -> Unit) {
+private fun PickerPopup(selected: Int, options: List<String>, onSelect: (Int) -> Unit, onDismiss: () -> Unit, leading: (@Composable (Int) -> Unit)? = null) {
     var query by remember { mutableStateOf("") }
     val matches = remember(query, options) {
         val q = query.trim()
@@ -183,6 +193,7 @@ private fun PickerPopup(selected: Int, options: List<String>, onSelect: (Int) ->
                                 text = options[id],
                                 selected = id == selected,
                                 onClick = { onSelect(id) },
+                                leading = leading?.let { l -> { l(id) } },
                             )
                         }
                     }
@@ -227,6 +238,7 @@ fun ListRow(
     edited: Boolean = false,
     flagged: Boolean = false,
     modifier: Modifier = Modifier,
+    leading: (@Composable () -> Unit)? = null,
 ) {
     val source = remember { MutableInteractionSource() }
     val hovered by source.collectIsHoveredAsState()
@@ -242,6 +254,7 @@ fun ListRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(id.padStart(3, '0'), style = Fox.mono, color = if (selected) scheme.onPrimaryContainer else scheme.onSurfaceVariant, modifier = Modifier.width(30.dp))
+        leading?.invoke()
         Text(
             text,
             style = MaterialTheme.typography.bodyMedium,

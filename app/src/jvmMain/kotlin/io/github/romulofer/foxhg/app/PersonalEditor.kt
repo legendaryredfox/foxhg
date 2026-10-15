@@ -10,7 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.romulofer.foxhg.app.ui.ItemPicker
 import io.github.romulofer.foxhg.app.ui.EditorHeader
+import io.github.romulofer.foxhg.app.ui.PokemonIcon
 import io.github.romulofer.foxhg.app.ui.FieldFlow
 import io.github.romulofer.foxhg.app.ui.NumberField
 import io.github.romulofer.foxhg.app.ui.PickerField
@@ -41,6 +43,7 @@ fun PersonalEditor(model: PersonalEditorModel, modifier: Modifier = Modifier) {
             label = model::label,
             onSelect = model::select,
             isEdited = model::isEdited,
+            leading = { PokemonIcon(it) },
         )
         model.selected?.let { record -> DetailPane { Form(model, record) } }
     }
@@ -101,8 +104,8 @@ private fun Form(model: PersonalEditorModel, p: PersonalData) {
 
     SectionCard("Held items in the wild") {
         FieldFlow {
-            PickerField("Common (50%)", p.heldItemCommon, items, { v -> model.update { it.copy(heldItemCommon = v) } }, Modifier.width(240.dp))
-            PickerField("Rare (5%)", p.heldItemRare, items, { v -> model.update { it.copy(heldItemRare = v) } }, Modifier.width(240.dp))
+            ItemPicker("Common (50%)", p.heldItemCommon, items, { v -> model.update { it.copy(heldItemCommon = v) } }, Modifier.width(240.dp))
+            ItemPicker("Rare (5%)", p.heldItemRare, items, { v -> model.update { it.copy(heldItemRare = v) } }, Modifier.width(240.dp))
         }
     }
 

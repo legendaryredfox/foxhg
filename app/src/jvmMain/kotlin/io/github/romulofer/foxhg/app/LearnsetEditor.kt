@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.romulofer.foxhg.app.ui.Chip
 import io.github.romulofer.foxhg.app.ui.EditorHeader
+import io.github.romulofer.foxhg.app.ui.PokemonIcon
 import io.github.romulofer.foxhg.app.ui.NumberField
 import io.github.romulofer.foxhg.app.ui.PickerField
 import io.github.romulofer.foxhg.app.ui.SectionCard
@@ -22,7 +23,7 @@ import io.github.romulofer.foxhg.core.data.learnset.LearnsetEntry
 
 @Composable
 fun LearnsetEditor(model: RecordEditorModel<Learnset>, modifier: Modifier = Modifier) {
-    RecordListDetail(model, modifier) { learnset ->
+    RecordListDetail(model, modifier, leading = { PokemonIcon(it) }) { learnset ->
         val moves = model.names?.moves ?: emptyList()
         EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)))
         SectionCard(

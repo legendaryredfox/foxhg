@@ -42,6 +42,7 @@ fun ListPane(
     width: Dp = 272.dp,
     flagged: (Int) -> Boolean = { false },
     detail: (Int) -> String? = { null },
+    leading: (@Composable (Int) -> Unit)? = null,
 ) {
     Column(modifier.width(width).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SearchBox(search, onSearch, placeholder, Modifier.fillMaxWidth())
@@ -56,6 +57,7 @@ fun ListPane(
                     detail = detail(index),
                     edited = isEdited(index),
                     flagged = flagged(index),
+                    leading = leading?.let { l -> { l(index) } },
                 )
             }
         }
@@ -81,6 +83,7 @@ fun <T> RecordListDetail(
     flagged: (Int) -> Boolean = { false },
     rowDetail: (Int) -> String? = { null },
     onSelect: (Int) -> Unit = { },
+    leading: (@Composable (Int) -> Unit)? = null,
     detail: @Composable (T) -> Unit,
 ) {
     model.loadError?.let {
@@ -99,6 +102,7 @@ fun <T> RecordListDetail(
             isEdited = model::isEdited,
             flagged = flagged,
             detail = rowDetail,
+            leading = leading,
         )
         model.selected?.let { record -> DetailPane { detail(record) } }
     }

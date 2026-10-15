@@ -47,10 +47,27 @@ class MessageEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
 
     init { loadDraft() }
 
+    /** Lower-case text of every message of a bank, rebuilt when the bank changes. */
+    private val searchText = HashMap<Int, Pair<TextArchive, String>>()
+
+    private fun textOf(bank: Int): String {
+        val archive = banks.records.getOrNull(bank) ?: return ""
+        searchText[bank]?.let { (cached, text) -> if (cached === archive) return text }
+        return archive.entries.joinToString("\u0000") { it.text() }.lowercase().also { searchText[bank] = archive to it }
+    }
+
+    /** Banks whose name or any of whose messages contains the search text. */
+    fun bankRows(): List<Int> {
+        val q = banks.search.trim().lowercase()
+        if (q.isEmpty()) return (0 until banks.recordCount).toList()
+        return (0 until banks.recordCount).filter { banks.label(it).lowercase().contains(q) || textOf(it).contains(q) }
+    }
+
+    /** The bank search also narrows the message list of the bank you open, so the match is in view. */
     fun selectBank(bank: Int) {
         banks.select(bank)
         messageIndex = 0
-        messageSearch = ""
+        messageSearch = banks.search.trim()
         loadDraft()
     }
 
@@ -98,11 +115,11 @@ fun MessageEditor(model: MessageEditorModel, modifier: Modifier = Modifier) {
     }
     Row(modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         ListPane(
-            rows = model.banks.rows(),
+            rows = model.bankRows(),
             selected = model.banks.selectedIndex,
             search = model.banks.search,
             onSearch = { model.banks.search = it },
-            placeholder = "Search banks…",
+            placeholder = "Search banks and messages…",
             label = model.banks::label,
             onSelect = model::selectBank,
             isEdited = model::isBankEdited,

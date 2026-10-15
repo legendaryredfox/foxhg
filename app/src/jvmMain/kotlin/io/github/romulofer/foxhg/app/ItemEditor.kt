@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.romulofer.foxhg.app.ui.EditorHeader
+import io.github.romulofer.foxhg.app.ui.ItemIcon
 import io.github.romulofer.foxhg.app.ui.FieldFlow
 import io.github.romulofer.foxhg.app.ui.NumberField
 import io.github.romulofer.foxhg.app.ui.PickerField
@@ -14,7 +15,7 @@ import io.github.romulofer.foxhg.core.data.item.ItemData
 
 @Composable
 fun ItemEditor(model: RecordEditorModel<ItemData>, modifier: Modifier = Modifier) {
-    RecordListDetail(model, modifier) { m ->
+    RecordListDetail(model, modifier, leading = { ItemIcon(it) }) { m ->
         val types = model.names?.types ?: emptyList()
         EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = { CsvButtons(model, ItemData.CSV, "items") })
         SectionCard("General") {

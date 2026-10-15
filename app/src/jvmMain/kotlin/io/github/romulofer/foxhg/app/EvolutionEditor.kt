@@ -15,7 +15,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.romulofer.foxhg.app.ui.SpeciesPicker
+import io.github.romulofer.foxhg.app.ui.ItemPicker
 import io.github.romulofer.foxhg.app.ui.EditorHeader
+import io.github.romulofer.foxhg.app.ui.PokemonIcon
 import io.github.romulofer.foxhg.app.ui.FieldFlow
 import io.github.romulofer.foxhg.app.ui.NumberField
 import io.github.romulofer.foxhg.app.ui.PickerField
@@ -29,7 +32,7 @@ import io.github.romulofer.foxhg.core.data.evolution.TradeEvolutions
 fun EvolutionEditor(model: RecordEditorModel<EvolutionData>, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         TradeConversionCard(model)
-        RecordListDetail(model, Modifier.fillMaxSize()) { data -> Detail(model, data) }
+        RecordListDetail(model, Modifier.fillMaxSize(), leading = { PokemonIcon(it) }) { data -> Detail(model, data) }
     }
 }
 
@@ -84,12 +87,12 @@ private fun Detail(model: RecordEditorModel<EvolutionData>, data: EvolutionData)
                         ParamKind.LEVEL -> NumberField("Level", entry.param, 1..100, setParam, Modifier.width(90.dp))
                         ParamKind.FRIENDSHIP -> NumberField("Friendship", entry.param, 0..255, setParam, Modifier.width(110.dp))
                         ParamKind.BEAUTY -> NumberField("Beauty", entry.param, 0..255, setParam, Modifier.width(110.dp))
-                        ParamKind.ITEM -> PickerField("Item", entry.param, items, setParam, Modifier.width(220.dp))
+                        ParamKind.ITEM -> ItemPicker("Item", entry.param, items, setParam, Modifier.width(220.dp))
                         ParamKind.MOVE -> PickerField("Move", entry.param, moves, setParam, Modifier.width(220.dp))
-                        ParamKind.SPECIES -> PickerField("Species", entry.param, species, setParam, Modifier.width(220.dp))
+                        ParamKind.SPECIES -> SpeciesPicker("Species", entry.param, species, setParam, Modifier.width(220.dp))
                     }
                     if (method != EvolutionMethod.NONE) {
-                        PickerField("Evolves into", entry.target, species, { v -> model.update { it.with(slot, entry.copy(target = v)) } }, Modifier.width(220.dp))
+                        SpeciesPicker("Evolves into", entry.target, species, { v -> model.update { it.with(slot, entry.copy(target = v)) } }, Modifier.width(220.dp))
                     }
                 }
             }

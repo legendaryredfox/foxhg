@@ -21,6 +21,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.romulofer.foxhg.app.ui.SpeciesPicker
+import io.github.romulofer.foxhg.app.ui.ItemPicker
 import io.github.romulofer.foxhg.app.ui.Chip
 import io.github.romulofer.foxhg.app.ui.EditorHeader
 import io.github.romulofer.foxhg.app.ui.FieldFlow
@@ -65,8 +67,8 @@ private fun ReplaceSpeciesCard(model: TrainerEditorModel) {
     var message by remember { mutableStateOf<String?>(null) }
     SectionCard("Replace a Pokémon in every trainer party", subtitle = "Keeps level and everything else; changes the species only") {
         FieldFlow {
-            PickerField("Replace", from, species, { from = it }, Modifier.width(200.dp))
-            PickerField("With", to, species, { to = it }, Modifier.width(200.dp))
+            SpeciesPicker("Replace", from, species, { from = it }, Modifier.width(200.dp))
+            SpeciesPicker("With", to, species, { to = it }, Modifier.width(200.dp))
             Button(onClick = {
                 val n = model.replaceSpeciesEverywhere(from, to)
                 message = if (n == 0) "No trainer uses ${species.getOrNull(from)}" else "Replaced $n Pokémon"
@@ -98,7 +100,7 @@ private fun Detail(model: TrainerEditorModel, trainer: Trainer) {
     SectionCard("Items used in battle") {
         FieldFlow {
             for (slot in 0 until 4) {
-                PickerField("Item ${slot + 1}", h.items.getOrElse(slot) { 0 }, names?.items ?: emptyList(), { v ->
+                ItemPicker("Item ${slot + 1}", h.items.getOrElse(slot) { 0 }, names?.items ?: emptyList(), { v ->
                     model.update { it.withHeader(it.header.copy(items = it.header.items.toMutableList().also { l -> l[slot] = v })) }
                 }, Modifier.width(200.dp))
             }
@@ -131,13 +133,13 @@ private fun MonCard(model: TrainerEditorModel, trainer: Trainer, slot: Int, mon:
                 TextButton(onClick = { model.removeMon(slot) }) { Text("Remove") }
             }
             FieldFlow {
-                PickerField("Species", mon.species, names?.species ?: emptyList(), { v -> model.updateMon(slot) { it.withSpecies(v) } }, Modifier.width(200.dp))
+                SpeciesPicker("Species", mon.species, names?.species ?: emptyList(), { v -> model.updateMon(slot) { it.withSpecies(v) } }, Modifier.width(200.dp))
                 NumberField("Level", mon.level, 1..100, { v -> model.updateMon(slot) { it.copy(level = v) } }, Modifier.width(80.dp))
                 NumberField("Form", mon.form, 0..63, { v -> model.updateMon(slot) { it.copy(speciesAndForm = (v shl 10) or it.species) } }, Modifier.width(80.dp))
                 NumberField("IV scale", mon.difficulty, 0..255, { v -> model.updateMon(slot) { it.copy(difficulty = v) } }, Modifier.width(90.dp))
                 NumberField("Gender / ability", mon.genderAbility, 0..255, { v -> model.updateMon(slot) { it.copy(genderAbility = v) } }, Modifier.width(130.dp))
                 if (h.hasHeldItems) {
-                    PickerField("Held item", mon.item, names?.items ?: emptyList(), { v -> model.updateMon(slot) { it.copy(item = v) } }, Modifier.width(200.dp))
+                    ItemPicker("Held item", mon.item, names?.items ?: emptyList(), { v -> model.updateMon(slot) { it.copy(item = v) } }, Modifier.width(200.dp))
                 }
             }
             if (h.hasCustomMoves) {
