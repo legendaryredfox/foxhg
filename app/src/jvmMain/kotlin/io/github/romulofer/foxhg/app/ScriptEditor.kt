@@ -37,6 +37,7 @@ import io.github.romulofer.foxhg.core.data.mapheader.MapHeader
 import io.github.romulofer.foxhg.core.data.mapheader.MapHeaderTable
 import io.github.romulofer.foxhg.core.project.RomProject
 import io.github.romulofer.foxhg.core.script.LevelScript
+import io.github.romulofer.foxhg.core.text.TextArchive
 import io.github.romulofer.foxhg.core.script.LevelTrigger
 import io.github.romulofer.foxhg.core.script.ScriptCommands
 import io.github.romulofer.foxhg.core.script.ScriptEntry
@@ -50,6 +51,9 @@ class ScriptLabels(project: RomProject) {
 
     private fun mapName(header: Int): String =
         headers.getOrNull(header)?.let { names?.locations?.getOrNull(it.locationName) }?.takeIf { it.isNotBlank() } ?: "Map $header"
+
+    /** The text bank (a file of the message NARC) the script file's first map reads its messages from, or null. */
+    fun textBank(file: Int): Int? = scriptUsers(file).firstOrNull()?.let { headers[it].textArchive }
 
     fun scriptUsers(file: Int): List<Int> = headers.indices.filter { headers[it].script == file }
     fun levelScriptUsers(file: Int): List<Int> = headers.indices.filter { headers[it].levelScript == file }
@@ -72,8 +76,13 @@ class ScriptLabels(project: RomProject) {
 }
 
 /** State of the Scripts editor: the file list is a [RecordEditorModel], the text being typed is the draft. */
-class ScriptEditorModel(project: RomProject, labels: ScriptLabels, onChanged: () -> Unit = {}) {
+class ScriptEditorModel(project: RomProject, private val labels: ScriptLabels, onChanged: () -> Unit = {}) {
     val files = RecordEditorModel(project, ScriptEntry.SPEC, labels::label, onChanged)
+    private val archives: List<TextArchive> = (TextArchive.load(project) as? FoxResult.Ok)?.value?.records ?: emptyList()
+
+    /** The messages the selected script file can show, for the notes in its text. */
+    private fun messages(file: Int): ScriptText.Messages? =
+        labels.textBank(file)?.let { archives.getOrNull(it) }?.let { bank -> ScriptText.Messages { id -> bank.entries.getOrNull(id)?.text() } }
 
     var draft: String by mutableStateOf("")
         private set
@@ -102,7 +111,7 @@ class ScriptEditorModel(project: RomProject, labels: ScriptLabels, onChanged: ()
     }
 
     private fun loadDraft() {
-        draft = (files.selected as? ScriptEntry.Script)?.let { ScriptText.toText(it.file) } ?: ""
+        draft = (files.selected as? ScriptEntry.Script)?.let { ScriptText.toText(it.file, messages(files.selectedIndex)) } ?: ""
         draftError = null
     }
 }
@@ -120,7 +129,7 @@ fun ScriptEditor(model: ScriptEditorModel, labels: ScriptLabels, modifier: Modif
         when (entry) {
             is ScriptEntry.Script -> SectionCard(
                 "Script",
-                subtitle = "Commands as in the script command database; a jump takes a label. Applied as you type once it is valid.",
+                subtitle = "Commands as in the script command database; a jump takes a label. Flag and variable names can be used instead of numbers. Applied as you type once it is valid.",
                 actions = { Chip("${entry.file.scriptCount} scripts") },
             ) {
                 TextArea(model.draft, model::edit, invalid = model.draftError != null, modifier = Modifier.fillMaxWidth(), minHeight = androidx.compose.ui.unit.Dp(480f), transformation = ScriptHighlight)

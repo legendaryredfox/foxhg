@@ -29,6 +29,12 @@ for name, cmd in v2["commands"].items():
 commands.sort()
 assert len({c[0] for c in commands}) == len(commands)
 
+def symbols(section):
+    return sorted(((v["id"], k) for k, v in v2[section].items()), key=lambda t: (t[0], 0 if t[1].startswith(("FLAG_", "VAR_")) else 1, t[1]))
+
+flags = symbols("flags")
+variables = symbols("vars")
+
 movements = sorted((int(k, 16), m["name"]) for k, m in legacy["movements"].items())
 comparisons = sorted((int(k, 16), n) for k, n in legacy["comparisonOperators"].items())
 
@@ -55,6 +61,15 @@ internal val MOVEMENT_CHUNKS = listOf(
 internal val COMPARISON_CHUNKS = listOf(
 {chunks([f"{i}|{n}" for i, n in comparisons])},
 )
+
+// Names of script flags and variables (`id|NAME`, the preferred name of an id first).
+internal val FLAG_CHUNKS = listOf(
+{chunks([f"{i}|{n}" for i, n in flags])},
+)
+
+internal val VARIABLE_CHUNKS = listOf(
+{chunks([f"{i}|{n}" for i, n in variables])},
+)
 '''
 open("core/src/commonMain/kotlin/io/github/romulofer/foxhg/core/script/ScrcmdData.kt", "w", encoding="utf-8").write(body)
-print(len(commands), len(movements), len(comparisons))
+print(len(commands), len(movements), len(comparisons), len(flags), len(variables))

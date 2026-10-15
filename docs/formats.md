@@ -298,3 +298,12 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
 - **Cries**: sequence 1 (`SEQ_PV001`, a one-note template with note length 0) played with bank = species number; each bank
   `BANK_PV<n>` uses wave archive n with one wave (Bulbasaur: 8184 samples at 10512 Hz, 0.78 s). Length 0 therefore means "play the
   sample to its end". Species 1-493 all have one.
+
+## Script symbols
+
+- Flags run 0..16447 and variables 0x4000.. (0x8000+ are the special ones, `VAR_SPECIAL_RESULT` = 32780); names come from the
+  script command database (synced from the decomp), generated into `ScriptData.kt` by `scripts/gen-scrcmd.py`. Several names can
+  share an id (aliases such as `MAPTEMP_FLAG_BASE`); the `FLAG_`/`VAR_` one is shown.
+- Flag parameters are known by command (`SetFlag`, `ClearFlag`, `CheckFlag` take a flag number); a value of 0x4000 or more in any
+  parameter is a variable. Message parameters are the ones named `text_slot`, `message`, ... in the database; the message is
+  read from the text bank in the `textArchive` field of the first map header that uses the script file.

@@ -197,6 +197,14 @@ class RealRomRecordsTest {
             val back = ScriptText.parse(ScriptText.toText(s.file)).ok()
             assertEquals(s.file, back, "text form of a script file must read back to the same file")
         }
+        val notes = ScriptText.Messages { "A message" }
+        var annotated = 0
+        for (s in scripts) {
+            val text = ScriptText.toText(s.file, notes)
+            if (text.contains("; FLAG_") || text.contains("; VAR_") || text.contains("; \"A message\"")) annotated++
+            assertEquals(s.file, ScriptText.parse(text).ok(), "notes do not change what the text means")
+        }
+        assertTrue(annotated > 300, "most script files carry flags, variables or messages that get a note, got $annotated")
     }
 
     @Test

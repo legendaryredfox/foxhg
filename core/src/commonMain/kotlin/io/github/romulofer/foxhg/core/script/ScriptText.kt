@@ -22,7 +22,16 @@ import io.github.romulofer.foxhg.core.FoxResult
  * comment. Labels may be numbered freely but `script_N` must run 1..n; the order of lines is the layout of the file.
  */
 object ScriptText {
-    fun toText(file: ScriptFile): String = buildString {
+    /** Looks messages up for the notes next to commands that show text. */
+    fun interface Messages {
+        fun text(id: Int): String?
+    }
+
+    /**
+     * The text form of [file]. With [messages] (the text bank the script reads from) commands that show a message get
+     * the start of it as a comment; flag and variable numbers always get their name as a comment.
+     */
+    fun toText(file: ScriptFile, messages: Messages? = null): String = buildString {
         for (item in file.items) {
             when (item) {
                 is ScriptItem.Label -> {
@@ -31,9 +40,40 @@ object ScriptText {
                 }
                 is ScriptItem.Pad -> append("    .pad ").append(item.bytes).append('\n')
                 is ScriptItem.Move -> append("    ").append(moveText(item.movement)).append('\n')
-                is ScriptItem.Instruction -> append("    ").append(commandText(item.command)).append('\n')
+                is ScriptItem.Instruction -> {
+                    val line = "    " + commandText(item.command)
+                    val note = notes(item.command, messages)
+                    append(line)
+                    if (note.isNotEmpty()) append(" ".repeat((44 - line.length).coerceAtLeast(2))).append("; ").append(note)
+                    append('\n')
+                }
             }
         }
+    }
+
+    private val COMMANDS_IN_TEXT = Regex("\\{[^}]*\\}")
+
+    /** One line of at most 36 characters: line breaks and {commands} become spaces or an ellipsis. */
+    private fun shorten(text: String): String {
+        val flat = COMMANDS_IN_TEXT.replace(text, "…").replace("\\n", " ").replace("\\r", " ").replace("\\f", " ").replace("\n", " ").trim()
+        return if (flat.length > 36) flat.take(35) + "…" else flat
+    }
+
+    private fun notes(c: ScriptCommand, messages: Messages?): String {
+        val out = ArrayList<String>()
+        var i = 0
+        while (ScriptCommands.nextArgSize(c.id, c.args.take(i)) != null) {
+            val v = c.args.getOrNull(i)?.toInt() ?: 0
+            if (i != ScriptCommands.jumpIndex(c.id)) {
+                when (ScriptCommands.role(c.id, i)) {
+                    ParamRole.FLAG -> ScriptSymbols.flagName(v)?.let { out += it }
+                    ParamRole.MESSAGE -> messages?.text(v)?.let { out += "\"" + shorten(it) + "\"" }
+                    ParamRole.PLAIN -> if (v >= ScriptSymbols.FIRST_VARIABLE) ScriptSymbols.variableName(v)?.let { out += it }
+                }
+            }
+            i++
+        }
+        return out.joinToString(", ")
     }
 
     private fun moveText(m: Movement): String = when {
@@ -90,7 +130,8 @@ object ScriptText {
         return FoxResult.Ok(file)
     }
 
-    private fun number(s: String): Long? = (if (s.startsWith("0x") || s.startsWith("0X")) s.substring(2).toLongOrNull(16) else s.toLongOrNull())
+    private fun number(s: String): Long? =
+        (if (s.startsWith("0x") || s.startsWith("0X")) s.substring(2).toLongOrNull(16) else s.toLongOrNull()) ?: ScriptSymbols.idOf(s)?.toLong()
 
     private fun parseLabel(s: String): LabelRef? {
         val kind = LabelRef.Kind.entries.firstOrNull { s.startsWith(it.name.lowercase() + "_") } ?: return null

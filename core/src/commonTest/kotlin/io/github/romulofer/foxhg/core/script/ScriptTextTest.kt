@@ -57,4 +57,22 @@ class ScriptTextTest {
             assertTrue(r is FoxResult.Err && r.message.contains(part), "$text -> $r")
         }
     }
+
+    @Test
+    fun flagAndVariableNamesAreNotesAndCanBeTyped() {
+        val named = file("script_1:\n    SetFlag FLAG_NOTHING\n    SetVar VAR_SPECIAL_RESULT, 1\n    End\n")
+        val text = ScriptText.toText(named)
+        assertTrue(text.contains("SetFlag 0") && text.contains("; FLAG_NOTHING"), text)
+        assertTrue(text.contains("; VAR_SPECIAL_RESULT"), text)
+        assertEquals(named, file(text), "the notes are comments: reading the text gives the same file")
+    }
+
+    @Test
+    fun messageNotesShowTheStartOfTheText() {
+        val f = file("script_1:\n    NPCMsg 3\n    End\n")
+        val text = ScriptText.toText(f) { id -> if (id == 3) "Hello there!\\nHow are you?" else null }
+        assertTrue(text.contains("; \"Hello there! How are you?\""), text)
+        assertEquals(f, file(text))
+        assertTrue(!ScriptText.toText(f).contains(";"), "without a message source there is no note")
+    }
 }
