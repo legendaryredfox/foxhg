@@ -20,6 +20,7 @@ import io.github.romulofer.foxhg.core.data.learnset.Learnset
 import io.github.romulofer.foxhg.core.data.learnset.LearnsetEntry
 import io.github.romulofer.foxhg.core.data.move.MoveData
 import io.github.romulofer.foxhg.core.data.tmhm.TmHmTable
+import io.github.romulofer.foxhg.core.data.trade.NpcTrade
 import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassGenders
 import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassPrizes
 import java.nio.file.Files
@@ -198,6 +199,29 @@ class RecordEditorsUiEndToEndTest {
             }
         } finally {
             dir.toFile().deleteRecursively()
+        }
+    }
+
+    @Test
+    fun tradeEditsOnTheInGameTradesScreen() = withHeartGoldApp { model, project ->
+        val names = project.names!!
+        val trade = { (NpcTrade.load(project) as FoxResult.Ok).value.records[0] }
+        val before = trade()
+        assertEquals("ONIX", names.species[before.giveSpecies])
+
+        open("In-game trades")
+        clickFirstText("Rocky")
+        onNodeWithTag("number:HP").typeNumber(31)
+        onNodeWithTag("number:Speed").typeNumber(40)
+        waitForIdle()
+        assertEquals(31, trade().hpIv)
+        assertEquals(before.speedIv, trade().speedIv, "40 is not an IV, so nothing is written")
+        pick("NPC gives", "STEELIX")
+        assertEquals(names.species.indexOf("STEELIX"), trade().giveSpecies)
+        assertEquals(before.askSpecies, trade().askSpecies, "untouched fields stay")
+
+        buildAndReopen(model) { rebuilt ->
+            assertEquals(trade(), (NpcTrade.load(rebuilt) as FoxResult.Ok).value.records[0])
         }
     }
 

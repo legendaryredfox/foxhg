@@ -50,6 +50,7 @@ import io.github.romulofer.foxhg.core.graphics.Icons
 import io.github.romulofer.foxhg.core.data.event.EventFile
 import io.github.romulofer.foxhg.core.data.item.ItemData
 import io.github.romulofer.foxhg.core.data.move.MoveData
+import io.github.romulofer.foxhg.core.data.trade.NpcTrade
 
 @Composable
 fun App(model: AppModel) {
@@ -209,6 +210,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
         }
         selected == EditorKind.EGG_MOVES -> Loading(project, "egg moves", { model.recordEditor(EditorKind.EGG_MOVES, project, EggMoves.SPEC, { "%03d".format(it) }, 0) }) { editor ->
             EggMoveEditor(editor, modifier.padding(16.dp))
+        }
+        selected == EditorKind.TRADES -> Loading(project, "trades", { model.recordEditor(EditorKind.TRADES, project, NpcTrade.SPEC, RecordEditorModel.tradeLabel(project.names), 0) }) { editor ->
+            TradeEditor(editor, modifier.padding(16.dp))
         }
         selected == EditorKind.TMHM -> Loading(project, "TMs and HMs", { TmHmEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             TmHmEditor(editor, modifier.padding(16.dp))

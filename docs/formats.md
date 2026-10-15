@@ -427,3 +427,13 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
   80 % or more of the flat plates match the model within 0.3 tiles (a test). Sloped plates (stairs, ramps, slopes of the 45 degree kind) are
   not drawn: their plane formula is not confirmed (a slope plate of the lab's roof area does not match the terrain at all).
 - Stripes are rows of the lookup grid, 7 for New Bark Town, with the z of the row start; their plates are listed in the index list.
+
+## In-game trades (`a/1/1/2`)
+
+- 13 files of 0x54 bytes, one per NPC trade, 21 little-endian u32: give species, HP, Atk, Def, Speed, SpAtk, SpDef IVs, ability, OT id,
+  cool, beauty, cute, smart, tough, PID, held item, OT gender (0 male, 1 female), sheen, language (2 English, 3 for Volty), ask species,
+  one unused word (0 in all 13). Layout from the decomp's `NPCTrade`; round trip exact, and the vanilla trades match the decomp's
+  `NpcTradeNum` order (0 Onix for Bellsprout, 12 Beldum for Forretress).
+- Nickname of trade `n` is entry `n` of message bank 200, the original trainer's name entry `n + 13` (Rocky, Rudy). The editor does not
+  edit those; the text editor does. PID and OT id are u32 in the file; the editor edits them up to 2^31 - 1 (all vanilla values are far below).
+

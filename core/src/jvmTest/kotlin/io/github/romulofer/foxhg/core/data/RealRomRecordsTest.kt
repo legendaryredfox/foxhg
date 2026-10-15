@@ -12,6 +12,7 @@ import io.github.romulofer.foxhg.core.data.evolution.TradeEvolutions
 import io.github.romulofer.foxhg.core.data.learnset.Learnset
 import io.github.romulofer.foxhg.core.data.learnset.LearnsetEntry
 import io.github.romulofer.foxhg.core.data.item.ItemData
+import io.github.romulofer.foxhg.core.data.trade.NpcTrade
 import io.github.romulofer.foxhg.core.graphics.Icons
 import io.github.romulofer.foxhg.core.data.map.FixedPos
 import io.github.romulofer.foxhg.core.graphics.Camera3d
@@ -100,6 +101,21 @@ class RealRomRecordsTest {
         assertEquals(200, pokeBall.price)
         assertEquals(1, pokeBall.battleUseFunc, "Poké Ball is a ball")
         assertEquals(ItemData.SIZE, table.records.first().toBytes().size)
+    }
+
+    @Test
+    fun npcTradesRoundTripAndMatchTheGame() = withProject { project ->
+        val table = NpcTrade.load(project).ok()
+        table.assertNarcRoundTrips(project)
+        assertEquals(13, table.records.size)
+        val species = project.names!!.species
+        val names = project.names!!.tradeNames
+        assertEquals("ONIX", species[table.records[0].giveSpecies])
+        assertEquals("BELLSPROUT", species[table.records[0].askSpecies])
+        assertEquals("Rocky", names[0])
+        assertEquals("Rudy", names[13])
+        assertEquals("BELDUM", species[table.records[12].giveSpecies])
+        assertTrue(table.records.all { it.toBytes().size == NpcTrade.SIZE })
     }
 
     @Test

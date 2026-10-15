@@ -6,6 +6,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     LEARNSET("Pokémon", "Learnsets", implemented = true),
     EVOLUTIONS("Pokémon", "Evolutions", implemented = true),
     EGG_MOVES("Pokémon", "Egg moves", implemented = true),
+    TRADES("Pokémon", "In-game trades", implemented = true),
     TMHM("Moves and items", "TMs and HMs", implemented = true),
     MOVES("Moves and items", "Moves", implemented = true),
     ITEMS("Moves and items", "Items", implemented = true),

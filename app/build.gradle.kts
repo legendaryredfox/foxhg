@@ -35,7 +35,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Deb, TargetFormat.Msi, TargetFormat.Dmg)
             packageName = "foxhg"
-            packageVersion = "0.1.0"
+            packageVersion = "0.5.0"
             description = "Nintendo DS Pokémon ROM editor."
             modules("java.prefs")
             linux {

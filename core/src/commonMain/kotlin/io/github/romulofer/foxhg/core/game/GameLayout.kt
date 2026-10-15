@@ -17,6 +17,8 @@ object HgssLayout {
     const val EGG_MOVES = "a/2/2/9"
     const val MOVES = "a/0/1/1"
     const val ITEMS = "a/0/1/7"
+    /** One file per in-game NPC trade (13 in HeartGold); the nickname and trainer name are in [TextBanks.TRADE_NAMES]. */
+    const val NPC_TRADES = "a/1/1/2"
     const val MAPS = "a/0/6/5"
     /** The sound archive (SDAT): sequences, banks and waves of music, sound effects and cries. Not a NARC. */
     const val SOUND_ARCHIVE = "data/sound/gs_sound_data.sdat"
@@ -76,6 +78,8 @@ object TextBanks {
     const val TRAINER_CLASSES = 730
     /** 235 entries, index = map header name id. */
     const val LOCATIONS = 279
+    /** Entry `n` is the nickname of trade `n`, entry `n + 13` the name of its original trainer. */
+    const val TRADE_NAMES = 200
 
     /** What a bank holds, for the banks the editors know; null for the rest. */
     fun describe(bank: Int): String? = when (bank) {

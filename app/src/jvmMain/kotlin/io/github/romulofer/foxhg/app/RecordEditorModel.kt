@@ -99,6 +99,8 @@ class RecordEditorModel<T>(
 
         fun itemLabel(names: GameNames?): (Int) -> String = { i -> "%03d  %s".format(i, names?.items?.getOrNull(i) ?: "Item $i") }
 
+        fun tradeLabel(names: GameNames?): (Int) -> String = { i -> "%02d  %s".format(i, names?.tradeNames?.getOrNull(i) ?: "Trade $i") }
+
         fun moveLabel(names: GameNames?): (Int) -> String = { i -> "%03d  %s".format(i, names?.moves?.getOrNull(i) ?: "Move $i") }
     }
 }
