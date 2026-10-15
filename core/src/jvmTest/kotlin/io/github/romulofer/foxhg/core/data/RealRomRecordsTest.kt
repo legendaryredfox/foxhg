@@ -9,6 +9,10 @@ import io.github.romulofer.foxhg.core.data.evolution.TradeEvolutions
 import io.github.romulofer.foxhg.core.data.learnset.Learnset
 import io.github.romulofer.foxhg.core.data.learnset.LearnsetEntry
 import io.github.romulofer.foxhg.core.data.item.ItemData
+import io.github.romulofer.foxhg.core.data.map.Collision
+import io.github.romulofer.foxhg.core.data.map.MapFile
+import io.github.romulofer.foxhg.core.data.map.MapUsages
+import io.github.romulofer.foxhg.core.data.map.TileTypes
 import io.github.romulofer.foxhg.core.data.move.MoveData
 import io.github.romulofer.foxhg.core.data.tmhm.TmHmTable
 import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassGenders
@@ -191,5 +195,41 @@ class RealRomRecordsTest {
             val back = ScriptText.parse(ScriptText.toText(s.file)).ok()
             assertEquals(s.file, back, "text form of a script file must read back to the same file")
         }
+    }
+
+    @Test
+    fun mapFilesRoundTripAndMatchTheGame() = withProject { project ->
+        val table = MapFile.load(project).ok()
+        table.assertNarcRoundTrips(project)
+        val maps = table.records
+        assertEquals(676, maps.size)
+        assertEquals(2859, maps.sumOf { it.buildings.size })
+        assertTrue(maps.all { m -> m.buildings.all { it.width == 16L && it.height == 16L && it.length == 16L } }, "building scales are 16 in vanilla")
+        assertEquals("Tall grass", TileTypes.info(2).label)
+        assertTrue(TileTypes.info(16).surfable && TileTypes.info(2).encounters)
+        val edited = maps[3].withTile(5, 7, type = 2, collision = 0x80)
+        assertEquals(listOf(2, 0x80), listOf(edited.type(5, 7), edited.collision(5, 7)))
+        assertEquals(maps[3].collision(7, 5), edited.collision(7, 5), "only the (5, 7) tile changed")
+        assertContentEquals(MapFile.parse(edited.toBytes()).ok().toBytes(), edited.toBytes())
+    }
+
+    @Test
+    fun mapPermissionsAreRowMajorAndEveryUsedMapHasAUsage() = withProject { project ->
+        val maps = MapFile.load(project).ok().records
+        val usages = MapUsages(project)
+        val events = EventFile.load(project).ok().records
+        var npcs = 0
+        var walkable = 0
+        maps.indices.forEach { map ->
+            for (u in usages.of(map)) {
+                val ev = events.getOrNull(usages.headers[u.header].eventFile) ?: continue
+                for (o in ev.overworlds.filter { !it.isAlias && it.x / 32 == u.x && it.y / 32 == u.y }) {
+                    npcs++
+                    if (!Collision.isBlocked(maps[map].collision(o.x % 32, o.y % 32))) walkable++
+                }
+            }
+        }
+        assertTrue(npcs > 1000, "many NPCs sit on a map cell we can find, found $npcs")
+        assertTrue(walkable * 100 / npcs >= 90, "NPCs stand on walkable tiles: $walkable of $npcs (row-major axes)")
     }
 }

@@ -256,3 +256,19 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
   `00` that ends the list; it can sit anywhere among the entries (468 files: 2 types, marker first, middle or last).
   The list ends with a single `00`. If a type 1 entry exists, `u16 variable, u16 value, u16 script` triples follow, ended by `u16 0`.
   Zero bytes pad the file to 4 bytes. All 468 files round trip; 3 of the script NARC's 5 raw files are empty ones.
+
+## Map files (`a/0/6/5`)
+
+- 676 files. Header: four u32 section sizes (permissions always 2048, buildings, NSBMD model, BDHC), then the background sound
+  block (`0x1234`, u16 length, data), the permissions, the buildings, the model, the BDHC. Sizes add up to the file size in every
+  vanilla file; round trip exact.
+- Permissions: 1024 pairs `u8 type, u8 collision`, **row-major**: tile (x, y) is at `(y * 32 + x) * 2`. Verified: 2568 of 2657 NPCs
+  stand on collision-free tiles with this order, 1629 with x/y swapped; warps sit on the warp/door tile types only with this order.
+  Type = the game's tile behaviour (`TILE_BEHAVIOR_*`, names generated into `TileTypeData.kt`: 2 tall grass, 16 river water,
+  17 whirlpool, ...); collision bit 0x80 blocks, the other bits (0-13 seen) are further flags (4 = grass rustle per the wiki).
+- Building (48 bytes): u32 model id, three fixed point coordinates `u16 fraction, s16 whole` (in file order x, y, z), three u32
+  rotations, one unused byte, u32 scales x3 (all 16 in vanilla), 7 unused bytes. y is ~1 everywhere, so the plan position is x, z.
+  **[UNVERIFIED]**: the origin is the middle of the map, so the tile is (x + 16, z + 16): with it a building is on average 6.8
+  tiles from the nearest warp, against 24 without the offset; x and z swapped scores 7.3, so the axes are not proven.
+- A map file belongs to a matrix cell (`a/0/4/1`): outdoor matrices store a header per cell, indoor ones use the header that
+  owns the matrix; the event file of that header holds the cell's events at matrix coordinates (32 tiles per cell).

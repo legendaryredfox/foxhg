@@ -17,6 +17,7 @@ object HgssLayout {
     const val EGG_MOVES = "a/2/2/9"
     const val MOVES = "a/0/1/1"
     const val ITEMS = "a/0/1/7"
+    const val MAPS = "a/0/6/5"
     const val MATRICES = "a/0/4/1"
     const val SCRIPTS = "a/0/1/2"
     const val EVENTS = "a/0/3/2"

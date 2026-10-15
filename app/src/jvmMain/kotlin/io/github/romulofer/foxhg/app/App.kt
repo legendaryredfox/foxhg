@@ -200,6 +200,10 @@ private fun Content(model: AppModel, modifier: Modifier) {
             val editor = remember(project) { TrainerEditorModel(project, onChanged = model::projectChanged) }
             TrainerEditor(editor, modifier.padding(16.dp))
         }
+        selected == EditorKind.MAPS -> {
+            val editor = remember(project) { MapEditorModel(project, onChanged = model::projectChanged) }
+            MapEditor(editor, modifier.padding(16.dp))
+        }
         selected == EditorKind.EVENTS -> {
             val labels = remember(project) { EventLabels(project) }
             val editor = remember(project) { RecordEditorModel(project, EventFile.SPEC, labels::label, model::projectChanged) }
