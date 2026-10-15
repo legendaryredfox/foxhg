@@ -30,6 +30,7 @@ class RealRomNamesTest {
             assertEquals("Stench", names.abilities[1])
             assertEquals("NORMAL", names.types[0])
             assertEquals("Youngster", names.trainerClasses[2])
+            assertEquals("PKMN Trainer", names.trainerClasses[0])
             assertEquals("#9999", GameNames.name(names.species, 9999))
             println("locations[1]=${names.locations.getOrNull(1)} species[250]=${names.species[250]} species[386]=${names.species[386]}")
         }

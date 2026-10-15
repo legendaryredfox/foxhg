@@ -31,12 +31,13 @@ The ROM data model and the editors are ported from DSPRE; the file formats are d
 
 | Command | Description |
 |---------|-------------|
-| `sdk env` | select Zulu 26 from `.sdkmanrc` (do this in every new shell) |
+| `sdk env` | select Zulu 26 from `.sdkmanrc` (Zulu 26 is also the sdkman default, and `gradle/gradle-daemon-jvm.properties` pins the Gradle daemon to it) |
 | `./gradlew :core:jvmTest` | format and model tests (no UI) |
 | `./gradlew :app:run` | launch the desktop app |
 | `./gradlew build` | compile and test everything |
 | `./gradlew :app:packageDeb` | native Linux package |
 | `scripts/setup-references.sh` | clone the reference projects into `references/` (shallow) |
+| `scripts/screenshot.sh out.png [rom.nds] [editor]` | run the app under xvfb and screenshot it (clears the GNOME variables that crash Java's GTK look and feel under a bare Xvfb) |
 | `scripts/boot-test.sh rom.nds out.png [frames]` | boot a ROM headless in RetroArch + DeSmuME and save a screenshot; compare with the vanilla frame (`BootFixtures` writes test ROMs when `FOXHG_BOOT_DIR` is set) |
 
 ## Layout

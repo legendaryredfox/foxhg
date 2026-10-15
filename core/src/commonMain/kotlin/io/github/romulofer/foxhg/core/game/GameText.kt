@@ -49,7 +49,9 @@ class GameNames(text: GameText) {
     val locations: List<String> = load(text, TextBanks.LOCATIONS)
 
     companion object {
-        private fun load(text: GameText, bank: Int): List<String> = (text.lines(bank) as? FoxResult.Ok)?.value ?: emptyList()
+        /** The charmap spells the "PK" and "MN" glyphs of "Pokémon" as two currency signs; names show them as letters. */
+        private fun load(text: GameText, bank: Int): List<String> =
+            ((text.lines(bank) as? FoxResult.Ok)?.value ?: emptyList()).map { it.replace("\u20A7", "PK").replace("\u20A6", "MN") }
 
         fun name(list: List<String>, id: Int): String = list.getOrNull(id) ?: "#$id"
     }

@@ -13,6 +13,8 @@ args=()
 [ -n "$rom" ] && args+=("$PWD/$rom")
 [ -n "$editor" ] && args+=("--editor=$editor")
 
+# Java's GTK look and feel throws an NPE under a bare Xvfb when it thinks it is on GNOME without a shell.
+env -u XDG_CURRENT_DESKTOP -u DESKTOP_SESSION -u GNOME_DESKTOP_SESSION_ID \
 xvfb-run -a -s "-screen 0 1280x800x24" bash -c '
   out="$1"; settle="$2"; nargs="$3"; shift 3
   app=("${@:1:nargs}"); xd=("${@:nargs+1}")
