@@ -66,6 +66,7 @@ Record every address, offset or quirk you confirm in `docs/formats.md`.
 ## Acceptance Criteria
 
 - every commit is authored **and committed** by `legendaryredfox <legendaryredfox.dev@gmail.com>` (set in this repo's local git config; check `git config user.email` before committing and never use the global identity here). The GitHub accounts are `legendaryredfox` (this project) and `romulofer`; push as `legendaryredfox`. The repo is public on github.com/legendaryredfox/foxhg and codeberg.org/legendaryredfox/foxhg (the Codeberg token is in `~/.codeberg_token`: pass it with an `http.extraheader`, never put it in a remote URL)
+- **no em dashes** (U+2014) anywhere in the project: code, comments, strings, docs, README, commit messages. Use a regular dash ( - ) or reword. `git grep -n "—"` must print nothing
 - the user is the sole author of all commits (github.com/legendaryredfox). **Do not** add `Co-Authored-By` or any Claude attribution line to commits or PRs in this project
 - every format in `core` has a round-trip test: `parse(bytes)` then `serialize()` must reproduce the original bytes for every entry of the real HeartGold ROM
 - a change is done only when `./gradlew build` passes; anything not built or run must be stated explicitly, never described as done

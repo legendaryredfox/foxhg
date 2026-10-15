@@ -24,7 +24,7 @@ fun main(args: Array<String>) = application {
     val model = remember(args) { AppModel().also { applyLaunchArguments(it, args) } }
     val title = buildString {
         append("foxhg")
-        model.projectName?.let { append(" — ").append(it) }
+        model.projectName?.let { append(" - ").append(it) }
         if (model.hasUnsavedWork) append(" •")
     }
     Window(

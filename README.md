@@ -3,7 +3,7 @@
 # foxhg
 
 **A native, cross-platform ROM editor for Pokémon HeartGold and SoulSilver.**
-Edit Pokémon, moves, items, trainers, wild encounters, maps (in 3D), scripts, text and more — on Linux, Windows and macOS, no Wine required.
+Edit Pokémon, moves, items, trainers, wild encounters, maps (in 3D), scripts, text and more - on Linux, Windows and macOS, no Wine required.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white)
@@ -48,7 +48,7 @@ Platinum and other languages are out of scope until HeartGold is solid.
 ### Map editing
 
 - **2D map view:** tile types and collision, paint / fill / pick, and every event (NPCs, trainers, warps, triggers, signs) drawn on the map
-  — select, drag, add, duplicate and remove them on the canvas.
+  - select, drag, add, duplicate and remove them on the canvas.
 - **3D map view:** terrain and buildings rendered with their real textures by a built-in software renderer (no GPU library). Turn, tilt,
   pan and zoom; click a building to select it; overlays for events, collision and the walking surface (BDHC).
 - **Building editing:** add, move (click the ground in 3D), duplicate and remove buildings, pick a model from a browser of all 340 models
@@ -83,7 +83,7 @@ Packaged builds will be published on the release page. Until then, build from so
 
 ### Build from source
 
-You need **JDK 26** (the project is pinned to it; [SDKMAN](https://sdkman.io) users: `sdk env` picks it from `.sdkmanrc`) and nothing else —
+You need **JDK 26** (the project is pinned to it; [SDKMAN](https://sdkman.io) users: `sdk env` picks it from `.sdkmanrc`) and nothing else -
 Gradle comes with the wrapper.
 
 ```bash
@@ -189,7 +189,7 @@ Spec: [`docs/spec.md`](docs/spec.md) · Plan and status: [`docs/plan.md`](docs/p
 
 Issues and pull requests are welcome. Before you start on a format:
 
-1. Read how the reference projects do it, then the format page, then write your own code from the format description — **do not copy code**
+1. Read how the reference projects do it, then the format page, then write your own code from the format description - **do not copy code**
    from DSPRE (AGPL-3.0), ndspy (GPL-3.0) or other projects; read them to understand a format and note what you confirm in `docs/formats.md`.
 2. Write the parser together with its **round-trip test against the real ROM**.
 3. `./gradlew build` must pass, and never commit a ROM or anything extracted from one.
@@ -215,7 +215,7 @@ a ROM you own, and respect the law where you live.
 
 ## Support
 
-If foxhg saves you time, you can buy me a coffee — it keeps the project going. ☕
+If foxhg saves you time, you can buy me a coffee - it keeps the project going. ☕
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-legendaryredfox-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/legendaryredfox)
 
