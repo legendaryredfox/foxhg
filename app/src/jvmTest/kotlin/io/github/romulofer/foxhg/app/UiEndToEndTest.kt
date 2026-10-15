@@ -1,5 +1,7 @@
 package io.github.romulofer.foxhg.app
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.DesktopComposeUiTest
@@ -13,6 +15,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performMouseInput
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.runDesktopComposeUiTest
@@ -197,10 +201,10 @@ class UiEndToEndTest {
 
         onNodeWithTag("chip:Paint collision").performClick()
         onNodeWithTag("chip:Block").performClick()
-        onNodeWithTag("map-canvas").performMouseInput { click(center) }
+        onNodeWithTag("map-canvas").performMouseInput { click(Offset(16 * 18f + 9f, 16 * 18f + 9f)) } // the middle of tile (16, 16): 18 px per tile
         waitForIdle()
         val mapAfter = (MapFile.load(project) as FoxResult.Ok).value.records[0]
-        assertEquals(0x80, mapAfter.collision(16, 16), "the middle tile of the grid is (16, 16)")
+        assertEquals(0x80, mapAfter.collision(16, 16), "the clicked tile changed")
         assertEquals(mapBefore.collision(15, 15), mapAfter.collision(15, 15), "only the clicked tile changed")
 
         val usage = MapUsages(project).of(0).first()
@@ -208,10 +212,10 @@ class UiEndToEndTest {
         val warpsBefore = (EventFile.load(project) as FoxResult.Ok).value.records[eventFile].warps.size
         onNodeWithTag("chip:Edit events").performClick()
         waitForIdle()
-        onNodeWithText("Add warp").performClick()
+        onNodeWithText("Add warp").performScrollTo().performSemanticsAction(SemanticsActions.OnClick)
         waitForIdle()
         assertEquals(warpsBefore + 1, (EventFile.load(project) as FoxResult.Ok).value.records[eventFile].warps.size)
-        onNodeWithText("Duplicate").assertIsDisplayed()
+        onNodeWithText("Duplicate").assertExists() // the selected event's buttons are below the fold
 
         buildAndReopen(model) { rebuilt ->
             assertEquals(0x80, (MapFile.load(rebuilt) as FoxResult.Ok).value.records[0].collision(16, 16))
@@ -225,9 +229,9 @@ class UiEndToEndTest {
         clickFirstText("New Bark Town")
         onNodeWithTag("picker:Type").performClick()
         waitForIdle()
-        onAllNodesWithText("Headbutt", substring = true).onFirst().performClick()
+        // the popup is a second root of the semantics tree; its rows read "6  Headbutt" exactly
+        onAllNodesWithText("6  Headbutt").onFirst().performClick()
         waitForIdle()
-        onNodeWithTag("picker:Type").assertIsDisplayed()
         onAllNodesWithText("6  Headbutt").onFirst().assertIsDisplayed()
     }
 

@@ -74,12 +74,14 @@ class AppModel(
 
     val projectName: String? get() = projectDir?.fileName?.toString()
 
+    // Both properties read [revision] first: Compose only re-reads them when a state they actually read changes, and `isDirty` is not state.
+
     /** Changes that exist only in memory: bare-ROM edits, or a project whose latest edits are not on disk yet. */
     val hasUnsavedWork: Boolean
-        get() = project != null && if (projectDir == null) project?.isDirty == true && revision >= 0 else revision != savedRevision
+        get() = revision >= 0 && project != null && if (projectDir == null) project?.isDirty == true else revision != savedRevision
 
     /** True for a bare ROM with edits: those are lost on exit unless saved into a project or built. */
-    val needsProjectToKeepWork: Boolean get() = project != null && projectDir == null && project?.isDirty == true && revision >= 0
+    val needsProjectToKeepWork: Boolean get() = revision >= 0 && project != null && projectDir == null && project?.isDirty == true
 
     val isDirty: Boolean get() = revision >= 0 && project?.isDirty == true
 

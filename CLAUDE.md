@@ -34,7 +34,7 @@ The ROM data model and the editors are ported from DSPRE; the file formats are d
 | `sdk env` | select Zulu 26 from `.sdkmanrc` (Zulu 26 is also the sdkman default, and `gradle/gradle-daemon-jvm.properties` pins the Gradle daemon to it) |
 | `./gradlew :core:jvmTest` | format and model tests (no UI) |
 | `./gradlew :app:run` | launch the desktop app |
-| `./gradlew build` | compile and test everything |
+| `./gradlew build` | compile and test everything; the UI tests need a display: `env -u XDG_CURRENT_DESKTOP -u DESKTOP_SESSION -u GNOME_DESKTOP_SESSION_ID xvfb-run -a ./gradlew build` |
 | `./gradlew :app:packageDeb` | native Linux package |
 | `scripts/setup-references.sh` | clone the reference projects into `references/` (shallow) |
 | `scripts/screenshot.sh out.png [rom.nds] [editor]` | run the app under xvfb and screenshot it (clears the GNOME variables that crash Java's GTK look and feel under a bare Xvfb) |
