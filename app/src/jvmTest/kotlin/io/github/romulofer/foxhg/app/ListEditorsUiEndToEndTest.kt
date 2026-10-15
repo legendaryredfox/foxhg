@@ -13,7 +13,10 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTextInput
 import io.github.romulofer.foxhg.core.FoxResult
 import io.github.romulofer.foxhg.core.data.encounter.EncounterData
+import io.github.romulofer.foxhg.core.data.NarcRecords
 import io.github.romulofer.foxhg.core.data.hiddenitem.HiddenItems
+import io.github.romulofer.foxhg.core.data.rocksmash.RockSmashItems
+import io.github.romulofer.foxhg.core.data.rocksmash.RockSmashSite
 import io.github.romulofer.foxhg.core.data.starter.Starters
 import io.github.romulofer.foxhg.core.data.mapheader.MapHeader
 import io.github.romulofer.foxhg.core.data.mapheader.MapHeaderTable
@@ -144,6 +147,34 @@ class ListEditorsUiEndToEndTest {
         waitForIdle()
         assertEquals(Starters.VANILLA, (Starters.load(project) as FoxResult.Ok).value)
         assertFalse(project.isDirty, "back to the original three, level 5: nothing is edited")
+    }
+
+    @Test
+    fun editingRockSmashOddsTableAndItemsOnItsScreen() = withHeartGoldApp { model, project ->
+        val route29 = EventLabels(project).let { labels -> (0 until 540).first { labels.mapName(it) == "Route 29" } }
+        val sites = { (NarcRecords.load(project, RockSmashSite.SPEC) as FoxResult.Ok).value.records }
+        val before = sites()[route29]
+        open("Rock Smash")
+        onNodeWithTag("search:Search…").performTextInput("route 29")
+        waitForIdle()
+        clickFirstText("Route 29", substring = true)
+        onNodeWithTag("number:Odds").typeNumber(41)
+        waitForIdle()
+        assertEquals(before.copy(odds = 41), sites()[route29], "the drop chance went into the map's file")
+        onNodeWithTag("number:Odds").typeNumber(101)
+        waitForIdle()
+        assertEquals(41, sites()[route29].odds, "101 is not a chance, so nothing is written")
+
+        pick("Item table", "Cliff Cave")
+        assertEquals(RockSmashSite(41, RockSmashSite.CLIFF_CAVE), sites()[route29])
+
+        pick("Slot 1 (25%)", "Revive", index = 0)
+        assertEquals(project.names!!.items.indexOf("Revive"), (RockSmashItems.load(project) as FoxResult.Ok).value.tables[RockSmashSite.DEFAULT][0])
+
+        buildAndReopen(model) { rebuilt ->
+            assertEquals(RockSmashSite(41, RockSmashSite.CLIFF_CAVE), (NarcRecords.load(rebuilt, RockSmashSite.SPEC) as FoxResult.Ok).value.records[route29])
+            assertEquals(project.names!!.items.indexOf("Revive"), (RockSmashItems.load(rebuilt) as FoxResult.Ok).value.tables[RockSmashSite.DEFAULT][0])
+        }
     }
 
     @Test

@@ -124,6 +124,16 @@ Add an entry here whenever a layout, offset or quirk is confirmed.
   DSPRE's `MoveData` and the move editing guide of the DS Pokémon Hacking wiki, `CONTEST_TYPE` values as in the decomp
   (`constants/pokemon.h`). **[UNVERIFIED]** in game: only the byte layout is checked against the ROM.
 
+## Rock Smash (`a/2/5/3`, overlay 1)
+
+- `a/2/5/3`: 540 files of 4 bytes, member N = map header N: drop chance u16 (percent, 0 to 100, 0 turns drops off) and table type u16
+  (0 default, 1 Ruins of Alph, 2 Cliff Cave). Vanilla: 538 default, one Ruins of Alph, one Cliff Cave; chances seen 0, 10, 15, 20, 25, 30, 50.
+  The item is only rolled when the wild encounter roll fails (encounter rate byte of the encounter file).
+- Overlay 1 (decompressed) holds the three item tables of 8 u16 items back to back: Ruins of Alph 0x23D04, default 0x23D14, Cliff Cave 0x23D24;
+  the roll picks slot 0 to 7 with 25, 20, 10, 10, 10, 10, 10, 5 percent (Serene Grace and Super Luck shift it one slot). HeartGold values read from
+  the ROM match the wiki guide (default: Max Ether, Revive, Heart Scale, four shards, Star Piece); SoulSilver's Ruins and Cliff Cave tables hold other
+  shards and fossils. Layout from the DS Pokémon Hacking wiki's Rock Smash guide and DSPRE's `RockSmashData`; `RealRomRecordsTest`.
+
 ## Starters (ARM9, chooser overlay, scripts, text)
 
 - Not a table: the chooser code of the decompressed ARM9 builds `{CHIKORITA, CYNDAQUIL, TOTODILE}` (decomp `choose_starter.c`). The three

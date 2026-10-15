@@ -55,7 +55,7 @@ Text and numbers only: no sprites or maps, so nothing here is more than the valu
 | **Pokémon** | Personal data (base stats, EV yield, types, abilities, catch rate, growth, egg groups, wild held items, TM/HM compatibility), Learnsets, Evolutions, Egg moves, Starters (species, level, held item; the rival and the professor follow), In-game trades |
 | **Moves and items** | Moves (battle data, flags, range, contest data), Items (CSV import and export for both), Hidden items, TMs and HMs |
 | **Trainers** | Trainers (header, party with held items and custom moves, battle items, *replace a species in every party*), Trainer classes (gender, prize money) |
-| **World** | Wild encounters (rates, grass by time of day, water and fishing slots, swarms, radio slots, copy from SoulSilver), Map headers (every field), Matrices, Maps, Events |
+| **World** | Wild encounters (rates, grass by time of day, water and fishing slots, swarms, radio slots, copy from SoulSilver), Rock Smash (drop chance and item tables), Map headers (every field), Matrices, Maps, Events |
 | **Scripts and text** | Scripts (a text language with syntax highlighting, flag, variable and message names, level scripts), Text archives (every message bank, search across all messages, bank names where known) |
 | **Audio** | Sounds browser (SDAT sequences) with a built-in sequence player |
 | **Tools** | Files: a read-only tree of the ROM with sizes, offsets, a hex dump and export |
@@ -195,7 +195,7 @@ game itself. Things that are known not to be done or not checked are marked in [
 - 3D map editing is staged: the viewer, building editing and walking-surface display work; lighting, shadows, water animation, sloped
   surface plates, rotation and scale, and writing new models are still to do.
 - Sound playback is checked for length and level, not yet by ear; some SDAT features (streams, portamento, sweeps) are skipped.
-- Not yet: Rock Smash and Fly editors, the overlay editor and ARM9 patch toolbox, SoulSilver-only encounter extras,
+- Not yet: the Fly editor, the overlay editor and ARM9 patch toolbox, SoulSilver-only encounter extras,
   replacing the ARM7 and the banner, other Pokémon games.
 
 Spec: [`docs/spec.md`](docs/spec.md) · Plan and status: [`docs/plan.md`](docs/plan.md)

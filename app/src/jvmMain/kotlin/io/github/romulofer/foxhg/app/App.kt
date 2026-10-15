@@ -281,6 +281,14 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.TRAINER_CLASSES -> Loading(project, "trainer classes", { TrainerClassEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             TrainerClassEditor(editor, modifier.padding(16.dp))
         }
+        selected == EditorKind.ROCK_SMASH -> Loading(project, "Rock Smash", {
+            RockSmashEditorModel(project, model::projectChanged, model.selectionMemory[EditorKind.ROCK_SMASH] ?: 0, { model.selectionMemory[EditorKind.ROCK_SMASH] = it }).also { m ->
+                // Open on the first map that drops items instead of the empty first header.
+                if (model.selectionMemory[EditorKind.ROCK_SMASH] == null) m.sites.records.indexOfFirst { it.odds > 0 }.takeIf { it >= 0 }?.let(m.sites::select)
+            }
+        }) { editor ->
+            RockSmashEditor(editor, modifier.padding(16.dp))
+        }
         selected == EditorKind.HEADERS -> Loading(project, "map headers", { MapHeaderEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.HEADERS]?.let(m::select) } }) { editor ->
             KeepSelection(model, EditorKind.HEADERS, editor.selectedIndex)
             MapHeaderEditor(editor, modifier.padding(16.dp))

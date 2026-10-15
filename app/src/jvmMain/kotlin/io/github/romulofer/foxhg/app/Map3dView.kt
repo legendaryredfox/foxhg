@@ -135,6 +135,8 @@ fun Map3dView(model: MapEditorModel, map: Int) {
                     if (!event.keyboardModifiers.isCtrlPressed) return@onPointerEvent
                     val delta = event.changes.firstOrNull()?.scrollDelta?.y ?: 0f
                     model.camera = model.camera.let { it.with(distance = it.distance * (1 + delta * 0.08)) }
+                    // Zooming used the wheel turn: without this the page around the view scrolls as well.
+                    event.changes.forEach { it.consume() }
                 },
         ) {
             val r = rendered ?: return@Canvas

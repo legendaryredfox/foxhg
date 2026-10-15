@@ -27,7 +27,7 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 /** The window shortcuts, list navigation inside a real screen, and the 3D view gestures. Skips without the ROM. */
-@OptIn(ExperimentalTestApi::class)
+@OptIn(ExperimentalTestApi::class, androidx.compose.ui.InternalComposeUiApi::class)
 class ShortcutsAndGesturesUiEndToEndTest {
     private fun price(project: io.github.romulofer.foxhg.core.project.RomProject, item: Int) = (ItemData.load(project) as FoxResult.Ok).value.records[item].price
 
@@ -115,6 +115,44 @@ class ShortcutsAndGesturesUiEndToEndTest {
         onNodeWithTag("reset-view").performScrollTo().performClick()
         waitForIdle()
         assertEquals(start, view(), "Reset view restores the camera")
+    }
+
+    /** How far the page that holds the 3D view is scrolled: the nearest scrolling ancestor of the view. */
+    private fun androidx.compose.ui.test.DesktopComposeUiTest.pageScroll(): Float {
+        var node: androidx.compose.ui.semantics.SemanticsNode? = onNodeWithTag("map3d").fetchSemanticsNode().parent
+        while (node != null) {
+            node.config.getOrNull(SemanticsProperties.VerticalScrollAxisRange)?.let { return it.value() }
+            node = node.parent
+        }
+        error("The 3D view is not inside a scrolling page")
+    }
+
+    @Test
+    fun ctrlWheelZoomsTheThreeDViewWithoutScrollingThePage() = withHeartGoldApp(height = 1100) { _, _ ->
+        open("Maps")
+        onNodeWithTag("map3d").performScrollTo()
+        waitForIdle()
+        val page = pageScroll()
+        val zoomedFrom = view()
+        wheelOverView(3f, ctrl = true)
+        waitForIdle()
+        assertNotEquals(zoomedFrom, view(), "Ctrl + wheel zooms the view")
+        assertEquals(page, pageScroll(), "and the page stays where it is")
+
+        wheelOverView(-3f, ctrl = false)
+        waitForIdle()
+        assertNotEquals(page, pageScroll(), "a plain wheel still scrolls the page")
+    }
+
+    /** One wheel turn over the 3D view, sent to the scene as a real wheel is: the test mouse can neither hold Ctrl nor reach the page like this. */
+    private fun androidx.compose.ui.test.DesktopComposeUiTest.wheelOverView(delta: Float, ctrl: Boolean) {
+        val centre = onNodeWithTag("map3d").fetchSemanticsNode().boundsInRoot.center
+        runOnUiThread {
+            scene.sendPointerEvent(
+                androidx.compose.ui.input.pointer.PointerEventType.Scroll, centre,
+                scrollDelta = Offset(0f, delta), keyboardModifiers = androidx.compose.ui.input.pointer.PointerKeyboardModifiers(isCtrlPressed = ctrl),
+            )
+        }
     }
 
     @Test

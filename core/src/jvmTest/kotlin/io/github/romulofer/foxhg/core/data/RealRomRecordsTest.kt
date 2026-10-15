@@ -24,6 +24,9 @@ import io.github.romulofer.foxhg.core.data.map.TileTypes
 import io.github.romulofer.foxhg.core.data.move.MoveData
 import io.github.romulofer.foxhg.core.data.tmhm.TmHmTable
 import io.github.romulofer.foxhg.core.data.hiddenitem.HiddenItems
+import io.github.romulofer.foxhg.core.data.mapheader.MapHeaderTable
+import io.github.romulofer.foxhg.core.data.rocksmash.RockSmashItems
+import io.github.romulofer.foxhg.core.data.rocksmash.RockSmashSite
 import io.github.romulofer.foxhg.core.data.starter.Starters
 import io.github.romulofer.foxhg.core.game.HgssLayout
 import io.github.romulofer.foxhg.core.narc.Narc
@@ -227,6 +230,32 @@ class RealRomRecordsTest {
         assertTrue(Starters.change(project, Starters(listOf(0, 4, 7), 0, 5)) is FoxResult.Err)
         assertTrue(Starters.change(project, Starters(listOf(1, 4, 7), 300, 5)) is FoxResult.Err)
         assertTrue(!project.isDirty, "a refused change writes nothing")
+    }
+
+    @Test
+    fun rockSmashMatchesTheGuideAndSavesBack() = withProject { project ->
+        val sites = NarcRecords.load(project, RockSmashSite.SPEC).ok()
+        assertEquals(MapHeaderTable.load(project).ok().size, sites.records.size, "one file per map header")
+        assertEquals(mapOf(0 to 538, 1 to 1, 2 to 1), sites.records.groupingBy { it.type }.eachCount())
+        assertTrue(sites.records.all { it.odds in 0..100 })
+        assertContentEquals(project.read("a/2/5/3")!!, sites.toNarc().toBytes(), "an unedited NARC writes back the same bytes")
+
+        val items = RockSmashItems.load(project).ok()
+        val names = project.names!!.items
+        fun table(t: Int) = items.tables[t].map { names[it] }
+        assertEquals(listOf("Max Ether", "Revive", "Heart Scale", "Red Shard", "Blue Shard", "Green Shard", "Yellow Shard", "Star Piece"), table(RockSmashSite.DEFAULT))
+        assertEquals(listOf("Red Shard", "Yellow Shard", "Helix Fossil", "Max Ether", "Blue Shard", "Green Shard", "Old Amber", "Max Revive"), table(RockSmashSite.RUINS_OF_ALPH), "HeartGold's table")
+        assertEquals(listOf("Max Ether", "Pearl", "Big Pearl", "Red Shard", "Yellow Shard", "Claw Fossil", "Claw Fossil", "Rare Bone"), table(RockSmashSite.CLIFF_CAVE))
+        val plain = project.readOverlay(1).ok()
+        assertContentEquals(plain, items.applyTo(plain))
+
+        sites.with(5, RockSmashSite(77, RockSmashSite.CLIFF_CAVE)).save(project).ok()
+        RockSmashItems.save(project, items.with(RockSmashSite.DEFAULT, 0, 3)).ok()
+        assertEquals(RockSmashSite(77, 2), NarcRecords.load(project, RockSmashSite.SPEC).ok().records[5])
+        assertEquals(3, RockSmashItems.load(project).ok().tables[0][0])
+        assertEquals(setOf(1), project.editedOverlays)
+        project.revertAll()
+        assertTrue(!project.isDirty)
     }
 
     @Test

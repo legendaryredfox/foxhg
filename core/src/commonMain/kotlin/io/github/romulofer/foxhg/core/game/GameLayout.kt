@@ -60,6 +60,15 @@ object HgssLayout {
     const val HIDDEN_ITEMS_ARM9_LENGTH = 0x405E4
     const val HIDDEN_ITEMS_ARM9_CAPACITY = 0x405E8
 
+    /** One 4-byte file per map header: Rock Smash item drop odds and the item table it draws from. */
+    const val ROCK_SMASH = "a/2/5/3"
+
+    /** Overlay 1 (field) holds the three Rock Smash item tables, 8 u16 items each, one after the other. */
+    const val ROCK_SMASH_ITEMS_OVERLAY = 1
+    const val ROCK_SMASH_RUINS_TABLE = 0x23D04
+    const val ROCK_SMASH_DEFAULT_TABLE = 0x23D14
+    const val ROCK_SMASH_CLIFF_TABLE = 0x23D24
+
     /** The overlay of the starter chooser; it keeps its own table of the three species (the cries). */
     const val STARTER_CHOOSER_OVERLAY = 61
 
