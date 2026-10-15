@@ -2,6 +2,7 @@ package io.github.romulofer.foxhg.core.data
 
 import io.github.romulofer.foxhg.core.FoxResult
 import io.github.romulofer.foxhg.core.data.eggmove.EggMoves
+import io.github.romulofer.foxhg.core.data.event.EventFile
 import io.github.romulofer.foxhg.core.data.evolution.EvolutionData
 import io.github.romulofer.foxhg.core.data.evolution.EvolutionMethod
 import io.github.romulofer.foxhg.core.data.evolution.TradeEvolutions
@@ -159,5 +160,17 @@ class RealRomRecordsTest {
         assertEquals("Mega Ball", project.names!!.items[3], "the lists are rebuilt after the text changed")
         project.revertAll()
         assertEquals("Great Ball", project.names!!.items[3], "and again after a revert")
+    }
+
+    @Test
+    fun eventFilesRoundTripAndMatchTheGame() = withProject { project ->
+        val table = EventFile.load(project).ok()
+        table.assertNarcRoundTrips(project)
+        val files = table.records
+        assertEquals(491, files.size)
+        assertEquals(7, files.count { it.isEmpty })
+        assertEquals(listOf(1034, 2667, 1317, 195), listOf(files.sumOf { it.spawnables.size }, files.sumOf { it.overworlds.size }, files.sumOf { it.warps.size }, files.sumOf { it.triggers.size }))
+        assertTrue(files.all { it.trailing.isEmpty() }, "no bytes after the last record in vanilla")
+        assertEquals(10, files.flatMap { it.overworlds }.count { it.isAlias })
     }
 }

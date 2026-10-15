@@ -219,3 +219,13 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
   low byte is the first value, 2 args), `0200 YESNO`(1), `0201 PAUSE`(1), `0202 WAIT`(1), `0203 CURSOR_X`(1), `0204 CURSOR_Y`(1),
   `0205 ALN_CENTER`(0), `0206 ALN_RIGHT`(0), `FF00 COLOR`(1), `FF01 SIZE`(1), `FF02`(2). Written `{NAME args}` by `MessageText`.
   Packed (9-bit) messages cannot hold a command or a code above 0x1FE, so the editor refuses them there.
+
+## Event files (`a/0/3/2`)
+
+- One file per event set (491 in this ROM, 7 empty), picked by `MapHeader.eventFile`. Four lists in this order, each `u32 count`
+  then fixed-size records: spawnables (20 bytes: script, type 0 misc/1 board/2 hidden item, x, unk, y, s32 z, unk, direction,
+  unk), overworld objects (32: id, sprite entry, movement, type, flag, script, facing, sight range, unk, unk, x range, y range,
+  x, y, s32 z; script 0xFFFF = alias), warps (12: x, y, target header, anchor, u32 height), triggers (16: script, x, y, width,
+  height, z, expected value, variable). No bytes follow the last record in vanilla; round trip exact over all files.
+- x/y are positions on the whole matrix, 32 tiles per cell (`x / 32` is the cell column). Warps may target header 4095 (0x0FFF),
+  which is not a map header. Overworld types seen: 0 normal (2260), 1 trainer (403), 4 (3), 7 (1); none of type 3.

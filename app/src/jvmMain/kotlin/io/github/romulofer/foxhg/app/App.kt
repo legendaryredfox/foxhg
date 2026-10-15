@@ -34,6 +34,7 @@ import io.github.romulofer.foxhg.app.ui.SectionCard
 import io.github.romulofer.foxhg.core.data.evolution.EvolutionData
 import io.github.romulofer.foxhg.core.data.learnset.Learnset
 import io.github.romulofer.foxhg.core.data.eggmove.EggMoves
+import io.github.romulofer.foxhg.core.data.event.EventFile
 import io.github.romulofer.foxhg.core.data.item.ItemData
 import io.github.romulofer.foxhg.core.data.move.MoveData
 
@@ -198,6 +199,11 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.TRAINERS -> {
             val editor = remember(project) { TrainerEditorModel(project, onChanged = model::projectChanged) }
             TrainerEditor(editor, modifier.padding(16.dp))
+        }
+        selected == EditorKind.EVENTS -> {
+            val labels = remember(project) { EventLabels(project) }
+            val editor = remember(project) { RecordEditorModel(project, EventFile.SPEC, labels::label, model::projectChanged) }
+            EventEditor(editor, labels, modifier.padding(16.dp))
         }
         selected == EditorKind.TEXT -> {
             val editor = remember(project) { MessageEditorModel(project, onChanged = model::projectChanged) }
