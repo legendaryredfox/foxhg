@@ -116,6 +116,7 @@ fun ScriptEditor(model: ScriptEditorModel, labels: ScriptLabels, modifier: Modif
         val levelUsers = labels.levelScriptUsers(index)
         if (scriptUsers.isNotEmpty()) Text("Script of map header " + labels.describe(scriptUsers), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (levelUsers.isNotEmpty()) Text("Level script of map header " + labels.describe(levelUsers), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (entry is ScriptEntry.Script) ScriptSounds(model.draft)
         when (entry) {
             is ScriptEntry.Script -> SectionCard(
                 "Script",
@@ -197,5 +198,28 @@ private fun LevelScriptForm(file: LevelScript, scriptFiles: List<Int>, set: (Lev
             }
         }
         Button(onClick = { set(file.withVariableTriggers(file.variableTriggers + VariableTrigger(0x4000, 0, 1))) }) { Text("Add variable trigger") }
+    }
+}
+
+private val SOUND_COMMANDS = Regex("""^\s*(PlaySE|StopSE|WaitSE|PlayFanfare|PlayBGM|TempBGM|PlayCry)\s+(0x[0-9A-Fa-f]+|\d+)""", RegexOption.MULTILINE)
+
+/** The sounds a script plays, with a button for each; only shown when there is any. */
+@Composable
+private fun ScriptSounds(text: String) {
+    val found = remember(text) {
+        SOUND_COMMANDS.findAll(text).mapNotNull { m ->
+            val id = m.groupValues[2].let { if (it.startsWith("0x") || it.startsWith("0X")) it.substring(2).toIntOrNull(16) else it.toIntOrNull() } ?: return@mapNotNull null
+            m.groupValues[1] to id
+        }.distinct().toList()
+    }
+    if (found.isEmpty()) return
+    SectionCard("Sounds in this script", subtitle = "Press play to hear what the commands play") {
+        found.forEach { (command, id) ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("$command $id", style = io.github.romulofer.foxhg.app.ui.Fox.mono, modifier = Modifier.width(160.dp))
+                if (command == "PlayCry") io.github.romulofer.foxhg.app.ui.CryButton(id) else io.github.romulofer.foxhg.app.ui.SoundButton(id)
+            }
+        }
+        io.github.romulofer.foxhg.app.ui.AudioStatus()
     }
 }

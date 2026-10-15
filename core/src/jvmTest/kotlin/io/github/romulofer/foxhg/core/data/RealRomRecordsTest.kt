@@ -10,6 +10,7 @@ import io.github.romulofer.foxhg.core.data.learnset.Learnset
 import io.github.romulofer.foxhg.core.data.learnset.LearnsetEntry
 import io.github.romulofer.foxhg.core.data.item.ItemData
 import io.github.romulofer.foxhg.core.graphics.Icons
+import io.github.romulofer.foxhg.core.sound.Sounds
 import io.github.romulofer.foxhg.core.data.map.Collision
 import io.github.romulofer.foxhg.core.data.map.MapFile
 import io.github.romulofer.foxhg.core.data.map.MapUsages
@@ -250,5 +251,23 @@ class RealRomRecordsTest {
         fun count(rows: IntRange, test: (Int) -> Boolean) = rows.sumOf { y -> (0 until 32).count { x -> pokeBall.argb[y * 32 + x].let { it ushr 24 != 0 && test(it) } } }
         assertTrue(count(4..14) { (it shr 16 and 0xFF) > (it and 0xFF) + 60 } > 20, "the upper half has red")
         assertTrue(count(17..28) { (it and 0xFF) > 150 && (it shr 16 and 0xFF) > 150 && (it shr 8 and 0xFF) > 150 } > 20, "the lower half has white")
+    }
+
+    @Test
+    fun soundsRenderCriesEffectsAndMusic() = withProject { project ->
+        val sounds = Sounds(project)
+        assertEquals(2379, sounds.sdat!!.sequences.size)
+        assertEquals("SEQ_PV001", sounds.name(1))
+        assertEquals("SEQ_SE_DP_SELECT", sounds.name(1500))
+        fun rms(c: io.github.romulofer.foxhg.core.sound.PcmClip) = Math.sqrt(c.samples.sumOf { it.toDouble() * it } / c.samples.size)
+        val bulbasaur = sounds.cry(1)!!
+        assertTrue(bulbasaur.seconds in 0.5..1.2 && rms(bulbasaur) > 500, "a cry is under a second and audible: ${bulbasaur.seconds}")
+        assertTrue(bulbasaur.samples.toList() != sounds.cry(25)!!.samples.toList(), "cries differ per species")
+        assertTrue((1..493).all { sounds.cry(it) != null }, "every species has a cry")
+        val select = sounds.sequence(1500)!!
+        assertTrue(select.seconds in 0.02..2.0 && rms(select) > 200, "a sound effect is short and audible: ${select.seconds}")
+        val title = sounds.sequence(1004)!!
+        assertTrue(title.seconds > 20 && rms(title) > 500, "music runs for a while and is audible: ${title.seconds}")
+        assertEquals(select.samples.toList(), sounds.sequence(1500)!!.samples.toList(), "rendering is deterministic")
     }
 }

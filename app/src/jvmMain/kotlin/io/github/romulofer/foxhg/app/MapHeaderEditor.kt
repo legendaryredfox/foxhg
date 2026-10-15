@@ -18,6 +18,7 @@ import io.github.romulofer.foxhg.app.ui.FieldFlow
 import io.github.romulofer.foxhg.app.ui.NumberField
 import io.github.romulofer.foxhg.app.ui.PickerField
 import io.github.romulofer.foxhg.app.ui.SectionCard
+import io.github.romulofer.foxhg.app.ui.SoundButton
 import io.github.romulofer.foxhg.app.ui.ToggleChip
 import io.github.romulofer.foxhg.core.data.mapheader.MapHeader
 
@@ -79,7 +80,9 @@ private fun Detail(model: MapHeaderEditorModel, h: MapHeader) {
     SectionCard("Music and look") {
         FieldFlow {
             NumberField("Day music", h.musicDay, 0..65535, { v -> model.update { it.copy(musicDay = v) } }, Modifier.width(100.dp))
+            SoundButton(h.musicDay)
             NumberField("Night music", h.musicNight, 0..65535, { v -> model.update { it.copy(musicNight = v) } }, Modifier.width(100.dp))
+            SoundButton(h.musicNight)
             NumberField("Weather", h.weather, 0..127, { v -> model.update { it.withWeather(v) } }, Modifier.width(90.dp))
             NumberField("Camera", h.camera, 0..63, { v -> model.update { it.withCamera(v) } }, Modifier.width(90.dp))
             NumberField("Battle background", h.battleBackground, 0..31, { v -> model.update { it.withBattleBackground(v) } }, Modifier.width(140.dp))

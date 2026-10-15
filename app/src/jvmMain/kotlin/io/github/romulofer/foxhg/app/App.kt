@@ -33,7 +33,11 @@ import io.github.romulofer.foxhg.app.ui.FoxTheme
 import io.github.romulofer.foxhg.app.ui.SectionCard
 import io.github.romulofer.foxhg.core.data.evolution.EvolutionData
 import io.github.romulofer.foxhg.core.data.learnset.Learnset
+import io.github.romulofer.foxhg.app.ui.AudioPlayer
 import io.github.romulofer.foxhg.app.ui.IconBitmaps
+import io.github.romulofer.foxhg.app.ui.ProvideSounds
+import io.github.romulofer.foxhg.app.ui.SoundContext
+import io.github.romulofer.foxhg.core.sound.Sounds
 import io.github.romulofer.foxhg.app.ui.ProvideIcons
 import io.github.romulofer.foxhg.core.data.eggmove.EggMoves
 import io.github.romulofer.foxhg.core.graphics.Icons
@@ -161,6 +165,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
     val project = model.project
     val selected = model.selected
     val icons = remember(project) { project?.let { IconBitmaps(Icons(it)) } }
+    val soundContext = remember(project) { project?.let { SoundContext(Sounds(it), AudioPlayer()) } }
+    androidx.compose.runtime.DisposableEffect(soundContext) { onDispose { soundContext?.player?.stop() } }
+    ProvideSounds(soundContext) {
     ProvideIcons(icons) {
     when {
         project == null -> EmptyState(model, modifier)
@@ -219,6 +226,7 @@ private fun Content(model: AppModel, modifier: Modifier) {
             val editor = remember(project) { ScriptEditorModel(project, labels, model::projectChanged) }
             ScriptEditor(editor, labels, modifier.padding(16.dp))
         }
+        selected == EditorKind.SOUNDS -> SoundEditor(modifier.padding(16.dp))
         selected == EditorKind.TEXT -> {
             val editor = remember(project) { MessageEditorModel(project, onChanged = model::projectChanged) }
             MessageEditor(editor, modifier.padding(16.dp))
@@ -240,6 +248,7 @@ private fun Content(model: AppModel, modifier: Modifier) {
             EncounterEditor(editor, modifier.padding(16.dp))
         }
         else -> Box(modifier, contentAlignment = Alignment.Center) { Text("${selected.title} is not implemented yet (docs/plan.md)", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    }
     }
     }
 }

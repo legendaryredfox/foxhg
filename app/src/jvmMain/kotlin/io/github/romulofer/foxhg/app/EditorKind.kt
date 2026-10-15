@@ -18,4 +18,5 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     EVENTS("World", "Events", implemented = true),
     SCRIPTS("Scripts and text", "Scripts", implemented = true),
     TEXT("Scripts and text", "Text archives", implemented = true),
+    SOUNDS("Audio", "Sounds", implemented = true),
 }
