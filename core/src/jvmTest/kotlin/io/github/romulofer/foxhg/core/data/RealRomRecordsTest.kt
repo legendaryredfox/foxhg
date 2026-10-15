@@ -10,6 +10,7 @@ import io.github.romulofer.foxhg.core.data.learnset.LearnsetEntry
 import io.github.romulofer.foxhg.core.data.item.ItemData
 import io.github.romulofer.foxhg.core.data.move.MoveData
 import io.github.romulofer.foxhg.core.data.tmhm.TmHmTable
+import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassGenders
 import io.github.romulofer.foxhg.core.nds.FileRomSource
 import io.github.romulofer.foxhg.core.project.RomProject
 import java.nio.file.Files
@@ -121,5 +122,17 @@ class RealRomRecordsTest {
         val itemNames = project.names!!.items
         val itemCsv = ItemData.CSV.export(items) { itemNames.getOrElse(it) { "" } }
         assertEquals(items, ItemData.CSV.import(itemCsv, items).ok())
+    }
+
+    @Test
+    fun trainerClassGendersMatchTheGame() = withProject { project ->
+        val table = TrainerClassGenders.load(project).ok()
+        val names = project.names!!.trainerClasses
+        assertEquals(128, table.genders.size)
+        assertEquals(listOf("Youngster" to 0, "Lass" to 1), listOf(2, 3).map { names[it] to table.genders[it] })
+        val plain = project.readArm9().ok()
+        assertContentEquals(plain, table.applyTo(plain))
+        TrainerClassGenders.save(project, table.with(2, 1)).ok()
+        assertEquals(1, TrainerClassGenders.load(project).ok().genders[2])
     }
 }

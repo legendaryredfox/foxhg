@@ -28,6 +28,9 @@ object HgssLayout {
 
     /** Offset in the decompressed ARM9 of the TM/HM move list: 92 TMs then 8 HMs, u16 each. */
     const val TM_MOVES_ARM9_OFFSET = 0x1000CC
+
+    /** Offset in the decompressed ARM9 of the trainer class gender table: one byte per class, 128 classes. */
+    const val TRAINER_CLASS_GENDER_ARM9_OFFSET = 0xFFB90
 }
 
 /** Indexes of the message archives (files of [HgssLayout.MESSAGES]) that hold the lists editors need names from. */

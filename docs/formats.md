@@ -194,3 +194,9 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
 
 - 100 u16 move ids at 0x1000CC of the **decompressed** ARM9 (same offset DSPRE uses for English HGSS): TM01-TM92, HM01-HM08.
   Verified: TM01 = Focus Punch, HM01 = Cut. Saving replaces the ARM9 on build.
+
+## Trainer class gender (ARM9)
+
+- One byte per class at 0xFFB90 of the decompressed ARM9: 0 male, 1 female, 2 neither (Elite Four class 89 is 2). Vanilla count is 128
+  (DSPRE); there are 129 class names. Verified: Youngster 0, Lass 1. Prize multiplier: overlay 12 (compressed, 162464 bytes
+  decompressed) at 0x34C04 as 129 u16 pairs {class, multiplier} per DSPRE; **[UNVERIFIED]**, needs overlay writing first.

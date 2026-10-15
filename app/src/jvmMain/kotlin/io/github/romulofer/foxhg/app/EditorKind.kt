@@ -10,6 +10,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     MOVES("Moves and items", "Moves", implemented = true),
     ITEMS("Moves and items", "Items", implemented = true),
     TRAINERS("Trainers", "Trainers", implemented = true),
+    TRAINER_CLASSES("Trainers", "Trainer classes", implemented = true),
     ENCOUNTERS("World", "Wild encounters", implemented = true),
     HEADERS("World", "Map headers", implemented = true),
     MATRICES("World", "Matrices", implemented = true),
