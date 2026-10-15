@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.platform.testTag
+import io.github.romulofer.foxhg.app.ui.ConfirmDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -69,16 +72,35 @@ private fun ReplaceSpeciesCard(model: TrainerEditorModel) {
     var from by remember { mutableStateOf(16) }
     var to by remember { mutableStateOf(19) }
     var message by remember { mutableStateOf<String?>(null) }
-    SectionCard("Replace a Pokémon in every trainer party", subtitle = "Keeps level and everything else; changes the species only") {
-        FieldFlow {
+    var open by remember { mutableStateOf(false) }
+    var asking by remember { mutableStateOf(false) }
+    val fromName = species.getOrNull(from) ?: "#$from"
+    val toName = species.getOrNull(to) ?: "#$to"
+    SectionCard(
+        "Replace a Pokémon in every trainer party",
+        subtitle = "Keeps level and everything else; changes the species only",
+        actions = { OutlinedButton(onClick = { open = !open }, modifier = Modifier.testTag("replace-toggle")) { Text(if (open) "Hide" else "Show") } },
+    ) {
+        if (open) FieldFlow {
             SpeciesPicker("Replace", from, species, { from = it }, Modifier.width(200.dp))
             SpeciesPicker("With", to, species, { to = it }, Modifier.width(200.dp))
-            Button(onClick = {
-                val n = model.replaceSpeciesEverywhere(from, to)
-                message = if (n == 0) "No trainer uses ${species.getOrNull(from)}" else "Replaced $n Pokémon"
-            }, enabled = from != to) { Text("Replace") }
-            message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary) }
+            OutlinedButton(onClick = { asking = true }, enabled = from != to, modifier = Modifier.testTag("replace-open")) { Text("Replace…") }
         }
+        message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary) }
+    }
+    if (asking) {
+        val n = model.countSpecies(from)
+        ConfirmDialog(
+            "Replace $fromName with $toName?",
+            if (n == 0) "No trainer uses $fromName, so nothing would change." else "${plural(n, "Pokémon")} in trainer parties will become $toName. Levels and moves stay. Ctrl+Z undoes it.",
+            "Replace",
+            onConfirm = {
+                asking = false
+                val changed = model.replaceSpeciesEverywhere(from, to)
+                message = if (changed == 0) "No trainer uses $fromName" else "Replaced $changed Pokémon"
+            },
+            onDismiss = { asking = false },
+        )
     }
 }
 
@@ -95,7 +117,11 @@ private fun Detail(model: TrainerEditorModel, trainer: Trainer) {
         FieldFlow {
             TrainerClassPicker("Class", h.trainerClass, names?.trainerClasses ?: emptyList(), { v -> model.update { it.withHeader(it.header.copy(trainerClass = v)) } }, Modifier.width(220.dp))
             NumberField("AI flags", h.aiFlags.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), 0..Int.MAX_VALUE, { v -> model.update { it.withHeader(it.header.copy(aiFlags = v.toLong())) } }, Modifier.width(130.dp))
-            NumberField("Double battle", h.doubleBattle.coerceAtMost(255).toInt(), 0..255, { v -> model.update { it.withHeader(it.header.copy(doubleBattle = v.toLong())) } }, Modifier.width(120.dp))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("Battle", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            // The game stores 2 for a double battle and 0 for a single one.
+            ToggleChip("Double battle", h.doubleBattle != 0L, { on -> model.update { it.withHeader(it.header.copy(doubleBattle = if (on) 2L else 0L)) } })
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Party format", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

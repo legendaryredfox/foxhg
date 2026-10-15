@@ -78,7 +78,7 @@ class UiEndToEndTest {
         onNodeWithTag("number:Price").performTextReplacement("321")
         waitForIdle()
         assertTrue(project.isDirty, "typing a price edits the project")
-        onNodeWithText("1 file(s) changed").assertIsDisplayed()
+        onNodeWithText("1 file changed").assertIsDisplayed()
         assertEquals(321, (ItemData.load(project) as FoxResult.Ok).value.records[4].price)
         buildAndReopen(model) { rebuilt ->
             assertEquals(321, (ItemData.load(rebuilt) as FoxResult.Ok).value.records[4].price)
@@ -102,7 +102,7 @@ class UiEndToEndTest {
         clickFirstText("PIKACHU")
         onNodeWithTag("number:stat:HP").performTextReplacement("77")
         waitForIdle()
-        onNodeWithText("1 file(s) changed").assertIsDisplayed()
+        onNodeWithText("1 file changed").assertIsDisplayed()
         assertEquals(77, (PersonalTable.load(project) as FoxResult.Ok).value.records[25].baseHp)
     }
 
@@ -209,7 +209,7 @@ class UiEndToEndTest {
         onNodeWithTag("number:Price").performTextReplacement("5")
         waitForIdle()
         assertTrue(project.isDirty)
-        onNodeWithText("1 file(s) changed").assertIsDisplayed()
+        onNodeWithText("1 file changed").assertIsDisplayed()
         onAllNodesWithText("Not saved", substring = true).onFirst().assertIsDisplayed()
     }
 }

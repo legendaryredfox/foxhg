@@ -86,7 +86,7 @@ class RecordEditorsUiEndToEndTest {
         onNodeWithTag("number:Trade becomes level").typeNumber(30, inScrollPane = false)
         waitForIdle()
         tap(onNodeWithText("Convert all"), inScrollPane = false)
-        onNodeWithText("Converted $trades evolution(s)").assertIsDisplayed()
+        onNodeWithText("Converted ${plural(trades, "evolution")}").assertIsDisplayed()
         onNodeWithText("No trade evolutions left.", substring = true).assertIsDisplayed()
         assertEquals(EvolutionMethod.LEVEL, records()[kadabra].slots[kadabraSlot].known)
         assertEquals(30, records()[kadabra].slots[kadabraSlot].param)

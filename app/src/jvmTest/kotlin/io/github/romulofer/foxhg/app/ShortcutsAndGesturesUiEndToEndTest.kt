@@ -17,6 +17,7 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.moveTo
 import androidx.compose.ui.test.ScrollWheel
+import io.github.romulofer.foxhg.app.ui.TextFocus
 import io.github.romulofer.foxhg.core.FoxResult
 import io.github.romulofer.foxhg.core.data.item.ItemData
 import kotlin.test.Test
@@ -51,6 +52,25 @@ class ShortcutsAndGesturesUiEndToEndTest {
         waitLoaded()
         assertEquals(777, price(project, 4), "Ctrl+Y redoes too")
         assertFalse(Actions.shortcut(model, Key.Z, ctrl = false, shift = false), "without Ctrl it is just a letter")
+    }
+
+    @Test
+    fun undoAndRedoStepAsideInATextBoxAndWhenThereIsNothingToUndo() = withHeartGoldApp { model, project ->
+        assertFalse(Actions.shortcut(model, Key.Z, ctrl = true, shift = false), "nothing to undo: the key is left alone")
+        assertFalse(Actions.shortcut(model, Key.Y, ctrl = true, shift = false), "nothing to redo: the key is left alone")
+        open("Items")
+        clickFirstText("Poké Ball")
+        onNodeWithTag("number:Price").performTextReplacement("778")
+        waitForIdle()
+        assertTrue(model.canUndo)
+        TextFocus.active = true
+        try {
+            assertFalse(Actions.shortcut(model, Key.Z, ctrl = true, shift = false), "in a script or message box Ctrl+Z is the box's own undo")
+            assertEquals(778, price(project, 4), "and the project is untouched")
+        } finally {
+            TextFocus.active = false
+        }
+        assertTrue(Actions.shortcut(model, Key.Z, ctrl = true, shift = false), "outside the box it undoes the project")
     }
 
     @Test

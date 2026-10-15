@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.romulofer.foxhg.app.ui.FieldFlow
 import io.github.romulofer.foxhg.app.ui.PickerField
 import io.github.romulofer.foxhg.app.ui.SectionCard
 import io.github.romulofer.foxhg.core.FoxResult
@@ -52,17 +53,15 @@ fun TmHmEditor(model: TmHmEditorModel, modifier: Modifier = Modifier) {
     val moves = model.names?.moves ?: emptyList()
     DetailPane(modifier) {
         SectionCard("TMs", subtitle = "Which species can learn each one is set in the personal data editor") {
-            (0 until TmHmTable.TM_COUNT).chunked(2).forEach { pair -> TmRow(model, table, pair, moves) }
+            FieldFlow { for (i in 0 until TmHmTable.TM_COUNT) TmPicker(model, table, i, moves) }
         }
         SectionCard("HMs") {
-            (TmHmTable.TM_COUNT until TmHmTable.COUNT).chunked(2).forEach { pair -> TmRow(model, table, pair, moves) }
+            FieldFlow { for (i in TmHmTable.TM_COUNT until TmHmTable.COUNT) TmPicker(model, table, i, moves) }
         }
     }
 }
 
 @Composable
-private fun TmRow(model: TmHmEditorModel, table: TmHmTable, indexes: List<Int>, moves: List<String>) {
-    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        for (i in indexes) PickerField(table.name(i), table.moves[i], moves, { v -> model.setMove(i, v) }, Modifier.width(280.dp))
-    }
+private fun TmPicker(model: TmHmEditorModel, table: TmHmTable, i: Int, moves: List<String>) {
+    PickerField(table.name(i), table.moves[i], moves, { v -> model.setMove(i, v) }, Modifier.width(280.dp))
 }

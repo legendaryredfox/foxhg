@@ -1,6 +1,10 @@
 package io.github.romulofer.foxhg.app
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import io.github.romulofer.foxhg.app.ui.ToggleChip
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -10,6 +14,28 @@ import io.github.romulofer.foxhg.app.ui.NumberField
 import io.github.romulofer.foxhg.app.ui.PickerField
 import io.github.romulofer.foxhg.app.ui.SectionCard
 import io.github.romulofer.foxhg.core.data.move.MoveData
+
+/** The flag bits of a move (byte 11), lowest bit first. */
+private val FLAG_NAMES = listOf("Contact", "Protect", "Magic Coat", "Snatch", "Mirror Move", "King's Rock", "Keep HP bar", "Hide shadow")
+
+private val CONTEST_TYPES = listOf("Cool", "Beauty", "Cute", "Smart", "Tough")
+
+/** Who a move hits, from its range value (one flag bit, or 0). */
+private fun rangeName(range: Int): String = when (range) {
+    0 -> "One adjacent opponent or ally"
+    1 -> "Varies with the effect"
+    2 -> "One random opponent"
+    4 -> "All adjacent opponents"
+    8 -> "All adjacent Pokémon"
+    16 -> "The user"
+    32 -> "The user's side"
+    64 -> "Every side"
+    128 -> "The opponent's side"
+    256 -> "One adjacent ally"
+    512 -> "The user or one ally"
+    1024 -> "One adjacent opponent"
+    else -> "Several range bits"
+}
 
 @Composable
 fun MoveEditor(model: RecordEditorModel<MoveData>, modifier: Modifier = Modifier) {
@@ -31,13 +57,20 @@ fun MoveEditor(model: RecordEditorModel<MoveData>, modifier: Modifier = Modifier
                 NumberField("Effect sequence", m.effect, 0..65535, { v -> model.update { it.copy(effect = v) } }, Modifier.width(140.dp))
                 NumberField("Effect chance %", m.effectChance, 0..255, { v -> model.update { it.copy(effectChance = v) } }, Modifier.width(140.dp))
                 NumberField("Range", m.range, 0..65535, { v -> model.update { it.copy(range = v) } })
+                Text(rangeName(m.range), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
             }
         }
-        SectionCard("Flags and contest data", subtitle = "Raw values; their individual meanings are not decoded yet") {
+        SectionCard("Flags", subtitle = "Interactions with abilities, items and other moves; the animation flags change how the move is drawn") {
             FieldFlow {
-                NumberField("Flags", m.flags, 0..255, { v -> model.update { it.copy(flags = v) } })
-                NumberField("Contest effect", m.contestEffect, 0..255, { v -> model.update { it.copy(contestEffect = v) } }, Modifier.width(130.dp))
-                NumberField("Contest type", m.contestType, 0..255, { v -> model.update { it.copy(contestType = v) } }, Modifier.width(130.dp))
+                FLAG_NAMES.forEachIndexed { bit, name ->
+                    ToggleChip(name, m.flags and (1 shl bit) != 0, { on -> model.update { it.copy(flags = if (on) it.flags or (1 shl bit) else it.flags and (1 shl bit).inv()) } })
+                }
+            }
+        }
+        SectionCard("Contest data", subtitle = "Super Contest condition and appeal, a Diamond, Pearl and Platinum feature") {
+            FieldFlow {
+                PickerField("Contest condition", m.contestType, CONTEST_TYPES, { v -> model.update { it.copy(contestType = v) } }, Modifier.width(180.dp))
+                NumberField("Contest appeal", m.contestEffect, 0..255, { v -> model.update { it.copy(contestEffect = v) } }, Modifier.width(130.dp))
             }
         }
     }

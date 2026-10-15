@@ -40,7 +40,10 @@ class ListEditorsUiEndToEndTest {
 
         open("Trainers")
         // the card starts on Pidgey -> Rattata
-        tap(onAllNodesWithText("Replace").onLast(), inScrollPane = false)
+        tap(onNodeWithTag("replace-toggle"), inScrollPane = false)
+        tap(onNodeWithTag("replace-open"), inScrollPane = false)
+        onNodeWithText("${plural(users, "Pokémon")} in trainer parties will become RATTATA. Levels and moves stay. Ctrl+Z undoes it.").assertIsDisplayed()
+        tap(onNodeWithTag("confirm"), inScrollPane = false)
         onNodeWithText("Replaced $users Pokémon").assertIsDisplayed()
         assertTrue(trainers().none { t -> t.party.any { it.species == pidgey } })
 
@@ -75,7 +78,8 @@ class ListEditorsUiEndToEndTest {
         waitForIdle()
         assertEquals(77, (EncounterData.loadHeartGold(project) as FoxResult.Ok).value.records[route30].rateWalking, "999 does not fit a rate, so nothing is written")
 
-        tap(onNodeWithText("Make every area match SoulSilver"), inScrollPane = false)
+        tap(onNodeWithTag("copy-all-open"), inScrollPane = false)
+        tap(onNodeWithTag("confirm"), inScrollPane = false)
         onAllNodesWithText("Copied into", substring = true).onFirst().assertIsDisplayed()
         onNodeWithText("Every area matches SoulSilver.").assertIsDisplayed()
 

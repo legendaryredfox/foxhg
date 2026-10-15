@@ -8,7 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
+import androidx.compose.ui.platform.testTag
+import io.github.romulofer.foxhg.app.ui.ConfirmDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -43,21 +44,40 @@ fun EncounterEditor(model: EncounterEditorModel, modifier: Modifier = Modifier) 
     }
 }
 
+/** "land 8 morning" as "Grass slot 8, morning"; the core names changes the way the file is laid out. */
+internal fun friendlyChange(what: String): String {
+    Regex("""land (\d+) (level|morning|day|night)""").matchEntire(what)?.let { m ->
+        val part = m.groupValues[2]
+        return "Grass slot ${m.groupValues[1]}, " + if (part == "level") "level" else "$part species"
+    }
+    Regex("""rate (.+)""").matchEntire(what)?.let { return "Rate, ${it.groupValues[1]}" }
+    return what.replaceFirstChar { it.uppercase() }
+}
+
 @Composable
 private fun VersionCard(model: EncounterEditorModel) {
     var message by remember { mutableStateOf<String?>(null) }
+    var asking by remember { mutableStateOf(false) }
     val differing = model.differingAreas()
     SectionCard(
         "Compare with ${model.otherName}",
-        subtitle = if (differing > 0) "$differing area(s) have different wild Pokémon. Areas marked ≠ in the list differ." else "Every area matches ${model.otherName}.",
+        subtitle = if (differing > 0) "${plural(differing, "area")} ${if (differing == 1) "has" else "have"} different wild Pokémon. Areas marked \"differs\" in the list are the ones." else "Every area matches ${model.otherName}.",
         actions = {
             message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary) }
-            Button(onClick = {
-                val n = model.copyAllFromOther()
-                message = "Copied into $n area(s)"
-            }, enabled = differing > 0) { Text("Make every area match ${model.otherName}") }
+            OutlinedButton(onClick = { asking = true }, enabled = differing > 0, modifier = Modifier.testTag("copy-all-open")) { Text("Make every area match ${model.otherName}…") }
         },
     ) {}
+    if (asking) ConfirmDialog(
+        "Make every area match ${model.otherName}?",
+        "${plural(differing, "area")} will take ${model.otherName}'s wild Pokémon, rates and levels. Your edits in those areas are replaced. Ctrl+Z undoes it.",
+        "Make them match",
+        onConfirm = {
+            asking = false
+            val n = model.copyAllFromOther()
+            message = "Copied into ${plural(n, "area")}"
+        },
+        onDismiss = { asking = false },
+    )
 }
 
 @Composable
@@ -65,7 +85,7 @@ private fun Detail(model: EncounterEditorModel, d: EncounterData) {
     val editor = model.editor
     val species = model.names?.species ?: emptyList()
     val maps = model.areas.maps(editor.selectedIndex)
-    EditorHeader(editor.selectedIndex.toString(), nameOf(editor.label(editor.selectedIndex)), trailing = { Chip("${maps.size} map(s)") })
+    EditorHeader(editor.selectedIndex.toString(), nameOf(editor.label(editor.selectedIndex)), trailing = { Chip(plural(maps.size, "map")) })
 
     val changes = model.changesFromOther()
     if (changes.isNotEmpty()) {
@@ -73,14 +93,14 @@ private fun Detail(model: EncounterEditorModel, d: EncounterData) {
         Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceVariant, border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f))) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("${changes.size} difference(s) from ${model.otherName}", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.weight(1f))
+                    Text("${plural(changes.size, "difference")} from ${model.otherName}", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.weight(1f))
                     OutlinedButton(onClick = model::copySelectedFromOther) { Text("Use ${model.otherName}'s data here") }
                 }
                 changes.take(if (expanded) changes.size else 5).forEach { c ->
                     val isSpecies = listOf("species", "morning", "day", "night", "swarm", "sound", "fishing").any { c.what.contains(it) } && !c.what.contains("level")
                     val from = if (isSpecies) species.getOrNull(c.from) ?: c.from else c.from
                     val to = if (isSpecies) species.getOrNull(c.to) ?: c.to else c.to
-                    Text("${c.what}:  $from  →  $to", style = Fox.mono.copy(fontSize = 12.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${friendlyChange(c.what)}:  $from  →  $to", style = Fox.mono.copy(fontSize = 12.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (changes.size > 5) TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) "Show fewer" else "Show all ${changes.size}") }
             }

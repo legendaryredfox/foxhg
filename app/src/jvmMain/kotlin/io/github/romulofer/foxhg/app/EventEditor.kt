@@ -60,12 +60,15 @@ class EventLabels(project: RomProject) {
 
 @Composable
 fun EventEditor(model: RecordEditorModel<EventFile>, labels: EventLabels, modifier: Modifier = Modifier) {
-    RecordListDetail(model, modifier, rowDetail = { model.records.getOrNull(it)?.count?.takeIf { n -> n > 0 }?.toString() }) { file ->
+    RecordListDetail(model, modifier, rowDetail = { i ->
+        val count = model.records.getOrNull(i)?.count?.takeIf { n -> n > 0 }?.toString()
+        listOfNotNull(labels.usedBy(i).firstOrNull()?.let { "hdr $it" }, count).joinToString(" · ").ifEmpty { null }
+    }) { file ->
         val users = labels.usedBy(model.selectedIndex)
         EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)))
         if (users.isNotEmpty()) {
             Text(
-                "Loaded by map header " + users.joinToString(", ") { "$it (${labels.mapName(it)})" },
+                "Loaded by map header " + summarize(users.map { "$it (${labels.mapName(it)})" }),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

@@ -24,7 +24,12 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.ui.semantics.Role
+import io.github.romulofer.foxhg.app.ui.ScrollHint
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
@@ -100,7 +105,8 @@ private fun TopBar(model: AppModel) {
         Spacer(Modifier.weight(1f))
         ProjectMenu(model)
         OutlinedButton(onClick = { Actions.run(model) }, enabled = model.project != null, modifier = Modifier.testTag("run")) { Text("Run") }
-        Button(onClick = { Actions.build(model) }, enabled = model.project != null) { Text("Build ROM…") }
+        if (model.isDirty) Button(onClick = { Actions.build(model) }, enabled = model.project != null) { Text("Build ROM…") }
+        else OutlinedButton(onClick = { Actions.build(model) }, enabled = model.project != null) { Text("Build ROM…") }
     }
 }
 
@@ -121,7 +127,9 @@ private fun SaveIndicator(model: AppModel) {
 @Composable
 private fun Sidebar(model: AppModel, modifier: Modifier) {
     val enabled = model.project != null
-    Column(modifier.background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)).verticalScroll(rememberScrollState()).padding(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    val scroll = rememberScrollState()
+    Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))) {
+    Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(start = 12.dp, top = 12.dp, bottom = 12.dp, end = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         val ready = EditorKind.entries.filter { it.implemented }.groupBy { it.group }
         ready.forEach { (group, editors) ->
             GroupLabel(group)
@@ -134,6 +142,8 @@ private fun Sidebar(model: AppModel, modifier: Modifier) {
             soon.forEach { NavItem(it.title, selected = false, enabled = false, soon = true) {} }
         }
     }
+    ScrollHint(scroll)
+    }
 }
 
 @Composable
@@ -144,10 +154,12 @@ private fun GroupLabel(text: String) {
 @Composable
 private fun NavItem(title: String, selected: Boolean, enabled: Boolean, soon: Boolean, onClick: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
+    val bringIntoView = remember { BringIntoViewRequester() }
+    LaunchedEffect(selected) { if (selected) bringIntoView.bringIntoView() }
     Row(
-        Modifier.testTag("nav:$title").fillMaxWidth().height(34.dp)
+        Modifier.testTag("nav:$title").fillMaxWidth().height(34.dp).bringIntoViewRequester(bringIntoView)
             .background(if (selected) scheme.primaryContainer else androidx.compose.ui.graphics.Color.Transparent, MaterialTheme.shapes.medium)
-            .clickable(enabled = enabled, onClick = onClick).padding(horizontal = 10.dp),
+            .clickable(enabled = enabled, role = Role.Tab, onClick = onClick).padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -176,7 +188,7 @@ private fun StatusBar(model: AppModel) {
         }
         model.project?.let { p ->
             val edited = p.editedPaths.size + p.editedOverlays.size + if (p.editedArm9 != null) 1 else 0
-            if (model.revision >= 0) Text(if (edited == 0) "No changes" else "$edited file(s) changed", color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            if (model.revision >= 0) Text(if (edited == 0) "No changes" else "${plural(edited, "file")} changed", color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
         model.romPath?.let { Text(it.fileName.toString(), color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall) }
         Text("v${AppVersion.current}", color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("app-version"))
@@ -229,7 +241,14 @@ private fun Content(model: AppModel, modifier: Modifier) {
             KeepSelection(model, EditorKind.MAPS, editor.maps.selectedIndex)
             MapEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.EVENTS -> Loading(project, "events", { EventLabels(project).let { labels -> labels to model.recordEditor(EditorKind.EVENTS, project, EventFile.SPEC, labels::label, 0) } }) { (labels, editor) ->
+        selected == EditorKind.EVENTS -> Loading(project, "events", {
+            EventLabels(project).let { labels ->
+                labels to model.recordEditor(EditorKind.EVENTS, project, EventFile.SPEC, labels::label, 0).also { m ->
+                    // Open on the first file that has events instead of the empty file 0.
+                    if (model.selectionMemory[EditorKind.EVENTS] == null) m.records.indexOfFirst { it.count > 0 }.takeIf { it >= 0 }?.let(m::select)
+                }
+            }
+        }) { (labels, editor) ->
             EventEditor(editor, labels, modifier.padding(16.dp))
         }
         selected == EditorKind.SCRIPTS -> Loading(project, "scripts", {

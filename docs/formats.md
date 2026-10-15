@@ -117,11 +117,18 @@ Add an entry here whenever a layout, offset or quirk is confirmed.
 - 471 records of 16 bytes (3 more than the 468 named moves): effect u16, category (0 physical, 1 special, 2 status),
   power, type, accuracy (0 = never misses), PP, effect chance, range u16, priority (signed), flags, contest effect,
   contest type, u16 contest word. **Round trip is exact**; Pound = physical, 40 power, normal, 100 accuracy, 35 PP.
+- Flags byte (bit 0 first): contact, protect, magic coat, snatch, mirror move, King's Rock, keep HP bar (animation), hide shadow
+  (animation). Range u16 is one flag bit: 0 one adjacent opponent or ally, 1 varies, 2 one random opponent, 4 all adjacent
+  opponents, 8 all adjacent Pokémon, 16 user, 32 user side, 64 every side, 128 opponent side, 256 one ally, 512 user or ally,
+  1024 one opponent. Contest type: 0 cool, 1 beauty, 2 cute, 3 smart, 4 tough (Super Contest, Diamond/Pearl/Platinum). Names as in
+  DSPRE's `MoveData` and the move editing guide of the DS Pokémon Hacking wiki, `CONTEST_TYPE` values as in the decomp
+  (`constants/pokemon.h`). **[UNVERIFIED]** in game: only the byte layout is checked against the ROM.
 
 ## Trainers (`a/0/5/5` headers, `a/0/5/6` parties)
 
 - 738 trainers; both NARCs have 738 files. Header is 20 bytes: type (bit 0 custom moves, bit 1 held items), class,
-  unknown byte, party size, 4 battle items (u16), AI flags (u32), double-battle (u32).
+  unknown byte, party size, 4 battle items (u16), AI flags (u32), double-battle (u32). The game stores 2 for a double battle and 0 for a single one
+  (DSPRE reads `== 2`); the editor writes exactly those two values.
 - Party record size depends on the type: 8 bytes (difficulty, gender/ability override, level, species+form, capsule),
   10 with a held item, 16 with custom moves, 18 with both; species is the low 10 bits and the form the high 6 bits.
   Vanilla: 487 default, 177 custom moves, 7 items, 67 both.

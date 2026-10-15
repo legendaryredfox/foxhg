@@ -6,6 +6,7 @@ import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import io.github.romulofer.foxhg.app.ui.TextFocus
 import io.github.romulofer.foxhg.core.project.ProjectStore
 
 /** What the menu, the buttons and the keyboard shortcuts do. One place, so they cannot drift apart. */
@@ -25,9 +26,10 @@ object Actions {
             key == Key.B -> { build(model); true }
             key == Key.R -> { run(model); true }
             key == Key.F -> SearchFocus.request()
-            key == Key.Z && shift -> { model.redo(); true }
-            key == Key.Z -> { model.undo(); true }
-            key == Key.Y -> { model.redo(); true }
+            // In a script or message box Ctrl+Z belongs to the box (it undoes the typing); elsewhere it undoes the project,
+            // and a key with nothing to undo or redo is left alone.
+            (key == Key.Z && shift) || key == Key.Y -> if (TextFocus.active || !model.canRedo) false else { model.redo(); true }
+            key == Key.Z -> if (TextFocus.active || !model.canUndo) false else { model.undo(); true }
             else -> false
         }
     }
@@ -77,8 +79,19 @@ object Actions {
         if (model.project != null) chooseBuildTarget()?.let(model::buildInBackground)
     }
 
+    /**
+     * Closes the window. A running task (build, Run) is waited for off the UI thread, so the progress window keeps
+     * moving instead of the whole window freezing; [exit] runs on the UI thread once it is done.
+     */
     fun quit(model: AppModel, exit: () -> Unit) = model.guard {
-        model.close()
-        exit()
+        if (model.task == null) {
+            model.close()
+            exit()
+        } else {
+            Thread {
+                model.awaitTask()
+                javax.swing.SwingUtilities.invokeLater { model.close(); exit() }
+            }.apply { isDaemon = true; name = "foxhg-quit"; start() }
+        }
     }
 }

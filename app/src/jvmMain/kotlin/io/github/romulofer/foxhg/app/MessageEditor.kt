@@ -123,7 +123,7 @@ fun MessageEditor(model: MessageEditorModel, modifier: Modifier = Modifier) {
             label = model.banks::label,
             onSelect = model::selectBank,
             isEdited = model::isBankEdited,
-            detail = { b -> model.banks.records.getOrNull(b)?.entries?.size?.toString() },
+            detail = { b -> model.banks.records.getOrNull(b)?.entries?.size?.let { "$it msg" } },
             width = 250.dp,
         )
         val archive = model.archive ?: return@Row
@@ -142,9 +142,9 @@ fun MessageEditor(model: MessageEditorModel, modifier: Modifier = Modifier) {
         )
         DetailPane {
             val entry = archive.entries.getOrNull(model.messageIndex)
-            EditorHeader(model.messageIndex.toString(), "Bank ${model.banks.selectedIndex}" + (TextBanks.describe(model.banks.selectedIndex)?.let { " · $it" } ?: ""))
+            EditorHeader(model.banks.selectedIndex.toString(), TextBanks.describe(model.banks.selectedIndex) ?: "Bank ${model.banks.selectedIndex}")
             SectionCard(
-                "Message",
+                "Message ${model.messageIndex} of ${archive.entries.size}",
                 subtitle = "Commands are written {NAME args}, for example {STRVAR_1 3, 0, 0}, {PAUSE 30}, {COLOR 1}. Line breaks: \\n next line, \\r new box, \\f clear.",
                 actions = {
                     if (entry?.compressed == true) Chip("packed")
@@ -152,6 +152,8 @@ fun MessageEditor(model: MessageEditorModel, modifier: Modifier = Modifier) {
                 },
             ) {
                 TextArea(model.draft, model::edit, invalid = model.draftError != null, modifier = Modifier.fillMaxWidth())
+                val lines = model.draft.split("\\n", "\\r", "\\f", "\n").size
+                Text("${plural(model.draft.length, "character")}, ${plural(lines, "line")}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 model.draftError?.let { Text("Not applied: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
             }
         }

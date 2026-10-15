@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -61,7 +62,10 @@ class ScriptLabels(project: RomProject) {
     /** Script files (header.script) of the maps that use level script [file]; its trigger numbers are scripts of those. */
     fun scriptFilesOfLevel(file: Int): List<Int> = levelScriptUsers(file).map { headers[it].script }.distinct()
 
-    fun describe(users: List<Int>): String = users.joinToString(", ") { "$it (${mapName(it)})" }
+    fun describe(users: List<Int>): String = summarize(users.map { "$it (${mapName(it)})" })
+
+    /** The first script file a map uses, so the editor opens on a script with something in it. */
+    fun firstUsedFile(): Int = headers.minOfOrNull { it.script }?.coerceAtLeast(0) ?: 0
 
     fun label(file: Int): String {
         val s = scriptUsers(file)
@@ -78,6 +82,8 @@ class ScriptLabels(project: RomProject) {
 /** State of the Scripts editor: the file list is a [RecordEditorModel], the text being typed is the draft. */
 class ScriptEditorModel(project: RomProject, private val labels: ScriptLabels, onChanged: () -> Unit = {}) {
     val files = RecordEditorModel(project, ScriptEntry.SPEC, labels::label, onChanged)
+    init { labels.firstUsedFile().let { if (it in 0 until files.recordCount) files.select(it) } }
+
     private val archives: List<TextArchive> = (TextArchive.load(project) as? FoxResult.Ok)?.value?.records ?: emptyList()
 
     /** The messages the selected script file can show, for the notes in its text. */
@@ -118,7 +124,9 @@ class ScriptEditorModel(project: RomProject, private val labels: ScriptLabels, o
 
 @Composable
 fun ScriptEditor(model: ScriptEditorModel, labels: ScriptLabels, modifier: Modifier = Modifier) {
-    RecordListDetail(model.files, modifier, onSelect = model::select) { entry ->
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val highlight = remember(dark) { ScriptHighlight(dark) }
+    RecordListDetail(model.files, modifier, onSelect = model::select, rowDetail = { labels.scriptUsers(it).firstOrNull()?.let { h -> "hdr $h" } }) { entry ->
         val index = model.files.selectedIndex
         EditorHeader(index.toString(), nameOf(model.files.label(index)))
         val scriptUsers = labels.scriptUsers(index)
@@ -132,7 +140,7 @@ fun ScriptEditor(model: ScriptEditorModel, labels: ScriptLabels, modifier: Modif
                 subtitle = "Commands as in the script command database; a jump takes a label. Flag and variable names can be used instead of numbers. Applied as you type once it is valid.",
                 actions = { Chip("${entry.file.scriptCount} scripts") },
             ) {
-                TextArea(model.draft, model::edit, invalid = model.draftError != null, modifier = Modifier.fillMaxWidth(), minHeight = androidx.compose.ui.unit.Dp(480f), transformation = ScriptHighlight)
+                TextArea(model.draft, model::edit, invalid = model.draftError != null, modifier = Modifier.fillMaxWidth(), minHeight = androidx.compose.ui.unit.Dp(480f), transformation = highlight)
                 model.draftError?.let { Text("Not applied: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
             }
             is ScriptEntry.Level -> LevelScriptForm(entry.file, labels.scriptFilesOfLevel(index)) { changed -> model.files.update { ScriptEntry.Level(changed.aligned()) } }
@@ -147,7 +155,12 @@ fun ScriptEditor(model: ScriptEditorModel, labels: ScriptLabels, modifier: Modif
 }
 
 /** Colours labels, command names, numbers and comments of a script text. */
-private object ScriptHighlight : VisualTransformation {
+internal class ScriptHighlight(dark: Boolean) : VisualTransformation {
+    private val label = if (dark) Color(0xFFFFA070) else Color(0xFFC2410C)
+    private val known = if (dark) Color(0xFF8AB4FF) else Color(0xFF1D4ED8)
+    private val unknown = if (dark) Color(0xFFFF8A8A) else Color(0xFFB91C1C)
+    private val numberColor = if (dark) Color(0xFF5FD7A7) else Color(0xFF047857)
+    private val commentColor = if (dark) Color(0xFFA8B0BD) else Color(0xFF5B6472)
     private val number = Regex("""\b(0x[0-9A-Fa-f]+|\d+)\b""")
 
     override fun filter(text: AnnotatedString): TransformedText {
@@ -160,16 +173,16 @@ private object ScriptHighlight : VisualTransformation {
                 val trimmed = code.trim()
                 val indent = code.length - code.trimStart().length
                 when {
-                    trimmed.endsWith(":") -> addStyle(SpanStyle(color = Color(0xFFC2410C), fontWeight = FontWeight.Bold), offset + indent, offset + indent + trimmed.length)
+                    trimmed.endsWith(":") -> addStyle(SpanStyle(color = label, fontWeight = FontWeight.Bold), offset + indent, offset + indent + trimmed.length)
                     trimmed.isNotEmpty() -> {
                         val nameEnd = trimmed.indexOf(' ').let { if (it < 0) trimmed.length else it }
                         val name = trimmed.substring(0, nameEnd)
-                        val known = name.startsWith(".") || ScriptCommands.byName(name) != null || ScriptCommands.movementIds.containsKey(name) || name == "Move"
-                        addStyle(SpanStyle(color = if (known) Color(0xFF1D4ED8) else Color(0xFFB91C1C), fontWeight = FontWeight.SemiBold), offset + indent, offset + indent + nameEnd)
-                        for (m in number.findAll(trimmed, nameEnd)) addStyle(SpanStyle(color = Color(0xFF047857)), offset + indent + m.range.first, offset + indent + m.range.last + 1)
+                        val isKnown = name.startsWith(".") || ScriptCommands.byName(name) != null || ScriptCommands.movementIds.containsKey(name) || name == "Move"
+                        addStyle(SpanStyle(color = if (isKnown) known else unknown, fontWeight = FontWeight.SemiBold), offset + indent, offset + indent + nameEnd)
+                        for (m in number.findAll(trimmed, nameEnd)) addStyle(SpanStyle(color = numberColor), offset + indent + m.range.first, offset + indent + m.range.last + 1)
                     }
                 }
-                if (comment >= 0) addStyle(SpanStyle(color = Color(0xFF6B7280)), offset + comment, offset + line.length)
+                if (comment >= 0) addStyle(SpanStyle(color = commentColor), offset + comment, offset + line.length)
                 offset += line.length + 1
             }
         }

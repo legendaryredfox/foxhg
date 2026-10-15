@@ -77,6 +77,9 @@ class TrainerEditorModel(private val project: RomProject, private val onChanged:
 
     fun removeMon(slot: Int) = update { t -> t.withParty(t.party.filterIndexed { i, _ -> i != slot }) }
 
+    /** How many Pokémon in all parties are [species]. */
+    fun countSpecies(species: Int): Int = table?.trainers?.sumOf { t -> t.party.count { it.species == species } } ?: 0
+
     /** Replaces [from] by [to] (keeping level and everything else) in every party; returns how many Pokémon changed. */
     fun replaceSpeciesEverywhere(from: Int, to: Int): Int {
         val current = table ?: return 0

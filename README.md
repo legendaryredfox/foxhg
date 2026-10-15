@@ -28,8 +28,23 @@ ROM, byte for byte.
 **Current target: Pokémon HeartGold (English).** SoulSilver (English) opens too where the layout is identical. Diamond, Pearl,
 Platinum and other languages are out of scope until HeartGold is solid.
 
-> **foxhg does not include any game data.** You need your own legally obtained ROM. Nothing from a ROM is ever stored in this
-> repository, and foxhg never modifies the ROM you open: *Build ROM* writes a new file.
+> **foxhg does not include any game data.** You need your own legally obtained ROM. No ROM, extracted file or sprite is ever stored in this
+> repository (the screenshots show only text and numbers), and foxhg never modifies the ROM you open: *Build ROM* writes a new file.
+
+## Screenshots
+
+Text and numbers only: no sprites or maps, so nothing here is more than the values the editors show.
+
+<table>
+  <tr>
+    <td><img src="docs/images/moves-editor.png" alt="Moves editor" width="440"><br><sub><b>Moves:</b> battle data, effect, flags, CSV import and export</sub></td>
+    <td><img src="docs/images/scripts-editor.png" alt="Scripts editor" width="440"><br><sub><b>Scripts:</b> syntax highlighting, flag and variable names, sound preview</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/text-editor.png" alt="Text archives editor" width="440"><br><sub><b>Text archives:</b> every message bank, search, command codes</sub></td>
+    <td><img src="docs/images/tms-editor.png" alt="TMs and HMs editor" width="440"><br><sub><b>TMs and HMs:</b> pick the move behind each disc</sub></td>
+  </tr>
+</table>
 
 ## Features
 
@@ -37,11 +52,11 @@ Platinum and other languages are out of scope until HeartGold is solid.
 
 | Area | Editors |
 |------|---------|
-| **Pokémon** | Personal data (base stats, EV yield, types, abilities, catch rate, growth, egg groups, wild held items, TM/HM compatibility), Learnsets, Evolutions, Egg moves |
-| **Moves and items** | Moves, Items (CSV import and export for both), TMs and HMs |
+| **Pokémon** | Personal data (base stats, EV yield, types, abilities, catch rate, growth, egg groups, wild held items, TM/HM compatibility), Learnsets, Evolutions, Egg moves, In-game trades |
+| **Moves and items** | Moves (battle data, flags, range, contest data), Items (CSV import and export for both), TMs and HMs |
 | **Trainers** | Trainers (header, party with held items and custom moves, battle items, *replace a species in every party*), Trainer classes (gender, prize money) |
 | **World** | Wild encounters (rates, grass by time of day, water and fishing slots, swarms, radio slots, copy from SoulSilver), Map headers (every field), Matrices, Maps, Events |
-| **Scripts and text** | Scripts (a text language with syntax highlighting, flag, variable and message names, level scripts), Text archives (every message bank, with names) |
+| **Scripts and text** | Scripts (a text language with syntax highlighting, flag, variable and message names, level scripts), Text archives (every message bank, search across all messages, bank names where known) |
 | **Audio** | Sounds browser (SDAT sequences) with a built-in sequence player |
 | **Tools** | Files: a read-only tree of the ROM with sizes, offsets, a hex dump and export |
 
@@ -65,7 +80,7 @@ NPC sprites, map thumbnails and sound playback show up next to the ids wherever 
 - **Projects:** a project is a folder with *only your changes*. The ROM is never copied or modified. Autosave, recents, relink a moved ROM.
 - **Undo and redo** (Ctrl+Z, Ctrl+Shift+Z) across all editors, kept when you close and reopen a project.
 - **Build ROM** writes a new `.nds` (the previous file is kept as `.bak`); **Run** builds and starts your emulator.
-- **Files screen, progress bars and a loading screen**, light and dark themes, keyboard navigation in every list (arrows, Ctrl+F).
+- **Files screen, progress bars and a loading screen**, light and dark themes, keyboard navigation in every list (arrows, Ctrl+F), a confirmation before tools that change many records at once.
 
 ### Under the hood
 
@@ -180,7 +195,7 @@ game itself. Things that are known not to be done or not checked are marked in [
 - 3D map editing is staged: the viewer, building editing and walking-surface display work; lighting, shadows, water animation, sloped
   surface plates, rotation and scale, and writing new models are still to do.
 - Sound playback is checked for length and level, not yet by ear; some SDAT features (streams, portamento, sweeps) are skipped.
-- Not yet: trades, starters and hidden items editors, the overlay editor and ARM9 patch toolbox, SoulSilver-only encounter extras,
+- Not yet: starters and hidden items editors, the overlay editor and ARM9 patch toolbox, SoulSilver-only encounter extras,
   replacing the ARM7 and the banner, other Pokémon games.
 
 Spec: [`docs/spec.md`](docs/spec.md) · Plan and status: [`docs/plan.md`](docs/plan.md)

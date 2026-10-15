@@ -36,10 +36,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.romulofer.foxhg.app.ui.ListRow
+import io.github.romulofer.foxhg.app.ui.ScrollHint
 import io.github.romulofer.foxhg.app.ui.SearchBox
 
 /** "025  PIKACHU" -> "PIKACHU". Labels are built as an id, two spaces, a name. */
 internal fun nameOf(label: String): String = label.substringAfter("  ", label).trim()
+
+/** "1 file", "2 files": [word] with an "s" unless [n] is 1. */
+internal fun plural(n: Int, word: String): String = "$n ${if (n == 1) word else word + "s"}"
+
+/** "a, b, c and 2 more": a long list of names cut to [limit] entries so it does not fill the screen. */
+internal fun summarize(items: List<String>, limit: Int = 4): String =
+    if (items.size <= limit) items.joinToString(", ") else items.take(limit).joinToString(", ") + " and ${items.size - limit} more"
 
 /** Where Ctrl+F goes: the search box of the list on screen. Set by [ListPane], used by the window's key handler. */
 object SearchFocus {
@@ -105,7 +113,8 @@ fun ListPane(
         if (rows.isEmpty()) {
             Text("No match", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(8.dp))
         } else {
-            LazyColumn(Modifier.fillMaxSize(), state = state, verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Box(Modifier.fillMaxSize()) {
+            LazyColumn(Modifier.fillMaxSize().padding(end = 8.dp), state = state, verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 items(rows) { index ->
                     ListRow(
                         id = index.toString(),
@@ -119,6 +128,8 @@ fun ListPane(
                     )
                 }
             }
+            ScrollHint(state)
+            }
         }
     }
 }
@@ -126,10 +137,14 @@ fun ListPane(
 /** The scrolling, width-limited area that holds a record's cards. */
 @Composable
 fun DetailPane(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Box(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Column(Modifier.widthIn(max = 960.dp).fillMaxWidth().padding(start = 20.dp, end = 4.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            content()
+    val scroll = rememberScrollState()
+    Box(modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().verticalScroll(scroll)) {
+            Column(Modifier.widthIn(max = 960.dp).fillMaxWidth().padding(start = 20.dp, end = 12.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                content()
+            }
         }
+        ScrollHint(scroll)
     }
 }
 

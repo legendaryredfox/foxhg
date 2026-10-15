@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -57,7 +58,7 @@ import io.github.romulofer.foxhg.core.data.map.MapUsages
 import io.github.romulofer.foxhg.core.data.map.TileTypes
 import io.github.romulofer.foxhg.core.project.RomProject
 
-enum class MapLayer(val label: String) { TYPES("Tile types"), COLLISION("Collision"), BOTH("Both") }
+enum class MapLayer(val label: String) { TYPES("Tile types"), COLLISION("Collision"), BOTH("Types and collision") }
 enum class MapTool(val label: String) { PAINT("Paint"), FILL("Fill"), PICK("Pick"), EVENTS("Edit events") }
 
 /** State of the Maps editor: the map files are a [RecordEditorModel], the rest is how they are shown and painted. */
@@ -254,15 +255,17 @@ fun MapEditor(model: MapEditorModel, modifier: Modifier = Modifier) {
             Text("Matrix ${usage.matrix}, cell ${usage.x},${usage.y}, map header ${usage.header}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         SectionCard("Tiles", subtitle = "Left click paints, right click picks. The tile type is what the game calls the tile behaviour; collision 0x80 blocks.") {
-            FieldFlow {
-                MapLayer.entries.forEach { l -> ToggleChip(l.label, model.layer == l, { model.layer = l }) }
-                MapTool.entries.forEach { t -> ToggleChip(t.label, model.tool == t, { model.tool = t }) }
+            ToolbarRow("Show") { MapLayer.entries.forEach { l -> ToggleChip(l.label, model.layer == l, { model.layer = l }) } }
+            ToolbarRow("Tool") { MapTool.entries.forEach { t -> ToggleChip(t.label, model.tool == t, { model.tool = t }) } }
+            ToolbarRow("Overlays") {
                 ToggleChip("Show events", model.showEvents, { model.showEvents = it })
                 ToggleChip("Show buildings", model.showBuildings, { model.showBuildings = it })
             }
-            FieldFlow {
+            ToolbarRow("Brush: tile type") {
                 ToggleChip("Paint type", model.paintType, { model.paintType = it })
                 PickerField("Type", model.brushType, TileTypes.all.map { "${it.id}  ${it.label}" }, { model.brushType = it }, Modifier.width(280.dp), leading = { Swatch(typeColor(it)) })
+            }
+            ToolbarRow("Brush: collision") {
                 ToggleChip("Paint collision", model.paintCollision, { model.paintCollision = it })
                 NumberField("Collision", model.brushCollision, 0..255, { model.brushCollision = it }, Modifier.width(110.dp))
                 ToggleChip("Walk", model.brushCollision == 0, { model.brushCollision = 0 })
@@ -278,6 +281,15 @@ fun MapEditor(model: MapEditorModel, modifier: Modifier = Modifier) {
             SectionCard("3D view", subtitle = "The map as the game draws it, without animation. Drag turns, right drag pans, Ctrl + wheel zooms, a click selects a building") { Map3dView(model, index) }
         }
         BuildingCard(model, map)
+    }
+}
+
+/** One captioned row of the map toolbar, so choices of the same kind sit together. */
+@Composable
+private fun ToolbarRow(caption: String, content: @Composable () -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+        Text(caption, Modifier.width(120.dp).padding(bottom = 6.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        FieldFlow(Modifier.weight(1f)) { content() }
     }
 }
 

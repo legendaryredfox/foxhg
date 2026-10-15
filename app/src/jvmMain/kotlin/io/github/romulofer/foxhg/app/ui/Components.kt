@@ -4,11 +4,26 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.TooltipArea
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -26,7 +41,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -113,7 +131,7 @@ fun NumberField(
             decorationBox = { inner ->
                 Box(fieldModifier(invalid).padding(horizontal = 10.dp), contentAlignment = Alignment.CenterStart) { inner() }
             },
-            modifier = Modifier.fillMaxWidth().testTag("number:$tag"),
+            modifier = Modifier.fillMaxWidth().testTag("number:$tag").semantics { contentDescription = label.ifEmpty { tag } },
         )
     }
 }
@@ -144,7 +162,7 @@ fun DecimalField(
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             decorationBox = { inner -> Box(fieldModifier(invalid).padding(horizontal = 10.dp), contentAlignment = Alignment.CenterStart) { inner() } },
-            modifier = Modifier.fillMaxWidth().testTag("decimal:$tag"),
+            modifier = Modifier.fillMaxWidth().testTag("decimal:$tag").semantics { contentDescription = label.ifEmpty { tag } },
         )
     }
 }
@@ -167,7 +185,7 @@ fun PickerField(
         FieldLabel(label)
         Box {
             Row(
-                fieldModifier(false, hovered || open).hoverable(source).testTag("picker:$label").clickable { open = true }.padding(horizontal = 10.dp),
+                fieldModifier(false, hovered || open).hoverable(source).testTag("picker:$label").clickable(role = Role.DropdownList) { open = true }.semantics { contentDescription = "$label: ${options.getOrNull(selected) ?: "#$selected"}" }.padding(horizontal = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 leading?.let { it(selected); Spacer(Modifier.width(6.dp)) }
@@ -259,11 +277,11 @@ fun SearchBox(value: String, onChange: (String) -> Unit, placeholder: String, mo
                     inner()
                 }
                 if (value.isNotEmpty()) {
-                    Text("✕", Modifier.clickable { onChange("") }.padding(start = 8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("✕", Modifier.clickable(role = Role.Button, onClickLabel = "Clear search") { onChange("") }.semantics { contentDescription = "Clear search" }.padding(start = 8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         },
-        modifier = (if (focusRequester != null) modifier.focusRequester(focusRequester) else modifier).testTag("search:$placeholder"),
+        modifier = (if (focusRequester != null) modifier.focusRequester(focusRequester) else modifier).testTag("search:$placeholder").semantics { contentDescription = placeholder.removeSuffix("…") },
     )
 }
 
@@ -289,22 +307,24 @@ fun ListRow(
         else -> Color.Transparent
     }
     Row(
-        modifier.fillMaxWidth().height(30.dp).background(bg, MaterialTheme.shapes.small).hoverable(source).clickable(onClick = onClick).padding(horizontal = 8.dp),
+        modifier.fillMaxWidth().height(30.dp).background(bg, MaterialTheme.shapes.small).hoverable(source)
+            .clickable(role = Role.Button, onClick = onClick).semantics { contentDescription = "$id $text" }.padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(id.padStart(3, '0'), style = Fox.mono, color = if (selected) scheme.onPrimaryContainer else scheme.onSurfaceVariant, modifier = Modifier.width(30.dp))
         leading?.invoke()
-        Text(
-            text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (selected) scheme.onPrimaryContainer else scheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
+        RowTooltip(text, Modifier.weight(1f)) {
+            Text(
+                text,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (selected) scheme.onPrimaryContainer else scheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         if (detail != null) Text(detail, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant, maxLines = 1)
-        if (flagged) Text("≠", style = MaterialTheme.typography.labelMedium, color = scheme.tertiary)
+        if (flagged) Text("differs", style = MaterialTheme.typography.labelSmall, color = scheme.tertiary)
         if (edited) Box(Modifier.width(7.dp).height(7.dp).background(scheme.primary, MaterialTheme.shapes.extraSmall))
     }
 }
@@ -372,7 +392,7 @@ fun ToggleChip(text: String, checked: Boolean, onToggle: (Boolean) -> Unit, modi
             .border(1.dp, if (checked) scheme.primary.copy(alpha = 0.6f) else scheme.outline, MaterialTheme.shapes.large)
             .hoverable(source)
             .testTag("chip:$text")
-            .clickable { onToggle(!checked) }
+            .toggleable(value = checked, role = Role.Checkbox, onValueChange = onToggle)
             .padding(horizontal = 10.dp, vertical = 4.dp),
     ) {
         Text(text, style = MaterialTheme.typography.labelMedium, color = if (checked) scheme.onPrimaryContainer else scheme.onSurface)
@@ -417,12 +437,60 @@ fun TextArea(
 ) {
     val shape = MaterialTheme.shapes.small
     val border = if (invalid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline
+    DisposableEffect(Unit) { onDispose { TextFocus.active = false } }
     BasicTextField(
         value = value,
         onValueChange = onChange,
         textStyle = Fox.mono.copy(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         visualTransformation = transformation,
-        modifier = modifier.testTag("textarea").heightIn(min = minHeight).background(MaterialTheme.colorScheme.surface, shape).border(1.dp, border, shape).padding(12.dp),
+        modifier = modifier.testTag("textarea").onFocusChanged { TextFocus.active = it.isFocused }.heightIn(min = minHeight).background(MaterialTheme.colorScheme.surface, shape).border(1.dp, border, shape).padding(12.dp),
     )
+}
+
+/** Asks before a tool that changes many records at once; the change can still be undone with Ctrl+Z. */
+@Composable
+fun ConfirmDialog(title: String, text: String, confirmLabel: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(text, style = MaterialTheme.typography.bodyMedium) },
+        confirmButton = { Button(onClick = onConfirm, modifier = Modifier.testTag("confirm")) { Text(confirmLabel) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
+}
+
+/**
+ * True while a multi-line text box (scripts, messages) has the keyboard focus. The window's undo and redo shortcuts
+ * step back off then, so Ctrl+Z undoes the typing in the box instead of the last edit of the project.
+ */
+object TextFocus {
+    var active: Boolean = false
+}
+
+/** Shows the full [text] in a tooltip, for rows whose name is cut short. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun RowTooltip(text: String, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    TooltipArea(
+        tooltip = {
+            Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surface, shadowElevation = 6.dp, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
+                Text(text, Modifier.widthIn(max = 480.dp).padding(horizontal = 10.dp, vertical = 6.dp), style = MaterialTheme.typography.bodySmall)
+            }
+        },
+        delayMillis = 500,
+        modifier = modifier,
+    ) { content() }
+}
+
+/** A thin scrollbar at the right edge of a scrolling [Box], so the user can tell a list or page goes on. */
+@Composable
+fun BoxScope.ScrollHint(state: ScrollState) {
+    VerticalScrollbar(rememberScrollbarAdapter(state), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
+}
+
+/** Same for a lazy list. */
+@Composable
+fun BoxScope.ScrollHint(state: LazyListState) {
+    VerticalScrollbar(rememberScrollbarAdapter(state), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
 }

@@ -44,7 +44,7 @@ private fun TradeConversionCard(model: RecordEditorModel<EvolutionData>) {
     val remaining = model.records.sumOf { r -> r.slots.count { it.known?.isTrade == true } }
     SectionCard(
         "Remove trade evolutions",
-        subtitle = if (remaining > 0) "$remaining trade evolution(s) left. Trade becomes a level-up; trade with an item becomes using that item." else "No trade evolutions left.",
+        subtitle = if (remaining > 0) "${plural(remaining, "trade evolution")} left. Trade becomes a level-up; trade with an item becomes using that item." else "No trade evolutions left.",
     ) {
         FieldFlow {
             NumberField("Trade becomes level", level, 2..100, { level = it }, Modifier.width(150.dp))
@@ -55,7 +55,7 @@ private fun TradeConversionCard(model: RecordEditorModel<EvolutionData>) {
                     changed = changes.size
                     converted
                 }
-                message = "Converted $changed evolution(s)"
+                message = "Converted ${plural(changed, "evolution")}"
             }, enabled = remaining > 0) { Text("Convert all") }
             message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary) }
         }
