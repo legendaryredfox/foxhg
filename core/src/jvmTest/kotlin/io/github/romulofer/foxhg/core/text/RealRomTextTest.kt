@@ -67,4 +67,21 @@ class RealRomTextTest {
         assertTrue(names.drop(1).all { n -> n.none { it == '\\' } || n.isEmpty() || true })
         assertTrue(names.any { it == "FALKNER" || it == "Falkner" }, "Falkner should be among the names: $names")
     }
+
+    @Test
+    fun everyMessageReadsAsTextAndEncodesBackToTheSameCodes() = withMessages { narc ->
+        var commands = 0
+        val failures = mutableListOf<String>()
+        narc.files.forEachIndexed { b, bytes ->
+            val archive = (TextArchive.parse(bytes) as FoxResult.Ok).value
+            archive.entries.forEachIndexed { i, entry ->
+                val text = entry.text()
+                commands += text.count { it == '{' }
+                val back = MessageText.encode(text)
+                if (back !is FoxResult.Ok || !back.value.contentEquals(entry.chars)) failures += "bank $b message $i: $text"
+            }
+        }
+        assertTrue(failures.isEmpty(), "${failures.size} messages do not survive text: ${failures.take(3)}")
+        assertTrue(commands > 10000, "the game's messages hold thousands of commands, found $commands")
+    }
 }

@@ -211,3 +211,11 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
 - `RomProject.writeOverlay(id, plain)` takes the decompressed image (same size as the original). A build recompresses it
   (BLZ) when the table entry is flagged compressed, replaces the overlay's FAT file and rewrites the table's size word
   (low 24 bits of the last word of the 32-byte entry). Projects keep `overlays/<id>.bin`. Round trip verified on overlay 12.
+
+## Message commands
+
+- A command inside a message is `0xFFFE`, a command word, an argument count n, then n argument words. Every command in the ROM
+  is complete (none truncated); 14 distinct words: `0100/0300/0400/3400` + low byte = string variable (`STRVAR_1/3/4/34`, the
+  low byte is the first value, 2 args), `0200 YESNO`(1), `0201 PAUSE`(1), `0202 WAIT`(1), `0203 CURSOR_X`(1), `0204 CURSOR_Y`(1),
+  `0205 ALN_CENTER`(0), `0206 ALN_RIGHT`(0), `FF00 COLOR`(1), `FF01 SIZE`(1), `FF02`(2). Written `{NAME args}` by `MessageText`.
+  Packed (9-bit) messages cannot hold a command or a code above 0x1FE, so the editor refuses them there.

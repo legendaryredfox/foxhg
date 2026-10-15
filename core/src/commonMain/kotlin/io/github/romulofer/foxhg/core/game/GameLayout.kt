@@ -55,4 +55,17 @@ object TextBanks {
     const val TRAINER_CLASSES = 730
     /** 235 entries, index = map header name id. */
     const val LOCATIONS = 279
+
+    /** What a bank holds, for the banks the editors know; null for the rest. */
+    fun describe(bank: Int): String? = when (bank) {
+        SPECIES -> "Species names"
+        MOVES -> "Move names"
+        ITEMS -> "Item names"
+        ABILITIES -> "Ability names"
+        TYPES -> "Type names"
+        TRAINER_NAMES -> "Trainer names"
+        TRAINER_CLASSES -> "Trainer class names"
+        LOCATIONS -> "Location names"
+        else -> null
+    }
 }

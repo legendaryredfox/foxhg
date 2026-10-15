@@ -199,6 +199,10 @@ private fun Content(model: AppModel, modifier: Modifier) {
             val editor = remember(project) { TrainerEditorModel(project, onChanged = model::projectChanged) }
             TrainerEditor(editor, modifier.padding(16.dp))
         }
+        selected == EditorKind.TEXT -> {
+            val editor = remember(project) { MessageEditorModel(project, onChanged = model::projectChanged) }
+            MessageEditor(editor, modifier.padding(16.dp))
+        }
         selected == EditorKind.TRAINER_CLASSES -> {
             val editor = remember(project) { TrainerClassEditorModel(project, onChanged = model::projectChanged) }
             TrainerClassEditor(editor, modifier.padding(16.dp))

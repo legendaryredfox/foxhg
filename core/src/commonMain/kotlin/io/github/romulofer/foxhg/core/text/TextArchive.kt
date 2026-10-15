@@ -1,6 +1,10 @@
 package io.github.romulofer.foxhg.core.text
 
 import io.github.romulofer.foxhg.core.FoxResult
+import io.github.romulofer.foxhg.core.data.NarcRecords
+import io.github.romulofer.foxhg.core.data.RecordSpec
+import io.github.romulofer.foxhg.core.game.HgssLayout
+import io.github.romulofer.foxhg.core.project.RomProject
 import io.github.romulofer.foxhg.core.putU16
 import io.github.romulofer.foxhg.core.putU32
 import io.github.romulofer.foxhg.core.u16
@@ -8,7 +12,7 @@ import io.github.romulofer.foxhg.core.u32
 
 /** One message: its 16-bit codes without the 0xFFFF terminator, and whether it is stored 9-bit compressed. */
 class TextEntry(val chars: IntArray, val compressed: Boolean = false) {
-    fun text(charmap: Charmap = Charmap.HGSS): String = charmap.decode(chars)
+    fun text(charmap: Charmap = Charmap.HGSS): String = MessageText.decode(chars, charmap)
 
     override fun equals(other: Any?) = other is TextEntry && compressed == other.compressed && chars.contentEquals(other.chars)
 
@@ -25,6 +29,27 @@ class TextEntry(val chars: IntArray, val compressed: Boolean = false) {
  * packed again on [toBytes]. Trainer names (bank 729) are stored this way.
  */
 class TextArchive(val key: Int, val entries: List<TextEntry>) {
+
+    fun withEntry(index: Int, entry: TextEntry): TextArchive =
+        TextArchive(key, entries.toMutableList().also { it[index] = entry })
+
+    /**
+     * Replaces message [index] with the codes of [text] (see [MessageText]). The message keeps its storage kind; a 9-bit
+     * packed one cannot hold a code above 0x1FE.
+     */
+    fun withText(index: Int, text: String): FoxResult<TextArchive> {
+        val old = entries.getOrNull(index) ?: return FoxResult.Err("No message $index (the bank has ${entries.size})")
+        val chars = when (val r = MessageText.encode(text)) {
+            is FoxResult.Ok -> r.value
+            is FoxResult.Err -> return r
+        }
+        if (old.compressed && chars.any { it > 0x1FE }) return FoxResult.Err("This message is stored packed (9-bit codes): it cannot hold {commands} or codes above 01FE")
+        return FoxResult.Ok(withEntry(index, TextEntry(chars, old.compressed)))
+    }
+
+    override fun equals(other: Any?) = other is TextArchive && key == other.key && entries == other.entries
+
+    override fun hashCode() = entries.hashCode() * 31 + key
 
     fun toBytes(): ByteArray {
         val encoded = entries.mapIndexed { i, entry -> encodeEntry(i, entry) }
@@ -46,6 +71,10 @@ class TextArchive(val key: Int, val entries: List<TextEntry>) {
     }
 
     companion object {
+        val SPEC = RecordSpec(HgssLayout.MESSAGES, ::parse, TextArchive::toBytes)
+
+        fun load(project: RomProject): FoxResult<NarcRecords<TextArchive>> = NarcRecords.load(project, SPEC)
+
         private const val COMPRESSED_MARKER = 0xF100
         private const val TERMINATOR = 0xFFFF
 
