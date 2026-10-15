@@ -5,6 +5,8 @@ import io.github.romulofer.foxhg.core.arm9.Arm9
 import io.github.romulofer.foxhg.core.compression.Blz
 import io.github.romulofer.foxhg.core.game.GameNames
 import io.github.romulofer.foxhg.core.game.GameText
+import io.github.romulofer.foxhg.core.game.HgssLayout
+import io.github.romulofer.foxhg.core.narc.Narc
 import io.github.romulofer.foxhg.core.nds.NdsBuilder
 import io.github.romulofer.foxhg.core.nds.NdsRom
 import io.github.romulofer.foxhg.core.nds.RomEdits
@@ -84,11 +86,26 @@ class RomProject(
         arm9Edit = null
     }
 
-    /** Message archives and the name lists derived from them, with the user's edits applied. */
-    val names: GameNames? by lazy {
-        val narcBytes = read("a/0/2/7") ?: return@lazy null
-        val narc = (io.github.romulofer.foxhg.core.narc.Narc.parse(narcBytes) as? FoxResult.Ok)?.value ?: return@lazy null
-        GameNames(GameText(narc))
+    private var namesCache: GameNames? = null
+    private var namesLoaded = false
+
+    /**
+     * Message archives and the name lists derived from them, with the user's edits applied. Rebuilt on the next read
+     * after the message archives change, so an editor opened later shows renamed species, moves and so on.
+     */
+    val names: GameNames?
+        get() {
+            if (!namesLoaded) {
+                namesCache = read(HgssLayout.MESSAGES)
+                    ?.let { (Narc.parse(it) as? FoxResult.Ok)?.value }
+                    ?.let { GameNames(GameText(it)) }
+                namesLoaded = true
+            }
+            return namesCache
+        }
+
+    private fun messagesChanged(path: String) {
+        if (path.trim('/') == HgssLayout.MESSAGES) namesLoaded = false
     }
 
     fun read(path: String): ByteArray? = edits[path.trim('/')]?.copyOf() ?: rom.read(path)
@@ -100,17 +117,20 @@ class RomProject(
         val key = path.trim('/')
         val file = rom.file(key) ?: return FoxResult.Err("The ROM has no file '$key'")
         if (bytes.contentEquals(rom.read(file))) edits.remove(key) else edits[key] = bytes.copyOf()
+        messagesChanged(key)
         return FoxResult.Ok(Unit)
     }
 
     fun revert(path: String) {
         edits.remove(path.trim('/'))
+        messagesChanged(path)
     }
 
     fun revertAll() {
         edits.clear()
         arm9Edit = null
         overlayEdits.clear()
+        namesLoaded = false
     }
 
     fun editedFiles(): Map<String, ByteArray> = edits.mapValues { it.value.copyOf() }

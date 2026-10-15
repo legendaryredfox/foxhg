@@ -43,6 +43,7 @@ class MessageEditorEndToEndTest {
             assertNotNull(editor.draftError, "an unknown command is reported")
             assertEquals("Mega Ball", editor.archive!!.entries[3].text(), "a bad draft is not written")
             editor.edit("Mega Ball")
+            assertEquals("003  Mega Ball", RecordEditorModel.itemLabel(project.names)(3), "an editor opened now lists the new name")
 
             editor.selectBank(TextBanks.TRAINER_NAMES) // 9-bit packed bank
             editor.selectMessage(20)

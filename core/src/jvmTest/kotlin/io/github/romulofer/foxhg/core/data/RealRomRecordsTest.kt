@@ -11,6 +11,7 @@ import io.github.romulofer.foxhg.core.data.item.ItemData
 import io.github.romulofer.foxhg.core.data.move.MoveData
 import io.github.romulofer.foxhg.core.data.tmhm.TmHmTable
 import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassGenders
+import io.github.romulofer.foxhg.core.text.TextArchive
 import io.github.romulofer.foxhg.core.data.trainerclass.TrainerClassPrizes
 import io.github.romulofer.foxhg.core.nds.FileRomSource
 import io.github.romulofer.foxhg.core.project.RomProject
@@ -147,5 +148,16 @@ class RealRomRecordsTest {
         TrainerClassPrizes.save(project, table.withEntry(2, 9)).ok()
         assertEquals(9, TrainerClassPrizes.load(project).ok().entries[2].multiplier)
         assertEquals(setOf(12), project.editedOverlays)
+    }
+
+    @Test
+    fun nameListsFollowMessageEdits() = withProject { project ->
+        assertEquals("Great Ball", project.names!!.items[3])
+        val table = TextArchive.load(project).ok()
+        val renamed = table.records[222].withText(3, "Mega Ball").ok()
+        table.with(222, renamed).save(project).ok()
+        assertEquals("Mega Ball", project.names!!.items[3], "the lists are rebuilt after the text changed")
+        project.revertAll()
+        assertEquals("Great Ball", project.names!!.items[3], "and again after a revert")
     }
 }
