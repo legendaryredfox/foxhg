@@ -251,6 +251,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.BATTLE_TOWER_SETS -> Loading(project, "Battle Tower sets", { model.recordEditor(EditorKind.BATTLE_TOWER_SETS, project, BattleTowerSet.SPEC, RecordEditorModel.speciesLabel(project.names), 1) }) { editor ->
             BattleTowerSetEditor(editor, modifier.padding(16.dp))
         }
+        selected == EditorKind.MARTS -> Loading(project, "Poké Marts", { MartEditorModel(project, model::projectChanged) }) { editor ->
+            MartEditor(editor, modifier.padding(16.dp))
+        }
         selected == EditorKind.LEARNSET -> Loading(project, "learnsets", { model.recordEditor(EditorKind.LEARNSET, project, Learnset.SPEC, RecordEditorModel.speciesLabel(project.names), 1) }) { editor ->
             LearnsetEditor(editor, modifier.padding(16.dp))
         }

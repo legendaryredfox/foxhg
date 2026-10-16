@@ -84,6 +84,18 @@ object HgssLayout {
     /** Eight members of 404 bytes: the total experience needed at levels 0 to 100 (u32 each) for each growth rate, in the personal data's growth rate order. */
     const val GROWTH_RATES = "a/0/0/3"
 
+    /** The ARM9 is loaded at this address, so a pointer into its data minus this is an offset in the decompressed ARM9. */
+    const val ARM9_BASE = 0x02000000
+
+    /**
+     * In the decompressed ARM9: the table of [SPECIAL_MARTS] u32 pointers (to lists of u16 item numbers ended by 0xFFFF) that the
+     * `SpMartScreen n` script command picks from, and the badge Poké Mart: [BADGE_MART_ENTRIES] entries of u16 item, u16 tier.
+     */
+    const val SPECIAL_MART_POINTERS = 0x10FA3C
+    const val SPECIAL_MARTS = 30
+    const val BADGE_MART = 0xFBF22
+    const val BADGE_MART_ENTRIES = 19
+
     /** One member of 494 records of 89 bytes (one per species): two-frame animation data, then movement byte at 1 and, in the last 3 bytes, sprite Y, shadow X and shadow size. */
     const val BATTLE_DISPLAY = "a/1/8/0"
 

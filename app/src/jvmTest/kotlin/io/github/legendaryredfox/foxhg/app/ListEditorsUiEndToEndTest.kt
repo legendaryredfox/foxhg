@@ -28,6 +28,7 @@ import io.github.legendaryredfox.foxhg.core.data.personal.PersonalTable
 import io.github.legendaryredfox.foxhg.core.data.personal.TmHmBulk
 import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerSet
 import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerTrainer
+import io.github.legendaryredfox.foxhg.core.data.mart.Marts
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerFlagBulk
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttFile
@@ -393,6 +394,31 @@ class ListEditorsUiEndToEndTest {
         buildAndReopen(model) { rebuilt ->
             assertEquals(trainers(), (NarcRecords.load(rebuilt, BattleTowerTrainer.SPEC) as FoxResult.Ok).value.records)
             assertEquals(sets(), (NarcRecords.load(rebuilt, BattleTowerSet.SPEC) as FoxResult.Ok).value.records)
+        }
+    }
+
+    @Test
+    fun editingAPokeMartOnItsScreen() = withHeartGoldApp { model, project ->
+        val marts = { (Marts.load(project) as FoxResult.Ok).value }
+        val before = marts()
+        open("Poké Marts")
+        onNodeWithTag("search:Search marts or items…").performTextInput("Awakening")
+        waitForIdle()
+        onAllNodesWithText("Potion, Super Potion, Hyper Potion", substring = true).onFirst().performClick() // marts 3 and 18 are alike: the first is 3
+        waitForIdle()
+        tap(onNodeWithTag("mart-add"))
+        waitForIdle()
+        assertEquals(before.specials[3], marts().specials[3], "a full mart cannot take another item")
+        tap(onNodeWithTag("mart-remove:0"))
+        waitForIdle()
+        assertEquals(before.specials[3].drop(1), marts().specials[3], "the first item is gone")
+        tap(onNodeWithTag("mart-add"))
+        waitForIdle()
+        assertEquals(before.specials[3].drop(1) + 4, marts().specials[3], "it is back at the end as a Poké Ball")
+        assertEquals(before.specials.filterIndexed { i, _ -> i != 3 }, marts().specials.filterIndexed { i, _ -> i != 3 }, "other marts stay")
+
+        buildAndReopen(model) { rebuilt ->
+            assertEquals(marts().specials, (Marts.load(rebuilt) as FoxResult.Ok).value.specials)
         }
     }
 

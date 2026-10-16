@@ -34,6 +34,8 @@ import io.github.legendaryredfox.foxhg.core.data.personal.PersonalTable
 import io.github.legendaryredfox.foxhg.core.data.personal.TmHmBulk
 import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerSet
 import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerTrainer
+import io.github.legendaryredfox.foxhg.core.data.mart.BadgeMartEntry
+import io.github.legendaryredfox.foxhg.core.data.mart.Marts
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerFlagBulk
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
@@ -425,6 +427,42 @@ class RealRomRecordsTest {
         assertEquals(editedTrainer, NarcRecords.load(project, BattleTowerTrainer.SPEC).ok().records[5])
         assertEquals(editedSet, NarcRecords.load(project, BattleTowerSet.SPEC).ok().records[1])
         assertEquals(BattleTowerTrainer.sizeFor(editedTrainer.setIds.size), editedTrainer.toBytes().size, "the file grows and shrinks with the list")
+        project.revertAll()
+        assertTrue(!project.isDirty)
+    }
+
+    @Test
+    fun martsRoundTripAndMatchTheDecomp() = withProject { project ->
+        val arm9 = (project.readArm9() as FoxResult.Ok).value
+        val marts = Marts.load(project).ok()
+        assertContentEquals(arm9, marts.applyTo(arm9), "an unedited table writes back the same bytes")
+        val items = project.names!!.items
+        fun names(mart: Int) = marts.specials[mart].map { items[it] }
+        assertEquals(30, marts.specials.size)
+        assertEquals(listOf("Air Mail", "Heal Ball"), names(0), "the decomp's _020FBA54")
+        assertEquals(listOf("Potion", "Super Potion", "Hyper Potion", "Max Potion", "Revive", "Antidote", "Parlyz Heal", "Burn Heal", "Ice Heal", "Awakening", "Full Heal"), names(3))
+        assertEquals(listOf("TinyMushroom", "Poké Ball", "Potion"), names(28))
+        assertEquals(19, marts.badge.size)
+        assertEquals(listOf("Poké Ball", "Potion", "Antidote", "Parlyz Heal"), Marts.badgeItems(marts.badge, 0).map { items[it] }, "no badges: tier 1")
+        assertEquals(19, Marts.badgeItems(marts.badge, 8).size, "eight badges: everything")
+        assertEquals(listOf(1, 2, 2, 3, 3, 4, 4, 5, 6, 6), (0..9).map { Marts.tierFor(it) })
+
+        val potion = items.indexOf("Potion")
+        val ball = items.indexOf("Poké Ball")
+        val edited = marts.withItem(0, 1, ball).withRemoved(3, 0).withBadge(0, BadgeMartEntry(potion, 6))
+        assertEquals(listOf(items.indexOf("Air Mail"), ball), edited.specials[0])
+        assertEquals(10, edited.specials[3].size)
+        assertTrue(edited.canAdd(3) && !edited.canAdd(0), "a shorter list can take an item back, a full one cannot")
+        assertEquals(edited, edited.withAdded(0, potion), "a full list takes nothing")
+        val added = edited.withAdded(3, potion)
+        assertEquals(marts.specials[3].drop(1) + potion, added.specials[3])
+
+        val written = added.applyTo(arm9)
+        val changed = arm9.indices.filter { arm9[it] != written[it] }
+        assertTrue(changed.isNotEmpty() && changed.all { it in 0xFBA54..0xFBC80 || it in HgssLayout.BADGE_MART until HgssLayout.BADGE_MART + 4 * 19 }, "only the mart bytes change")
+        added.save(project).ok()
+        assertEquals(added.specials, Marts.load(project).ok().specials)
+        assertEquals(added.badge, Marts.load(project).ok().badge)
         project.revertAll()
         assertTrue(!project.isDirty)
     }

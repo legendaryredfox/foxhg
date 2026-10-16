@@ -12,6 +12,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     STARTERS("Pokémon", "Starters", implemented = true),
     TRADES("Pokémon", "In-game trades", implemented = true),
     TMHM("Moves and items", "TMs and HMs", implemented = true),
+    MARTS("Moves and items", "Poké Marts", implemented = true),
     TMHM_BULK("Moves and items", "TM/HM compatibility", implemented = true),
     MOVES("Moves and items", "Moves", implemented = true),
     ITEMS("Moves and items", "Items", implemented = true),
