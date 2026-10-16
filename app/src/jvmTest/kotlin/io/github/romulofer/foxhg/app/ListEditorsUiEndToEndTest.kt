@@ -14,6 +14,9 @@ import androidx.compose.ui.test.performTextInput
 import io.github.romulofer.foxhg.core.FoxResult
 import io.github.romulofer.foxhg.core.data.encounter.EncounterData
 import io.github.romulofer.foxhg.core.data.NarcRecords
+import io.github.romulofer.foxhg.core.data.fly.FlyTable
+import io.github.romulofer.foxhg.core.patch.PatchStatus
+import io.github.romulofer.foxhg.core.patch.dspre.DsprePatches
 import io.github.romulofer.foxhg.core.data.hiddenitem.HiddenItems
 import io.github.romulofer.foxhg.core.data.rocksmash.RockSmashItems
 import io.github.romulofer.foxhg.core.data.rocksmash.RockSmashSite
@@ -123,6 +126,44 @@ class ListEditorsUiEndToEndTest {
             assertEquals(231, reread.entries.size)
             assertEquals(1, reread.entries[0].index, "the first spot was removed, so the old second one leads")
             assertEquals(0, reread.entries.last().index, "and the spot added back is last")
+        }
+    }
+
+    @Test
+    fun applyingToolboxPatchesOnTheirScreen() = withHeartGoldApp { model, project ->
+        open("ROM toolbox")
+        onNodeWithTag("apply:dynamic-camera").assertIsNotEnabled()
+        onNodeWithTag("apply:trainer-names").assertIsEnabled()
+        tap(onNodeWithTag("apply:arm9-expansion"), inScrollPane = false)
+        tap(onNodeWithTag("confirm"), inScrollPane = false)
+        waitForIdle()
+        assertEquals(PatchStatus.Applied, DsprePatches.arm9Expansion.status(project))
+        onNodeWithTag("apply:arm9-expansion").assertIsNotEnabled()
+        onNodeWithTag("apply:dynamic-camera").assertIsEnabled()
+        onNodeWithTag("toolbox-message").assertIsDisplayed()
+
+        buildAndReopen(model) { rebuilt ->
+            assertEquals(PatchStatus.Applied, DsprePatches.arm9Expansion.status(rebuilt), "the expansion is in the built ROM")
+            assertEquals(PatchStatus.Available, DsprePatches.trainerNames.status(rebuilt))
+        }
+    }
+
+    @Test
+    fun editingATownOnTheFlyScreen() = withHeartGoldApp { model, project ->
+        val table = { (FlyTable.load(project) as FoxResult.Ok).value }
+        val vanilla = table().entries[0]
+        open("Fly")
+        onNodeWithTag("number:Fly X").typeNumber(700)
+        waitForIdle()
+        assertEquals(vanilla.copy(flyX = 700), table().entries[0], "only the landing X changed")
+        onNodeWithTag("number:Blackout Y").typeNumber(9)
+        waitForIdle()
+        assertEquals(9, table().entries[0].localY)
+
+        buildAndReopen(model) { rebuilt ->
+            val reread = (FlyTable.load(rebuilt) as FoxResult.Ok).value
+            assertEquals(vanilla.copy(flyX = 700, localY = 9), reread.entries[0])
+            assertEquals(30, reread.entries.size)
         }
     }
 

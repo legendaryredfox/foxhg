@@ -60,6 +60,18 @@ object HgssLayout {
     const val HIDDEN_ITEMS_ARM9_LENGTH = 0x405E4
     const val HIDDEN_ITEMS_ARM9_CAPACITY = 0x405E8
 
+    /** In the decompressed ARM9: the fly table, [FLY_TABLE_ENTRIES] entries of 18 bytes (one per town, the order of the Town Map). */
+    const val FLY_TABLE_ARM9 = 0xF9E80
+    const val FLY_TABLE_ENTRIES = 30
+
+    /**
+     * The synthetic overlay: member 0 of this NARC, once the ARM9 expansion patch has run, is a code and data area that the ARM9 loads to
+     * [SYNTHETIC_OVERLAY_ADDRESS] at start-up. [SYNTHETIC_OVERLAY_SIZE] bytes after the expansion.
+     */
+    const val SYNTHETIC_OVERLAY = "a/0/2/8"
+    const val SYNTHETIC_OVERLAY_ADDRESS = 0x023C8000
+    const val SYNTHETIC_OVERLAY_SIZE = 0x16000
+
     /** One 4-byte file per map header: Rock Smash item drop odds and the item table it draws from. */
     const val ROCK_SMASH = "a/2/5/3"
 

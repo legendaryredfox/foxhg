@@ -160,6 +160,43 @@ Add an entry here whenever a layout, offset or quirk is confirmed.
   (`HIDDEN_ITEMS_FLAG_BASE`); indexes are not in table order (#225 is third). Shortening the table clears the dropped slots and nothing else.
   **[UNVERIFIED]** in game.
 
+## Fly table (ARM9)
+
+- 30 entries of 18 bytes at 0xF9E80 of the decompressed ARM9 (offset from DSPRE's `RomInfo`, layout from its fly editor): flag index u8,
+  flags u8 (bit 0 blackout spawn, bit 1 fly point), blackout map header u16, blackout tile X u8 and Y u8, fly map header u16, fly global
+  X u16 and Y u16, unlock map header u16, unlock global X u16 and Y u16. The table has a fixed length (the decomp has no fly table
+  symbol, nothing found past entry 29), so entries are edited, not added or removed.
+- Checked against the ROM (`RealRomRecordsTest.flyTableMatchesTheGameAndSavesBack`): entries 0-22 are the Johto and Kanto towns in
+  Town Map order (New Bark Town first, Saffron City last), 23 Safari Zone Gate, 24 Frontier Access, 25 Pokéathlon Dome, 26-29 Route 26,
+  32, 3 and 10 (no fly point, blackout spawn only for 27-29). 24 entries unlock where Fly lands; Frontier Access and Pokéathlon Dome
+  unlock elsewhere. Flag bits other than the two known ones are 0 in the vanilla table and are not kept. **[UNVERIFIED]** in game.
+
+## ROM toolbox patches (ARM9, overlay 1, synthetic overlay)
+
+Ported from DSPRE's `PatchToolboxDialog` / `ToolboxDB` into `core/.../patch/dspre/` (AGPL-3.0-only files, see `THIRD_PARTY_NOTICES.md`).
+HeartGold English only. Every edit lists the bytes it replaces and a patch refuses a ROM that does not hold them. ARM9 offsets are file
+offsets (runtime address 0x02000000 + offset). Checked against the ROM: every original value, that all patches apply together and undo
+exactly (`PatchToolboxRealRomTest`), and that a ROM with all of them boots to the same intro frame as the vanilla one (`BootFixtures.toolboxPatches`
+and `scripts/boot-test.sh`, 2400 frames). Nothing was tried in game past the intro: **[UNVERIFIED]**.
+
+- **Synthetic overlay**: member 0 of `a/0/2/8` (HGSS; Platinum uses `weather_sys.narc`). Vanilla it is a 552 byte file. After the ARM9 expansion it is
+  0x16000 bytes, loaded to 0x023C8000 at start-up (offsets in it are runtime address - 0x023C8000).
+- **ARM9 expansion**: ARM9 0xCD0 `00 20 03 21` (mov r0,#0; mov r1,#3) becomes `0F F1 30 FB`, a `bl` to a 28 byte loader routine written at ARM9 0x110334
+  (vanilla: 0xFF filler); the routine ends with the two replaced instructions. It calls the function at 0x02007508 with the load address
+  0x023C8000, 0x1C and 0 (presumably the NARC id and member of `a/0/2/8`; not checked). The vanilla 552 byte member 0 is replaced by 0x16000 zero bytes, as DSPRE does.
+- **Matrix expansion**: 13 ARM9 constants (limits `01BF`, `0136`, `0189`, `0109` raised by 0x40, buffer sizes doubled or moved) at 0x3AEC6, 0x3AEC8,
+  0x3AF60, 0x3AF7A, 0x3AF94, 0x3AF98, 0x3AFB0, 0x3B000, 0x3B110, 0x3B1F8, 0x3B264, 0x3B090, 0x3B0C4. What each one is exactly is not decoded.
+- **Trainer name length**: ARM9 0x7342E is the immediate of `movs r2,#8`; 12 gives 11 usable characters.
+- **Dynamic camera**: ARM9 0x23174 `FF F7 06 FF` -> `B6 F3 2E FA`; overlay 1 0x1574C and 0x15864 get a `ldr r3,[pc]; bx r3` stub with the address
+  0x023D9C41 and 0x023D9C01 (synthetic 0x11C41 and 0x11C01); the 1816 byte routine (marker "GetCamBox") goes to synthetic 0x115B0.
+- **Building rotation**: overlay 1 0xE1C6 `0F A9 00 28` becomes a THUMB `bl` from 0x021F3AC6 to the 20 byte routine at synthetic 0x11CE8, which
+  has a `bl` (offset 8) to the game function 0x02020D2C and ends with the two replaced instructions.
+- **Script command table repoint**: the count (0x355 = 853, ARM9 0xFAC90) and table (0xFAD00) pointers live at ARM9 0x400E0 and 0x400E4. The table is
+  copied to the synthetic overlay at 0x200 as `"COUN"`, count, `"TABL"`, table, and the pointers set to 0x023C8000 + 0x204 and + 0x20C. No command is added.
+- **Disable texture animations**: u16 at offset 4 of every `a/0/4/2` file set to 0xFFFF.
+- Not ported yet: dynamic headers (moves the header table to `a/0/5/0`; the Map headers editor reads the ARM9 table only), Sentence Case names,
+  Standardize items.
+
 ## Trainers (`a/0/5/5` headers, `a/0/5/6` parties)
 
 - 738 trainers; both NARCs have 738 files. Header is 20 bytes: type (bit 0 custom moves, bit 1 held items), class,

@@ -23,6 +23,7 @@ import io.github.romulofer.foxhg.core.data.map.MapUsages
 import io.github.romulofer.foxhg.core.data.map.TileTypes
 import io.github.romulofer.foxhg.core.data.move.MoveData
 import io.github.romulofer.foxhg.core.data.tmhm.TmHmTable
+import io.github.romulofer.foxhg.core.data.fly.FlyTable
 import io.github.romulofer.foxhg.core.data.hiddenitem.HiddenItems
 import io.github.romulofer.foxhg.core.data.mapheader.MapHeaderTable
 import io.github.romulofer.foxhg.core.data.rocksmash.RockSmashItems
@@ -173,6 +174,25 @@ class RealRomRecordsTest {
         assertContentEquals(plain, table.applyTo(plain))
         TrainerClassGenders.save(project, table.with(2, 1)).ok()
         assertEquals(1, TrainerClassGenders.load(project).ok().genders[2])
+    }
+
+    @Test
+    fun flyTableMatchesTheGameAndSavesBack() = withProject { project ->
+        val table = FlyTable.load(project).ok()
+        val loc = project.names!!.locations
+        val headers = (MapHeaderTable.load(project) as FoxResult.Ok).value
+        val flyTo = table.entries.map { loc[headers[it.flyHeader].locationName] }
+        assertEquals(30, table.entries.size)
+        assertEquals(listOf("New Bark Town", "Cherrygrove City", "Violet City"), flyTo.take(3))
+        assertEquals(695 to 397, table.entries[0].let { it.flyX to it.flyY })
+        assertEquals(24, table.entries.count { it.isFlyPoint && it.flyHeader == it.unlockHeader && it.flyX == it.unlockX }, "most towns unlock where Fly lands")
+        assertTrue(table.entries.all { it.flyHeader < headers.size && it.blackoutHeader < headers.size && it.unlockHeader < headers.size })
+        val plain = project.readArm9().ok()
+        assertContentEquals(plain, table.applyTo(plain), "an unedited table writes back the same ARM9")
+
+        FlyTable.save(project, table.with(0, table.entries[0].copy(flyX = 700, isFlyPoint = false))).ok()
+        assertEquals(700 to false, FlyTable.load(project).ok().entries[0].let { it.flyX to it.isFlyPoint })
+        project.revertAll()
     }
 
     @Test

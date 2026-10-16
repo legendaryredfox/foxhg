@@ -16,6 +16,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     TRAINER_CLASSES("Trainers", "Trainer classes", implemented = true),
     ENCOUNTERS("World", "Wild encounters", implemented = true),
     ROCK_SMASH("World", "Rock Smash", implemented = true),
+    FLY("World", "Fly", implemented = true),
     HEADERS("World", "Map headers", implemented = true),
     MATRICES("World", "Matrices", implemented = true),
     MAPS("World", "Maps", implemented = true),
@@ -23,5 +24,6 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     SCRIPTS("Scripts and text", "Scripts", implemented = true),
     TEXT("Scripts and text", "Text archives", implemented = true),
     SOUNDS("Audio", "Sounds", implemented = true),
+    TOOLBOX("Tools", "ROM toolbox", implemented = true),
     FILES("Tools", "Files", implemented = true),
 }

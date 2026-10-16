@@ -55,6 +55,20 @@ class BootFixtures {
     }
 
     @Test
+    fun toolboxPatches() {
+        val dir = outDir ?: return
+        if (!Files.exists(romPath)) return
+        FileRomSource(romPath).use { source ->
+            val project = open(source)
+            for (patch in io.github.romulofer.foxhg.core.patch.dspre.DsprePatches.all) {
+                check(patch.apply(project) is FoxResult.Ok) { "${patch.id} failed" }
+            }
+            Files.createDirectories(dir)
+            build(project, dir.resolve("toolbox-patches.nds"))
+        }
+    }
+
+    @Test
     fun recompressedOverlays() {
         val dir = outDir ?: return
         if (!Files.exists(romPath)) return

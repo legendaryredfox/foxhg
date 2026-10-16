@@ -204,6 +204,7 @@ Issues and pull requests are welcome. Before you start on a format:
 
 1. Read how the reference projects do it, then the format page, then write your own code from the format description - **do not copy code**
    from DSPRE (AGPL-3.0), ndspy (GPL-3.0) or other projects; read them to understand a format and note what you confirm in `docs/formats.md`.
+   The one exception is the ROM toolbox patches, ported from DSPRE under AGPL-3.0 (see [License](#license)).
 2. Write the parser together with its **round-trip test against the real ROM**.
 3. `./gradlew build` must pass, and never commit a ROM or anything extracted from one.
 
@@ -234,7 +235,14 @@ If you like this project, please consider buying me a coffee. ☕
 
 ## License
 
-foxhg is free software under the **[GNU General Public License v3.0 or later](LICENSE)** (`GPL-3.0-or-later`).
+foxhg is free software under the **[GNU General Public License v3.0 or later](LICENSE)** (`GPL-3.0-or-later`), with one part under the AGPL:
+
+- The **ROM toolbox patches** (`core/src/commonMain/kotlin/io/github/romulofer/foxhg/core/patch/dspre/`) are ported from
+  [DSPRE](https://github.com/DS-Pokemon-Rom-Editor/DSPRE) and stay under the **[GNU Affero General Public License v3.0](LICENSES/AGPL-3.0.txt)**
+  (`AGPL-3.0-only`), copyright the DSPRE contributors. The GPL and the AGPL allow combining the two in one program. Because of those files the
+  program as a whole can not be relicensed to a permissive license (MIT, Apache) unless they are removed or replaced. If you offer foxhg to
+  users over a network, the AGPL asks you to give those users the source.
+- Data taken from other projects is listed with its license in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Why the GPL: this is a tool in an ecosystem built on copyleft tools (DSPRE is AGPL-3.0, ndspy and Nds4j are GPL-3.0). The GPL keeps foxhg and
 every fork of it free for the community, is compatible with its dependencies (Kotlin, Compose Multiplatform and kotlinx are Apache-2.0)

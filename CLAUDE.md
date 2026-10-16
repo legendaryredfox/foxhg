@@ -86,7 +86,7 @@ Record every address, offset or quirk you confirm in `docs/formats.md`.
 
 - do not run on a different JDK; Gradle toolchain is pinned to 26
 - do not depend on DSPRE's external `.exe` tools (`ndstool`, `dsrom`, `chatot`, `blz`, `apicula`); everything is pure Kotlin, or a Linux-native tool called through one adapter in `jvmMain`
-- do not copy code from the reference projects: DSPRE is AGPL-3.0 and ndspy is GPL-3.0. Read them to understand a format, then write the code from the format description (see how `Blz.kt` and `TextArchive.kt` were done). foxhg is GPL-3.0-or-later (decided 2026-10-15, see `LICENSE` and the README)
+- do not copy code from the reference projects (DSPRE is AGPL-3.0, ndspy and Nds4j are GPL-3.0), except where the user decided otherwise: the ROM toolbox patches (ARM machine code and patch tables) are ported from DSPRE under AGPL-3.0 (decided 2026-10-15). Those files live in `core/.../patch/dspre/`, start with the AGPL header (`SPDX-License-Identifier: AGPL-3.0-only`, copyright of the DSPRE contributors, source link) and are listed in `THIRD_PARTY_NOTICES.md` and the README license section. Everything else is written from the format description (see how `Blz.kt` and `TextArchive.kt` were done). foxhg as a whole is GPL-3.0-or-later and, because of those files, can no longer be relicensed to a permissive license without removing them (see `LICENSE` and the README)
 - do not reference `references/` paths from shipped files (README, build files); only from `CLAUDE.md` and `docs/`
 - do not `git push`, open a PR, or switch the `gh` account without an explicit request; commit only when asked
 

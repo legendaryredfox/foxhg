@@ -242,6 +242,10 @@ private fun Content(model: AppModel, modifier: Modifier) {
             KeepSelection(model, EditorKind.HIDDEN_ITEMS, editor.selectedIndex)
             HiddenItemEditor(editor, modifier.padding(16.dp))
         }
+        selected == EditorKind.FLY -> Loading(project, "fly table", { FlyEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.FLY]?.let(m::select) } }) { editor ->
+            KeepSelection(model, EditorKind.FLY, editor.selectedIndex)
+            FlyEditor(editor, modifier.padding(16.dp))
+        }
         selected == EditorKind.TRAINERS -> Loading(project, "trainers", { TrainerEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.TRAINERS]?.let(m::select) } }) { editor ->
             KeepSelection(model, EditorKind.TRAINERS, editor.selectedIndex)
             TrainerEditor(editor, modifier.padding(16.dp))
@@ -268,6 +272,7 @@ private fun Content(model: AppModel, modifier: Modifier) {
             ScriptEditor(editor, labels, modifier.padding(16.dp))
         }
         selected == EditorKind.SOUNDS -> SoundEditor(modifier.padding(16.dp))
+        selected == EditorKind.TOOLBOX -> PatchToolbox(remember(project) { PatchToolboxModel(project, onChanged = model::projectChanged) }, modifier.padding(16.dp))
         selected == EditorKind.FILES -> Loading(project, "files", { FileTreeModel(project) }) { editor ->
             FileTreeEditor(editor, model, modifier.padding(16.dp))
         }
