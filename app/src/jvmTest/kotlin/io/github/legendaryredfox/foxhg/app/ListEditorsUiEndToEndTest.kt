@@ -29,6 +29,7 @@ import io.github.legendaryredfox.foxhg.core.data.personal.TmHmBulk
 import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerSet
 import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerTrainer
 import io.github.legendaryredfox.foxhg.core.data.mart.Marts
+import io.github.legendaryredfox.foxhg.core.data.learnset.Learnset
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
 import io.github.legendaryredfox.foxhg.core.data.typechart.TypeChart
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerFlagBulk
@@ -477,6 +478,30 @@ class ListEditorsUiEndToEndTest {
 
         buildAndReopen(model) { rebuilt ->
             assertEquals(chart(), (TypeChart.load(rebuilt) as FoxResult.Ok).value)
+        }
+    }
+
+    @Test
+    fun teachingAndForgettingAMoveInBulkOnTheLearnsetScreen() = withHeartGoldApp { model, project ->
+        val sets = { (Learnset.load(project) as FoxResult.Ok).value.records }
+        val before = sets()
+        val scratch = project.names!!.moves.indexOf("Scratch")
+        open("Learnsets")
+        onNodeWithTag("search:Search…").performTextInput("bulbasaur")
+        waitForIdle()
+        pick("Bulk move", "Scratch")
+        onNodeWithTag("number:Bulk level").typeNumber(5)
+        waitForIdle()
+        tap(onNodeWithTag("bulk-teach"))
+        waitForIdle()
+        assertTrue(sets()[1].entries.any { it.move == scratch && it.level == 5 }, "Bulbasaur learned it")
+        assertEquals(before.drop(2), sets().drop(2), "the species that are not shown stay as they were")
+        tap(onNodeWithTag("bulk-forget"))
+        waitForIdle()
+        assertEquals(before[1], sets()[1], "forgetting it again restores the learnset")
+
+        buildAndReopen(model) { rebuilt ->
+            assertEquals(sets(), (Learnset.load(rebuilt) as FoxResult.Ok).value.records)
         }
     }
 

@@ -40,6 +40,7 @@ import io.github.legendaryredfox.foxhg.core.data.mart.Marts
 import io.github.legendaryredfox.foxhg.core.patch.PatchTarget
 import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
 import io.github.legendaryredfox.foxhg.core.u32
+import io.github.legendaryredfox.foxhg.core.data.learnset.LearnsetBulk
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
 import io.github.legendaryredfox.foxhg.core.data.typechart.TypeChart
 import io.github.legendaryredfox.foxhg.core.data.typechart.TypeEntry
@@ -550,6 +551,47 @@ class RealRomRecordsTest {
         assertTrue(changed.isNotEmpty() && changed.all { it in HgssLayout.TYPE_CHART_OFFSET until HgssLayout.TYPE_CHART_OFFSET + 3 * (HgssLayout.TYPE_CHART_SLOTS + 1) }, "only the table changes")
         moved.save(project).ok()
         assertEquals(moved, TypeChart.load(project).ok())
+        project.revertAll()
+        assertTrue(!project.isDirty)
+    }
+
+    @Test
+    fun learnsetBulkEditsAndCsvRoundTripOverTheRealLearnsets() = withProject { project ->
+        val table = Learnset.load(project).ok()
+        val records = table.records
+        val names = project.names!!
+
+        // The CSV of the untouched table reads back as exactly the same learnsets (empty ones stay as they are).
+        val csv = LearnsetBulk.export(records, { names.species.getOrElse(it) { "" } }, { names.moves.getOrElse(it) { "" } })
+        assertEquals(records, LearnsetBulk.import(csv, records).ok(), "export then import changes nothing")
+        assertEquals(records.sumOf { it.entries.size } + 1, csv.trim().lines().size, "one row per move and a header")
+
+        val tackle = 33
+        val scratchless = (1..493).filter { s -> records[s].entries.none { it.move == tackle } && records[s].entries.size < Learnset.MAX_ENTRIES }
+        val taught = LearnsetBulk.teach(records, scratchless, tackle, 7)
+        assertEquals(scratchless.size, taught.changed)
+        assertTrue(scratchless.all { s -> taught.records[s].entries.any { it.move == tackle && it.level == 7 } })
+        fun sorted(l: Learnset) = l.entries.map { it.level } == l.entries.map { it.level }.sorted()
+        assertTrue(scratchless.filter { sorted(records[it]) }.all { sorted(taught.records[it]) }, "a list sorted by level stays sorted")
+        assertEquals(records.indices.filter { it !in scratchless }.map { records[it] }, records.indices.filter { it !in scratchless }.map { taught.records[it] }, "other species are untouched")
+        assertEquals(0, LearnsetBulk.teach(taught.records, scratchless, tackle, 7).changed, "teaching twice changes nothing")
+
+        val forgotten = LearnsetBulk.forget(taught.records, 1..493, tackle)
+        assertTrue(forgotten.records.drop(1).take(493).all { l -> l.entries.none { it.move == tackle } })
+        val swapped = LearnsetBulk.replace(records, 1..493, tackle, 1)
+        assertTrue(swapped.records.drop(1).take(493).all { l -> l.entries.none { it.move == tackle } })
+        val replaced = (1..493).first { s -> records[s].entries.any { it.move == tackle } && records[s].entries.none { it.move == 1 } }
+        assertEquals(records[replaced].entries.map { if (it.move == tackle) it.copy(move = 1) else it }, swapped.records[replaced].entries, "same levels, other move")
+
+        assertTrue(LearnsetBulk.import("species,level,move\n1,0,33\n", records) is FoxResult.Err, "level 0 is rejected")
+        assertTrue(LearnsetBulk.import("species,level,move\n9999,5,33\n", records) is FoxResult.Err)
+        assertTrue(LearnsetBulk.import("species,level\n1,5\n", records) is FoxResult.Err)
+        val one = LearnsetBulk.import("species,level,move\n25,5,33\n25,9,45\n", records).ok()
+        assertEquals(listOf(LearnsetEntry(33, 5), LearnsetEntry(45, 9)), one[25].entries)
+        assertEquals(records[24], one[24])
+
+        taught.records.let { table.withAll(it) }.save(project).ok()
+        assertEquals(taught.records, Learnset.load(project).ok().records)
         project.revertAll()
         assertTrue(!project.isDirty)
     }
