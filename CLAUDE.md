@@ -7,8 +7,10 @@ rebuilt as a Kotlin Multiplatform app. DSPRE is a C# WinForms app on .NET Framew
 (or under wine). foxhg keeps the same job, editing Nintendo DS Pokémon ROMs, but runs natively on Linux, Windows and
 macOS, and keeps the format code separate from the UI so it can be tested without a window.
 
-Current focus: **Pokémon HeartGold (English)**. SoulSilver comes for free where the layout is identical. Diamond,
-Pearl, Platinum and other languages are out of scope until HGSS English is solid.
+Current focus: **Pokémon HeartGold (English)**. SoulSilver comes for free where the layout is identical. The long-term
+goal is every DS Pokémon ROM (other HGSS languages, Platinum, Diamond, Pearl, later Gen V), then GB and GBA; all of that
+is out of scope until HGSS English is solid, but write code so a second game is a new profile and layout, not a rewrite
+(docs/spec.md 3.3 and 9, docs/plan.md M8).
 
 The ROM data model and the editors are ported from DSPRE; the file formats are documented by the
 [DS Pokémon Hacking wiki](https://ds-pokemon-hacking.github.io/) and the

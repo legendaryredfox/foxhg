@@ -25,8 +25,9 @@ app that only runs on Windows (or under Wine). **foxhg** has the same job, rebui
 Compose Multiplatform, so it runs natively everywhere. The format code lives in a UI-free library (`core`) and is tested against a real
 ROM, byte for byte.
 
-**Current target: Pokémon HeartGold (English).** SoulSilver (English) opens too where the layout is identical. Diamond, Pearl,
-Platinum and other languages are out of scope until HeartGold is solid.
+**Current target: Pokémon HeartGold (English).** SoulSilver (English) opens too where the layout is identical. The goal is every
+Nintendo DS Pokémon game and language (Platinum, Diamond, Pearl, other HeartGold and SoulSilver languages, later Black, White, Black 2
+and White 2), then Game Boy and Game Boy Advance, but none of those is supported yet: HeartGold comes first.
 
 > **foxhg does not include any game data.** You need your own legally obtained ROM. No ROM, extracted file or sprite is ever stored in this
 > repository (the screenshots show only text and numbers), and foxhg never modifies the ROM you open: *Build ROM* writes a new file.
