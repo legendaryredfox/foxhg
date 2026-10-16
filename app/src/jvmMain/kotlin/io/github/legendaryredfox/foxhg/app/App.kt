@@ -221,6 +221,7 @@ private fun Content(model: AppModel, modifier: Modifier) {
     androidx.compose.runtime.key(model.undoEpoch) {
     when {
         selected == EditorKind.SAVE_PLAYER && model.save != null -> SavePlayerScreen(model.save!!, modifier)
+        selected == EditorKind.SAVE_PARTY && model.save != null -> SavePartyScreen(model.save!!, model.project?.names, model::saveRules, modifier)
         selected == EditorKind.SAVE_POSITION && model.save != null -> SavePositionScreen(model.save!!, model::mapName, modifier)
         selected == EditorKind.SAVE_FILE && model.save != null -> SaveFileScreen(model.save!!, modifier)
         project == null -> EmptyState(model, modifier)

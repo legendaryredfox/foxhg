@@ -181,6 +181,9 @@ class AppModel(
         return names.getOrNull(map)?.takeIf { it.isNotBlank() }
     }
 
+    /** The species rules of the open ROM as they are now (base stats, growth curves) for the party editor, or null without a ROM. Read when an edit needs them. */
+    fun saveRules(): SaveRules? = project?.let(SaveRules::load)
+
     fun closeSave() {
         save = null
         if (selected?.group == SAVE_GROUP) selected = null

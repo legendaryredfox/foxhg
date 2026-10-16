@@ -30,9 +30,11 @@ import io.github.legendaryredfox.foxhg.core.save.BlockKind
 import io.github.legendaryredfox.foxhg.core.save.LocalFieldData
 import io.github.legendaryredfox.foxhg.core.save.Location
 import io.github.legendaryredfox.foxhg.core.save.movedTo
+import io.github.legendaryredfox.foxhg.core.save.PartyData
 import io.github.legendaryredfox.foxhg.core.save.PlayerData
 import io.github.legendaryredfox.foxhg.core.save.SaveChunks
 import io.github.legendaryredfox.foxhg.core.save.SaveFile
+import io.github.legendaryredfox.foxhg.core.save.withParty
 import io.github.legendaryredfox.foxhg.core.save.withPlayer
 import java.nio.file.Files
 import java.nio.file.Path
@@ -57,6 +59,17 @@ class SaveEditorModel(val path: Path, file: SaveFile) {
     val player: PlayerData? get() = (PlayerData.read(file) as? FoxResult.Ok)?.value
 
     val position: LocalFieldData? get() = (LocalFieldData.read(file) as? FoxResult.Ok)?.value
+
+    val party: PartyData? get() = (PartyData.read(file) as? FoxResult.Ok)?.value
+
+    /** Replaces the party; the reason is shown when the save refuses it. */
+    fun updateParty(change: (PartyData) -> PartyData) {
+        val current = party ?: return
+        when (val r = file.withParty(change(current))) {
+            is FoxResult.Ok -> { file = r.value; error = null }
+            is FoxResult.Err -> error = r.message
+        }
+    }
 
     /** Makes the save continue at [place] (see [movedTo]). */
     fun moveTo(place: Location) {
@@ -141,7 +154,7 @@ fun SaveFileScreen(model: SaveEditorModel, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SaveStatus(model: SaveEditorModel) {
+internal fun SaveStatus(model: SaveEditorModel) {
     if (model.dirty) Chip("● Not written", emphasis = true, modifier = Modifier.testTag("save-dirty"))
     else model.status?.let { Chip(it) }
     Button(onClick = { model.write() }, enabled = model.dirty, modifier = Modifier.testTag("save-write")) { Text("Write save file") }

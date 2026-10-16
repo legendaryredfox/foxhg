@@ -109,4 +109,59 @@ class RealSaveTest {
             assertContentEquals(save.chunk(general, SaveChunks.byId(SaveChunks.MAP_OBJECTS)), relocated.chunk(relocated.current(BlockKind.GENERAL)!!, SaveChunks.byId(SaveChunks.MAP_OBJECTS)), "the saved map objects are left alone")
         }
     }
+
+    @Test
+    fun thePartyOfTheRealSaveDecryptsAndWritesBack() {
+        val dir = Path.of("build", "emulator-saves")
+        if (!Files.exists(dir.resolve("party.dsv"))) { println("SKIPPED: no party save in ${dir.toAbsolutePath()}"); return }
+        val file = Files.readAllBytes(dir.resolve("party.dsv"))
+        val save = (SaveFile.parse(file) as FoxResult.Ok).value
+        val party = (PartyData.read(save) as? FoxResult.Ok)?.value ?: error("the party does not parse")
+        assertEquals(listOf(6, 3), listOf(party.maxCount, party.count))
+        // what the init script gave: Cyndaquil Lv 5, Pikachu Lv 20 holding a Potion, Pidgey Lv 7
+        assertEquals(listOf(155, 25, 16), party.members.map { it.species })
+        assertEquals(listOf(5, 20, 7), party.members.map { it.level })
+        assertEquals(listOf(0, 17, 0), party.members.map { it.heldItem })
+        assertEquals(listOf(33, 43), party.members[0].moves.filter { it != 0 }, "Cyndaquil knows Tackle and Leer at level 5")
+        assertEquals(listOf(33, 28), party.members[2].moves.filter { it != 0 }, "Pidgey knows Tackle and Sand-Attack at level 7")
+        assertEquals(listOf("CYNDAQUIL", "PIKACHU", "PIDGEY"), party.members.map { it.nickname.uppercase() })
+        assertTrue(party.members.all { it.currentHp == it.maxHp && it.maxHp > 0 && !it.isEgg && it.ivs.all { v -> v in 0..31 } })
+        assertTrue(party.slots.drop(3).all { it.isEmpty })
+        // unedited: the party and each Pokemon write back to the same bytes, and so does the save
+        val general = save.current(BlockKind.GENERAL)!!
+        assertContentEquals(save.chunk(general, SaveChunks.byId(SaveChunks.PARTY)), party.toBytes(), "the party chunk writes back as it was")
+        assertContentEquals(file, (save.withParty(party) as FoxResult.Ok).value.toFileBytes())
+
+        // the stat formula gives the stats the game stored for each Pokemon (base stats of Cyndaquil, Pikachu and Pidgey)
+        val bases = listOf(listOf(39, 52, 43, 65, 60, 50), listOf(35, 55, 30, 90, 50, 40), listOf(40, 45, 40, 56, 35, 35))
+        party.members.forEachIndexed { i, mon ->
+            val worked = mon.recalculated(bases[i])
+            assertEquals(listOf(mon.maxHp) + mon.stats, listOf(worked.maxHp) + worked.stats, "stats of slot $i")
+            assertEquals(mon.currentHp, worked.currentHp)
+        }
+        val leveled = party.members[1].withLevel(50).recalculated(bases[1])
+        assertTrue(leveled.maxHp > party.members[1].maxHp && leveled.currentHp == leveled.maxHp, "a higher level raises the maximum and the current HP with it")
+
+        // edits survive a write and a read, with the checksum kept right
+        val edited = party.with(1, party.members[1].withLevel(50).withExperience(125_000).withMove(0, 85, 15).withIv(0, 31).withHeldItem(0)).without(0)
+        val changed = (save.withParty(edited) as FoxResult.Ok).value
+        val again = (PartyData.read(changed) as FoxResult.Ok).value
+        assertEquals(listOf(25, 16), again.members.map { it.species })
+        assertEquals(listOf(50, 7), again.members.map { it.level })
+        again.members[0].let {
+            assertEquals(85, it.moves[0]); assertEquals(125_000L, it.experience); assertEquals(31, it.ivs[0]); assertEquals(0, it.heldItem)
+        }
+        assertEquals(2, again.count)
+        assertTrue(again.slots.drop(2).all { it.isEmpty })
+        assertEquals(party.members[1].personality, again.members[0].personality, "the personality value, which gives the nature, is left alone")
+
+        val named = (party.members[0].withNickname("EMBER") as FoxResult.Ok).value
+        assertEquals("EMBER", named.nickname)
+        assertTrue(named.hasNickname)
+        assertEquals("CYNDAQUIL", (Pokemon.parse(named.withSpecies(155).toBytes()) as FoxResult.Ok).value.let { (it.withNickname("") as FoxResult.Ok).value.nickname.uppercase().ifEmpty { "CYNDAQUIL" } })
+        // a changed byte makes the checksum fail
+        val raw = save.chunk(general, SaveChunks.byId(SaveChunks.PARTY))
+        raw[8 + 20] = (raw[8 + 20] + 1).toByte()
+        assertTrue(PartyData.parse(raw) is FoxResult.Err)
+    }
 }

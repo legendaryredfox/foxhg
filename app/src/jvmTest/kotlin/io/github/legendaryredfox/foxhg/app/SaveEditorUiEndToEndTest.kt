@@ -9,7 +9,9 @@ import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.putU32
 import io.github.legendaryredfox.foxhg.core.save.BlockFooter
 import io.github.legendaryredfox.foxhg.core.save.BlockKind
+import io.github.legendaryredfox.foxhg.core.save.PartyData
 import io.github.legendaryredfox.foxhg.core.save.PlayerData
+import io.github.legendaryredfox.foxhg.core.save.Pokemon
 import io.github.legendaryredfox.foxhg.core.save.SaveChunks
 import io.github.legendaryredfox.foxhg.core.save.SaveFile
 import io.github.legendaryredfox.foxhg.core.save.SaveFormat
@@ -36,6 +38,8 @@ object SyntheticSave {
                 val player = (PlayerData.parse(ByteArray(PlayerData.SIZE)) as FoxResult.Ok).value.copy(money = 1500, version = 7, language = 2)
                 val named = (player.withName("TEST") as FoxResult.Ok).value
                 named.toBytes().copyInto(file, offset + SaveChunks.byId(SaveChunks.PLAYERDATA).offset)
+                // the game writes its empty party slots encrypted, never as zeros
+                PartyData(6, 0, List(PartyData.SLOTS) { Pokemon.EMPTY }, ByteArray(PartyData.EXTRA)).toBytes().copyInto(file, offset + SaveChunks.byId(SaveChunks.PARTY).offset)
             }
             val footer = offset + kind.size - BlockFooter.SIZE
             file.putU32(footer, 1); file.putU32(footer + 4, kind.size.toLong()); file.putU32(footer + 8, BlockFooter.MAGIC)
@@ -141,6 +145,39 @@ class SaveEditorUiEndToEndTest {
             tap(onNodeWithTag("save-write"), inScrollPane = false)
             waitForIdle()
             assertTrue((SaveFile.parse(Files.readAllBytes(path)) as FoxResult.Ok).value.blocks.count { it.valid } == 2)
+        }
+    }
+
+    @Test
+    fun thePartyScreenEditsAPokemonAndRemovesIt() = withSave { path, _ ->
+        val model = testModel()
+        model.openSave(path)
+        val pikachu = Pokemon.EMPTY.withSpecies(25).withLevel(20).withHp(50, 50).withMove(0, 85, 15).withMove(1, 98, 30).withIv(0, 10).withExperience(8000)
+        model.save!!.updateParty { it.with(it.count, pikachu).with(it.count + 1, pikachu.withSpecies(16).withLevel(7)) }
+        assertEquals(listOf(25, 16), model.save!!.party!!.members.map { it.species })
+        model.selected = EditorKind.SAVE_PARTY
+        runApp(model) {
+            onNodeWithTag("number:Level").typeNumber(30)
+            waitForIdle()
+            assertEquals(30, model.save!!.party!!.members[0].level)
+            assertEquals(7, model.save!!.party!!.members[1].level, "the other slot is left alone")
+            onNodeWithTag("number:IV 0").typeNumber(31)
+            onNodeWithTag("number:PP 1").typeNumber(40)
+            waitForIdle()
+            model.save!!.party!!.members[0].let { assertEquals(31, it.ivs[0]); assertEquals(40, it.pp[0]); assertEquals(85, it.moves[0]) }
+            tap(onNodeWithTag("party-slot:1"), inScrollPane = false)
+            waitForIdle()
+            onNodeWithTag("number:Level").typeNumber(9)
+            waitForIdle()
+            assertEquals(listOf(30, 9), model.save!!.party!!.members.map { it.level })
+            tap(onNodeWithTag("party-remove"), inScrollPane = false)
+            waitForIdle()
+            assertEquals(listOf(25), model.save!!.party!!.members.map { it.species })
+            onNodeWithTag("save-dirty").assertExists() // the header scrolls away on this long page
+            tap(onNodeWithTag("save-write"), inScrollPane = false)
+            waitForIdle()
+            val written = (SaveFile.parse(Files.readAllBytes(path)) as FoxResult.Ok).value
+            assertEquals(listOf(25), (PartyData.read(written) as FoxResult.Ok).value.members.map { it.species })
         }
     }
 }

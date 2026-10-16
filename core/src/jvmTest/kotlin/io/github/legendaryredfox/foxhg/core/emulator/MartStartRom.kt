@@ -22,7 +22,13 @@ object MartStartRom {
     /** Viridian's Poke Mart (map 500), next to the second clerk at (2, 4), who sells special mart 26 (Steel Mail, Net Ball, Heal Ball). */
     val VIRIDIAN = Start(500, 3, 4, 2)
 
-    data class Start(val map: Int, val x: Int, val y: Int, val direction: Int)
+    data class Start(val map: Int, val x: Int, val y: Int, val direction: Int, val gifts: List<Gift> = emptyList())
+
+    /** A Pokemon the init script gives at the start of the new game (`GiveMon`): the party of a save made with it. */
+    data class Gift(val species: Int, val level: Int, val item: Int = 0)
+
+    /** Cherrygrove's mart with a party: Cyndaquil Lv 5, Pikachu Lv 20 holding a Potion and Pidgey Lv 7. */
+    val CHERRYGROVE_WITH_PARTY = CHERRYGROVE.copy(gifts = listOf(Gift(155, 5), Gift(25, 20, 17), Gift(16, 7)))
 
     /** Writes the ROM for [start] to [target], made from the ROM at [romPath]. */
     fun build(romPath: Path, target: Path, start: Start) {
@@ -43,6 +49,7 @@ object MartStartRom {
             val lines = ScriptText.toText(init).lines().toMutableList()
             val first = lines.indexOfFirst { it.trim() == "script_1:" } + 1
             check(first > 0) { "no script_1 in the init script" }
+            for (gift in start.gifts.reversed()) lines.add(first, "    GiveMon ${gift.species}, ${gift.level}, ${gift.item}, 0, 0, VAR_SPECIAL_RESULT")
             for (flag in listOf("FLAG_GOT_BAG", "FLAG_GOT_TRAINER_CARD", "FLAG_GOT_SAVE_BUTTON", "FLAG_GOT_OPTIONS_BUTTON")) lines.add(first, "    SetFlag $flag")
             val edited = (ScriptText.parse(lines.joinToString("\n")) as? FoxResult.Ok)?.value ?: error("the edited init script does not parse")
             check(scripts.with(149, ScriptEntry.Script(edited)).save(project) is FoxResult.Ok)
