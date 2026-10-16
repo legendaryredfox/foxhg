@@ -29,7 +29,7 @@ kotlin {
 
 compose.desktop {
     application {
-        mainClass = "io.github.romulofer.foxhg.app.MainKt"
+        mainClass = "io.github.legendaryredfox.foxhg.app.MainKt"
         jvmArgs += "--enable-native-access=ALL-UNNAMED"
         // extra JVM flags for `:app:run`, e.g. scripts/live-click-test.sh points user.home at a temporary folder
         System.getenv("FOXHG_JVM_ARGS")?.takeIf { it.isNotBlank() }?.let { jvmArgs += it.split(" ") }

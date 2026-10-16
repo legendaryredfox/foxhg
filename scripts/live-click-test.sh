@@ -49,7 +49,7 @@ xvfb-run -a -s "-screen 0 1280x800x24" bash -c '
     xdotool windowfocus "$win"; sleep 1
   }
   quit() {
-    kill -- -"$app_pid" 2>/dev/null; pkill -f "io.github.romulofer.foxhg.app.Main[K]t" 2>/dev/null
+    kill -- -"$app_pid" 2>/dev/null; pkill -f "io.github.legendaryredfox.foxhg.app.Main[K]t" 2>/dev/null
     for _ in $(seq 1 20); do xdotool search --name "^foxhg" >/dev/null 2>&1 || break; sleep 1; done
   }
   click() { xdotool mousemove --window "$win" "$1" "$2" click 1; sleep 0.7; }

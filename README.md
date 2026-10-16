@@ -238,7 +238,7 @@ If you like this project, please consider buying me a coffee. ☕
 
 foxhg is free software under the **[GNU General Public License v3.0 or later](LICENSE)** (`GPL-3.0-or-later`), with one part under the AGPL:
 
-- The **ROM toolbox patches** (`core/src/commonMain/kotlin/io/github/romulofer/foxhg/core/patch/dspre/`) are ported from
+- The **ROM toolbox patches** (`core/src/commonMain/kotlin/io/github/legendaryredfox/foxhg/core/patch/dspre/`) are ported from
   [DSPRE](https://github.com/DS-Pokemon-Rom-Editor/DSPRE) and stay under the **[GNU Affero General Public License v3.0](LICENSES/AGPL-3.0.txt)**
   (`AGPL-3.0-only`), copyright the DSPRE contributors. The GPL and the AGPL allow combining the two in one program. Because of those files the
   program as a whole can not be relicensed to a permissive license (MIT, Apache) unless they are removed or replaced. If you offer foxhg to

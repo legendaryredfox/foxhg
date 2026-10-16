@@ -145,6 +145,17 @@ Add an entry here whenever a layout, offset or quirk is confirmed.
   vanilla group is empty (`RealRomRecordsTest`). Layout from the DS Pokémon Hacking wiki's Headbutt guide and DSPRE's `HeadbuttEncounterFile`.
   **[UNVERIFIED]** in game: only the layout is checked against the ROM.
 
+## Pickup (overlay 12)
+
+- In the decompressed image of overlay 12 (battle), HeartGold English: 18 u16 common items at 0x34B44, 11 u16 rare items at 0x34A4C, the activation divisor (1 byte) at 0xC852 and 9 weight bytes at 0x3518C. Vanilla: divisor 10, weights 30, 40, 50, 60, 70, 80, 90, 94, 98 (slots of 30, 10, 10, 10, 10, 10, 10, 4, 4 rolls out of 100), the common table starts with Potion, Antidote, Super Potion and ends with PP Up, Max Elixir, the rare one starts with Hyper Potion, Nugget, King's Rock.
+- Logic (decomp `BtlCmd_GenerateEndOfBattleItem`): a Pokémon with Pickup and no held item activates when a random number modulo the divisor is 0; it rolls 0 to 99 and bracket = (level - 1) / 10, at most 9. The first slot j with weight above the roll gives `common[bracket + j]`; a roll of 98 or 99 that no weight caught gives `rare[bracket + 99 - roll]`. A table written back unedited is identical to the overlay (`RealRomRecordsTest`). Offsets from DSPRE's `RomInfo`; the other languages have other offsets and are not supported yet. **[UNVERIFIED]** in game.
+
+## Battle display (`a/1/8/0`, `a/0/0/5`)
+
+- `a/1/8/0` (`pl_poke_data.narc` in the wiki file table): a NARC with one member of 43966 bytes = 494 records of 89 bytes, one per species (index 0 is the egg slot). In each record byte 1 is a movement byte (raw, 24 distinct values in the ROM, meaning unknown), and the last three bytes are the battle sprite Y (signed), the shadow X (signed) and the shadow size (0 to 3 in vanilla). The rest holds two-frame animation data and is kept as read.
+- `a/0/0/5` (`height.narc`): a NARC of 1976 = 494 x 4 members of 1 byte (or 0 bytes when the species has no sprite for that slot), in the order female back, male back, female front, male front. Heights are unsigned. 1812 members hold a byte, 164 are empty.
+- Both read and write back byte for byte (`RealRomRecordsTest`). Layout from DSPRE's `BattleDisplayEditor` (same for HeartGold and SoulSilver). **[UNVERIFIED]** in game: the movement byte meaning and the visual effect of the offsets.
+
 ## Bug Catching Contest (`data/mushi/mushi_encount.bin`)
 
 - A plain file, not a NARC: 320 bytes, 4 sets of 10 entries of 8 bytes (u16 species, u8 min level, u8 max level, u8 rate, u8 score, u16
