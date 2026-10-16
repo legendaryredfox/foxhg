@@ -145,6 +145,10 @@ Add an entry here whenever a layout, offset or quirk is confirmed.
   vanilla group is empty (`RealRomRecordsTest`). Layout from the DS Pokémon Hacking wiki's Headbutt guide and DSPRE's `HeadbuttEncounterFile`.
   **[UNVERIFIED]** in game: only the layout is checked against the ROM.
 
+## Trainer battle flags (header of `a/0/5/5`)
+
+- Bytes 12 to 15 of the 20-byte trainer header are the AI flags (u32): bit 0 Basic, 1 Evaluate Attack, 2 Expert, 3 Setup, 4 Risky, 5 Prioritize Extremes, 6 Baton Pass, 7 Tag Strategy, 8 Check HP, 9 Weather, 10 Harassment (names from DSPRE's `TrainerFlagBulkEditor`; the decomp only calls the field `TRATTR_AIFLAGS`). Bytes 16 to 19 are the battle type (u32): 2 for a double battle, 0 for a single one; all 738 vanilla trainers use one of the two, 25 are doubles. In the ROM bits 0 to 9 appear in some trainer, 737 trainers have Basic and 288 Expert. Editing one flag keeps every other bit; the party format bits (byte 0) are not flags and are not touched (`RealRomRecordsTest`). **[UNVERIFIED]** in game.
+
 ## Growth rates (`a/0/0/3`)
 
 - A NARC of 8 members of 404 bytes: 101 u32 values, the total experience needed at levels 0 to 100 (levels 0 and 1 are 0), one member per growth rate in the personal data's order: Medium Fast, Erratic, Fluctuating, Medium Slow, Fast, Slow, then two unused ones equal to Medium Fast. The game looks levels up in these tables (decomp `LoadGrowthTable`). Level 100 totals in the ROM: 1000000, 600000, 1640000, 1059860, 800000, 1250000; Medium Fast at level 50 is 125000. Editing a level means moving every later one by the same amount (wiki guide). All eight round-trip byte for byte (`RealRomRecordsTest`). **[UNVERIFIED]** in game.

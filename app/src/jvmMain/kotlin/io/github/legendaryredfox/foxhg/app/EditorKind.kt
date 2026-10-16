@@ -17,6 +17,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     ITEMS("Moves and items", "Items", implemented = true),
     HIDDEN_ITEMS("Moves and items", "Hidden items", implemented = true),
     TRAINERS("Trainers", "Trainers", implemented = true),
+    TRAINER_FLAGS("Trainers", "Battle flags", implemented = true),
     TRAINER_CLASSES("Trainers", "Trainer classes", implemented = true),
     ENCOUNTERS("World", "Wild encounters", implemented = true),
     ROCK_SMASH("World", "Rock Smash", implemented = true),

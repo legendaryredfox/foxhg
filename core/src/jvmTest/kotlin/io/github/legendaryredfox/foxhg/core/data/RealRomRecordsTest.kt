@@ -33,6 +33,8 @@ import io.github.legendaryredfox.foxhg.core.data.growth.GrowthCurve
 import io.github.legendaryredfox.foxhg.core.data.personal.PersonalTable
 import io.github.legendaryredfox.foxhg.core.data.personal.TmHmBulk
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
+import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerFlagBulk
+import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttEncounter
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttFile
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttTree
@@ -367,6 +369,33 @@ class RealRomRecordsTest {
         assertEquals(personal.records[133].copy(tmHmWords = copied.records[133].tmHmWords).toBytes().toList(), copied.records[133].toBytes().toList(), "only the machine bits change")
         taught.save(project).ok()
         assertEquals(taught.records, PersonalTable.load(project).ok().records)
+        project.revertAll()
+        assertTrue(!project.isDirty)
+    }
+
+    @Test
+    fun trainerFlagBulkEditsOnlyTheFlagAndSavesBack() = withProject { project ->
+        val table = TrainerTable.load(project).ok()
+        val doubles = TrainerFlagBulk.withFlagSet(table, TrainerFlagBulk.DOUBLE_BATTLE)
+        println("trainers=${table.trainers.size} doubles=${doubles.size} basic=${TrainerFlagBulk.withFlagSet(table, 0).size} expert=${TrainerFlagBulk.withFlagSet(table, 2).size} aiBits=${table.trainers.fold(0L) { a, t -> a or t.header.aiFlags }.toString(2)}")
+        assertTrue(doubles.isNotEmpty() && doubles.size < table.trainers.size)
+        assertTrue(table.trainers.all { it.header.doubleBattle == 0L || it.header.doubleBattle == 2L }, "the game stores 0 or 2")
+
+        val first = (1 until table.trainers.size).first { table.trainers[it].header.doubleBattle == 0L && !TrainerFlagBulk.has(table.trainers[it], 5) }
+        val others = table.trainers.indices.filter { it != first }
+        val on = TrainerFlagBulk.set(table, TrainerFlagBulk.DOUBLE_BATTLE, listOf(first), true)
+        assertEquals(2L, on.trainers[first].header.doubleBattle)
+        assertEquals(table.trainers[first].copy(header = table.trainers[first].header.copy(doubleBattle = 2L)), on.trainers[first], "only the flag changed")
+        assertTrue(others.all { on.trainers[it] === table.trainers[it] }, "other trainers are not touched")
+
+        val bit = TrainerFlagBulk.set(table, 5, listOf(first), true)
+        assertEquals(table.trainers[first].header.aiFlags or 32L, bit.trainers[first].header.aiFlags, "one AI bit, the others stay")
+        assertEquals(table.trainers, TrainerFlagBulk.set(bit, 5, listOf(first), false).trainers, "clearing it restores the trainer")
+        val classes = TrainerFlagBulk.byClass(table)
+        assertEquals(table.trainers.size, classes.values.sumOf { it.size })
+
+        on.save(project).ok()
+        assertEquals(on.trainers, TrainerTable.load(project).ok().trainers)
         project.revertAll()
         assertTrue(!project.isDirty)
     }

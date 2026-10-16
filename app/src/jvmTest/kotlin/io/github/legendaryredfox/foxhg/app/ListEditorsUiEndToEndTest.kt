@@ -27,6 +27,7 @@ import io.github.legendaryredfox.foxhg.core.data.growth.GrowthCurve
 import io.github.legendaryredfox.foxhg.core.data.personal.PersonalTable
 import io.github.legendaryredfox.foxhg.core.data.personal.TmHmBulk
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
+import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerFlagBulk
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttFile
 import io.github.legendaryredfox.foxhg.core.data.rocksmash.RockSmashItems
 import io.github.legendaryredfox.foxhg.core.data.rocksmash.RockSmashSite
@@ -329,6 +330,31 @@ class ListEditorsUiEndToEndTest {
 
         buildAndReopen(model) { rebuilt ->
             assertEquals(table().records, (PersonalTable.load(rebuilt) as FoxResult.Ok).value.records)
+        }
+    }
+
+    @Test
+    fun editingTrainerBattleFlagsInBulkOnItsScreen() = withHeartGoldApp { model, project ->
+        val table = { (TrainerTable.load(project) as FoxResult.Ok).value }
+        val before = table()
+        val target = (1 until before.trainers.size).first { !TrainerFlagBulk.has(before.trainers[it], TrainerFlagBulk.DOUBLE_BATTLE) }
+        open("Battle flags")
+        onNodeWithTag("picker:Flag").performClick() // the header is not in a scrolling list, so no scrolling into view
+        waitForIdle()
+        onAllNodesWithTag("search:Search…").onLast().performTextInput("Double Battle")
+        waitForIdle()
+        onAllNodesWithText("Double Battle").onLast().performClick()
+        waitForIdle()
+        onNodeWithTag("search:Search trainers or classes…").performTextInput("%03d".format(target))
+        waitForIdle()
+        tap(onNodeWithTag("flag:$target"))
+        waitForIdle()
+        assertTrue(TrainerFlagBulk.has(table().trainers[target], TrainerFlagBulk.DOUBLE_BATTLE), "the flag went on")
+        assertEquals(2L, table().trainers[target].header.doubleBattle, "the game stores 2")
+        assertEquals(before.trainers.indices.filter { it != target }.map { before.trainers[it] }, table().trainers.filterIndexed { i, _ -> i != target }, "other trainers stay")
+
+        buildAndReopen(model) { rebuilt ->
+            assertEquals(table().trainers, (TrainerTable.load(rebuilt) as FoxResult.Ok).value.trainers)
         }
     }
 
