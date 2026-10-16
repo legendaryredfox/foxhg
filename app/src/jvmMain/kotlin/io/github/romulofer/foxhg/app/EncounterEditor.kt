@@ -8,8 +8,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.ui.platform.testTag
 import io.github.romulofer.foxhg.app.ui.ConfirmDialog
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -33,6 +37,7 @@ import io.github.romulofer.foxhg.app.ui.NumberField
 import io.github.romulofer.foxhg.app.ui.PickerField
 import io.github.romulofer.foxhg.app.ui.SectionCard
 import io.github.romulofer.foxhg.core.data.encounter.EncounterData
+import io.github.romulofer.foxhg.core.data.encounter.EncounterGroup
 import io.github.romulofer.foxhg.core.data.encounter.EncounterSlot
 
 @Composable
@@ -118,6 +123,8 @@ private fun Detail(model: EncounterEditorModel, d: EncounterData) {
         }
     }
 
+    RosterCard(model, d, species)
+
     SectionCard("Grass", subtitle = "Each slot has one level and a species for morning, day and night") {
         for (i in 0 until EncounterData.LAND) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Bottom) {
@@ -167,3 +174,65 @@ private fun SlotCard(title: String, slots: List<EncounterSlot>, species: List<St
 }
 
 private fun <T> List<T>.set(index: Int, value: T): List<T> = toMutableList().also { it[index] = value }
+
+/**
+ * Add and remove Pokémon. A group has a fixed number of slots with fixed chances, so a Pokémon is added by taking slots
+ * from the ones that have most, and removed by handing its slots to the others; the slots below show the result.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun RosterCard(model: EncounterEditorModel, d: EncounterData, species: List<String>) {
+    var adding by remember { mutableStateOf<EncounterGroup?>(null) }
+    var message by remember(model.editor.selectedIndex) { mutableStateOf<String?>(null) }
+    SectionCard("Pokémon in this area", subtitle = "Each group has fixed slots with fixed chances: adding takes slots from the others, removing gives its slots away") {
+        EncounterGroup.entries.forEach { group ->
+            val roster = group.roster(d)
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(group.label, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
+                    OutlinedButton(onClick = { adding = group }, modifier = Modifier.testTag("add:${group.name}")) { Text("Add Pokémon…") }
+                }
+                FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+                    if (roster.isEmpty()) Text("none", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    roster.forEach { e ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Chip("${species.getOrNull(e.species) ?: e.species}  ${e.percent}%")
+                            TextButton(
+                                onClick = { message = if (model.removeSpecies(group, e.species)) null else "Cannot remove the last Pokémon of ${group.label.lowercase()}" },
+                                enabled = roster.size > 1,
+                                modifier = Modifier.testTag("remove:${group.name}:${e.species}"),
+                            ) { Text("Remove") }
+                        }
+                    }
+                }
+            }
+        }
+        message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+    }
+    adding?.let { group ->
+        AddDialog(group, species, onAdd = { id, percent ->
+            val ok = model.addSpecies(group, id, percent)
+            message = if (ok) null else "Could not add ${species.getOrNull(id) ?: id} to ${group.label.lowercase()}: already there, or every Pokémon has just one slot"
+            adding = null
+        }, onDismiss = { adding = null })
+    }
+}
+
+@Composable
+private fun AddDialog(group: EncounterGroup, species: List<String>, onAdd: (Int, Int) -> Unit, onDismiss: () -> Unit) {
+    var chosen by remember { mutableStateOf(0) }
+    var percent by remember { mutableStateOf(10) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add a Pokémon to ${group.label.lowercase()}") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                SpeciesPicker("Species", chosen, species, { chosen = it }, Modifier.fillMaxWidth())
+                NumberField("Chance, percent", percent, 1..99, { percent = it }, Modifier.width(140.dp), tag = "add-percent")
+                Text("Slots come from the Pokémon with the biggest chance, in steps of the slot chances (${group.percents.joinToString(", ")}%), so the result can be a little off.", style = MaterialTheme.typography.bodySmall)
+            }
+        },
+        confirmButton = { Button(onClick = { onAdd(chosen, percent) }, enabled = chosen != 0, modifier = Modifier.testTag("confirm")) { Text("Add") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
+}

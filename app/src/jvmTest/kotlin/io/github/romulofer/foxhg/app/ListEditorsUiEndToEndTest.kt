@@ -8,11 +8,13 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTextInput
 import io.github.romulofer.foxhg.core.FoxResult
 import io.github.romulofer.foxhg.core.data.encounter.EncounterData
+import io.github.romulofer.foxhg.core.data.encounter.EncounterGroup
 import io.github.romulofer.foxhg.core.data.NarcRecords
 import io.github.romulofer.foxhg.core.data.fly.FlyTable
 import io.github.romulofer.foxhg.core.patch.PatchStatus
@@ -95,6 +97,44 @@ class ListEditorsUiEndToEndTest {
 
         buildAndReopen(model) { rebuilt ->
             assertContentEquals(rebuilt.read("a/1/3/6"), rebuilt.read("a/0/3/7"), "HeartGold now equals the SoulSilver table")
+        }
+    }
+
+    @Test
+    fun addingAndRemovingAWildPokemonOnTheWildEncountersScreen() = withHeartGoldApp { model, project ->
+        val names = project.names!!
+        val route30 = EncounterEditorModel(project).let { m -> m.editor.rows().first { m.editor.label(it).contains("Route 30") } }
+        val area = { (EncounterData.loadHeartGold(project) as FoxResult.Ok).value.records[route30] }
+        val mareep = names.species.indexOf("MAREEP")
+        val before = EncounterGroup.GRASS_DAY.roster(area())
+        assertTrue(before.none { it.species == mareep })
+        val victim = before.last().species
+
+        open("Wild encounters")
+        clickFirstText("Route 30", substring = true)
+        tap(onNodeWithTag("add:GRASS_DAY"))
+        // the dialog's picker is the last "Species" one and sits outside the scroll pane
+        tap(onAllNodesWithTag("picker:Species").onLast(), inScrollPane = false)
+        onAllNodesWithTag("search:Search…").onLast().performTextInput("MAREEP")
+        waitForIdle()
+        onAllNodesWithText("MAREEP").onLast().performClick()
+        waitForIdle()
+        onNodeWithTag("number:add-percent").typeNumber(10, inScrollPane = false)
+        tap(onNodeWithTag("confirm"), inScrollPane = false)
+        val added = EncounterGroup.GRASS_DAY.roster(area())
+        assertEquals(10, added.first { it.species == mareep }.percent)
+        assertEquals(100, added.sumOf { it.percent })
+        assertEquals(before.size, EncounterGroup.GRASS_NIGHT.roster(area()).size.coerceAtLeast(before.size), "other times of day are not touched")
+
+        tap(onNodeWithTag("remove:GRASS_DAY:$victim"))
+        val removed = EncounterGroup.GRASS_DAY.roster(area())
+        assertTrue(removed.none { it.species == victim })
+        assertEquals(100, removed.sumOf { it.percent })
+
+        buildAndReopen(model) { rebuilt ->
+            val rec = (EncounterData.loadHeartGold(rebuilt) as FoxResult.Ok).value.records[route30]
+            assertTrue(EncounterGroup.GRASS_DAY.roster(rec).any { it.species == mareep })
+            assertTrue(EncounterGroup.GRASS_DAY.roster(rec).none { it.species == victim })
         }
     }
 

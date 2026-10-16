@@ -221,6 +221,10 @@ and `scripts/boot-test.sh`, 2400 frames). Nothing was tried in game past the int
   Ursaring, Arbok, Beedrill, Ledian, Gulpin, Persian, Mawile. Only in HeartGold's: Spinarak, Growlithe, Mankey, Phanpy,
   Mantine, Gligar, Sableye, Baltoy, Sandshrew, Caterpie, Metapod, Sandslash, Butterfree, Ariados, Primeape, Donphan. (Spinarak
   is HeartGold's and Ledyba SoulSilver's, as in the decomp's data.)
+- Slot chances are fixed by the game (decomp `EncounterSlot_WildMonSlotRoll_*`, not stored in the file): grass 20, 20, 10, 10, 10, 10, 5, 5,
+  4, 4, 1, 1; surf 60, 30, 5, 4, 1; rock smash 80, 20; all three rods 40, 30, 15, 10, 5. No check for species 0 was found in the decomp's slot roll (**[UNVERIFIED]** in game),
+  so the editor never leaves a group with an empty slot: "add Pokémon" takes slots from the Pokémon with most, "remove" hands the slots to
+  the others (the last Pokémon of a group cannot be removed). An all-empty group (rate 0 areas) gives every slot to the first Pokémon added.
 - A HeartGold ROM whose table was replaced by SoulSilver's boots to the vanilla intro frame. Static encounters, roamers and
   fossils are not in these tables (scripts / overlay data) and are not handled yet.
 

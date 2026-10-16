@@ -7,6 +7,7 @@ import io.github.romulofer.foxhg.core.data.encounter.EncounterAreas
 import io.github.romulofer.foxhg.core.data.encounter.EncounterChange
 import io.github.romulofer.foxhg.core.data.encounter.EncounterData
 import io.github.romulofer.foxhg.core.data.encounter.EncounterDiff
+import io.github.romulofer.foxhg.core.data.encounter.EncounterGroup
 import io.github.romulofer.foxhg.core.nds.Game
 import io.github.romulofer.foxhg.core.project.RomProject
 
@@ -62,4 +63,18 @@ class EncounterEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
     }
 
     fun differingAreas(): Int = editor.records.indices.count { differsFromOther(it) }
+
+    /** Takes [species] out of [group] in the selected area; false when it is absent or the last one there. */
+    fun removeSpecies(group: EncounterGroup, species: Int): Boolean {
+        val next = group.remove(editor.records.getOrNull(editor.selectedIndex) ?: return false, species) ?: return false
+        editor.update { next }
+        return true
+    }
+
+    /** Puts [species] into [group] of the selected area at about [percent] percent; false when it is already there or no slot is free to take. */
+    fun addSpecies(group: EncounterGroup, species: Int, percent: Int): Boolean {
+        val next = group.add(editor.records.getOrNull(editor.selectedIndex) ?: return false, species, percent) ?: return false
+        editor.update { next }
+        return true
+    }
 }
