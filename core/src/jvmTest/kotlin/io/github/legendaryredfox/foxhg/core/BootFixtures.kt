@@ -54,6 +54,50 @@ class BootFixtures {
         }
     }
 
+    /** The editors added after the first fixtures: type chart, pickup, growth rates, battle display, Battle Tower, trainer flags and the marts, all edited in place. */
+    @Test
+    fun laterEditors() {
+        val dir = outDir ?: return
+        if (!Files.exists(romPath)) return
+        FileRomSource(romPath).use { source ->
+            val project = open(source)
+            val chart = (io.github.legendaryredfox.foxhg.core.data.typechart.TypeChart.load(project) as FoxResult.Ok).value
+            check(chart.with(10, 12, 10).with(0, 10, 5).save(project) is FoxResult.Ok) // Fire against Grass back to 1x, Normal against Fire half
+            val pickup = (io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable.load(project) as FoxResult.Ok).value
+            check(pickup.copy(divisor = 5).withCommon(0, 17).save(project) is FoxResult.Ok)
+            val growth = (io.github.legendaryredfox.foxhg.core.data.NarcRecords.load(project, io.github.legendaryredfox.foxhg.core.data.growth.GrowthCurve.SPEC) as FoxResult.Ok).value
+            check(growth.with(4, growth.records[4].withLevel(10, growth.records[4].exp[10] + 100)).save(project) is FoxResult.Ok)
+            val display = (io.github.legendaryredfox.foxhg.core.data.battledisplay.BattleDisplayTable.load(project) as FoxResult.Ok).value
+            check(display.with(25, display.get(25).copy(spriteY = 9, shadowSize = 2)).save(project) is FoxResult.Ok)
+            val towerSets = (io.github.legendaryredfox.foxhg.core.data.NarcRecords.load(project, io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerSet.SPEC) as FoxResult.Ok).value
+            check(towerSets.with(1, towerSets.records[1].withMove(2, 33)).save(project) is FoxResult.Ok)
+            val trainers = (io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable.load(project) as FoxResult.Ok).value
+            check(io.github.legendaryredfox.foxhg.core.data.trainer.TrainerFlagBulk.set(trainers, io.github.legendaryredfox.foxhg.core.data.trainer.TrainerFlagBulk.DOUBLE_BATTLE, listOf(5), true).save(project) is FoxResult.Ok)
+            val marts = (io.github.legendaryredfox.foxhg.core.data.mart.Marts.load(project) as FoxResult.Ok).value
+            check(marts.withItem(0, 1, 4).withRemoved(3, 0).withBadge(0, io.github.legendaryredfox.foxhg.core.data.mart.BadgeMartEntry(17, 2)).save(project) is FoxResult.Ok)
+            Files.createDirectories(dir)
+            build(project, dir.resolve("later-editors.nds"))
+        }
+    }
+
+    /** The ARM9 expansion (the loader runs at start-up and maps the synthetic overlay) with two marts moved into it. */
+    @Test
+    fun movedMarts() {
+        val dir = outDir ?: return
+        if (!Files.exists(romPath)) return
+        FileRomSource(romPath).use { source ->
+            val project = open(source)
+            check(io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches.arm9Expansion.apply(project) is FoxResult.Ok)
+            var marts = (io.github.legendaryredfox.foxhg.core.data.mart.Marts.load(project) as FoxResult.Ok).value
+            repeat(6) { marts = marts.withAdded(0, 17 + it) }
+            marts = marts.withAdded(28, 18)
+            check(marts.isMoved(0) && marts.isMoved(28))
+            check(marts.save(project) is FoxResult.Ok)
+            Files.createDirectories(dir)
+            build(project, dir.resolve("moved-marts.nds"))
+        }
+    }
+
     @Test
     fun toolboxPatches() {
         val dir = outDir ?: return
