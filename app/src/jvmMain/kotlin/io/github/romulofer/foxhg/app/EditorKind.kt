@@ -17,6 +17,8 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     ENCOUNTERS("World", "Wild encounters", implemented = true),
     ROCK_SMASH("World", "Rock Smash", implemented = true),
     FLY("World", "Fly", implemented = true),
+    HEADBUTT("World", "Headbutt", implemented = true),
+    BUG_CONTEST("World", "Bug Contest", implemented = true),
     HEADERS("World", "Map headers", implemented = true),
     MATRICES("World", "Matrices", implemented = true),
     MAPS("World", "Maps", implemented = true),

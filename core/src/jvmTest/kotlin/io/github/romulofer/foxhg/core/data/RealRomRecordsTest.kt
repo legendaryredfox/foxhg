@@ -26,6 +26,10 @@ import io.github.romulofer.foxhg.core.data.tmhm.TmHmTable
 import io.github.romulofer.foxhg.core.data.fly.FlyTable
 import io.github.romulofer.foxhg.core.data.hiddenitem.HiddenItems
 import io.github.romulofer.foxhg.core.data.mapheader.MapHeaderTable
+import io.github.romulofer.foxhg.core.data.bugcontest.BugContestTable
+import io.github.romulofer.foxhg.core.data.headbutt.HeadbuttEncounter
+import io.github.romulofer.foxhg.core.data.headbutt.HeadbuttFile
+import io.github.romulofer.foxhg.core.data.headbutt.HeadbuttTree
 import io.github.romulofer.foxhg.core.data.rocksmash.RockSmashItems
 import io.github.romulofer.foxhg.core.data.rocksmash.RockSmashSite
 import io.github.romulofer.foxhg.core.data.starter.Starters
@@ -250,6 +254,53 @@ class RealRomRecordsTest {
         assertTrue(Starters.change(project, Starters(listOf(0, 4, 7), 0, 5)) is FoxResult.Err)
         assertTrue(Starters.change(project, Starters(listOf(1, 4, 7), 300, 5)) is FoxResult.Err)
         assertTrue(!project.isDirty, "a refused change writes nothing")
+    }
+
+    @Test
+    fun headbuttRoundTripsAndEditsSaveBack() = withProject { project ->
+        val files = NarcRecords.load(project, HeadbuttFile.SPEC).ok()
+        assertEquals(MapHeaderTable.load(project).ok().size, files.records.size, "one file per map header")
+        assertContentEquals(project.read("a/2/5/2")!!, files.toNarc().toBytes(), "an unedited NARC writes back the same bytes")
+        val withTrees = files.records.indices.filter { files.records[it].hasTrees }
+        assertTrue(withTrees.isNotEmpty() && withTrees.size < files.records.size)
+        val speciesCount = project.names!!.species.size
+        for (i in withTrees) {
+            val f = files.records[i]
+            assertTrue((f.normal + f.special).all { it.species < speciesCount && it.minLevel <= it.maxLevel }, "header $i holds real species and a level range")
+            assertTrue((f.normalGroups + f.specialGroups).all { g -> g.trees.any { !it.isUnused } }, "header $i has no empty group")
+        }
+        val edited = files.records[withTrees.first()].withNormal(0, HeadbuttEncounter(16, 3, 7))
+            .let { it.copy(normalGroups = it.normalGroups.mapIndexed { n, g -> if (n == 0) g.with(0, HeadbuttTree(40, 41)) else g }) }
+        files.with(withTrees.first(), edited).save(project).ok()
+        assertEquals(edited, NarcRecords.load(project, HeadbuttFile.SPEC).ok().records[withTrees.first()])
+        assertEquals(edited, HeadbuttFile.parse(edited.toBytes()).ok())
+        project.revertAll()
+        assertTrue(!project.isDirty)
+    }
+
+    @Test
+    fun bugContestMatchesTheGuideAndSavesBack() = withProject { project ->
+        val raw = project.read(BugContestTable.PATH)!!
+        val table = BugContestTable.load(project).ok()
+        assertContentEquals(raw, table.toBytes(), "an unedited table writes back the same bytes")
+        val names = project.names!!.species
+        fun slot(set: Int, i: Int) = table.sets[set][i].let { listOf(names[it.species], it.minLevel, it.maxLevel, it.rate, it.score) }
+        assertEquals(listOf("CATERPIE", 7, 18, 80, 60), slot(0, 0), "the guide's Set 0, slot 0")
+        assertEquals(listOf("PINSIR", 13, 14, 0, 100), slot(0, 9))
+        assertEquals(listOf(20, 20, 10, 10, 10, 10, 5, 5, 5, 5), BugContestTable.effectiveRates(table.sets[0]))
+        for (set in table.sets) {
+            assertEquals(listOf(80, 60, 50, 40, 30, 20, 15, 10, 5, 0), set.map { it.rate }, "all four sets share the rates")
+            assertEquals(emptyList(), BugContestTable.problems(set))
+            assertEquals(100, BugContestTable.effectiveRates(set).sum())
+        }
+
+        val edited = table.with(2, 3, table.sets[2][3].copy(rate = 50, species = 13))
+        edited.save(project).ok()
+        assertEquals(edited, BugContestTable.load(project).ok())
+        assertEquals(1, BugContestTable.problems(edited.sets[2]).size, "equal rates hide a slot")
+        assertTrue(BugContestTable.problems(edited.sets[2]).first().startsWith("Slot 4"))
+        project.revertAll()
+        assertTrue(!project.isDirty)
     }
 
     @Test

@@ -53,7 +53,7 @@ Platinum and other languages are out of scope until HeartGold is solid.
 | **Pokémon** | Personal data (base stats, EV yield, types, abilities, catch rate, growth, egg groups, wild held items, TM/HM compatibility), Learnsets, Evolutions, Egg moves, Starters (species, level, held item; the rival and the professor follow), In-game trades |
 | **Moves and items** | Moves (battle data, flags, range, contest data), Items (CSV import and export for both), Hidden items, TMs and HMs |
 | **Trainers** | Trainers (header, party with held items and custom moves, battle items, *replace a species in every party*), Trainer classes (gender, prize money) |
-| **World** | Wild encounters (rates, grass by time of day, water and fishing slots, swarms, radio slots, copy from SoulSilver), Rock Smash (drop chance and item tables), Map headers (every field), Matrices, Maps, Events |
+| **World** | Wild encounters (rates, grass by time of day, water and fishing slots, swarms, radio slots, copy from SoulSilver), Rock Smash (drop chance and item tables), Headbutt (tables and tree tiles), Bug Contest (the four daily sets), Map headers (every field), Matrices, Maps, Events |
 | **Scripts and text** | Scripts (a text language with syntax highlighting, flag, variable and message names, level scripts), Text archives (every message bank, search across all messages, bank names where known) |
 | **Audio** | Sounds browser (SDAT sequences) with a built-in sequence player |
 | **Tools** | Files: a read-only tree of the ROM with sizes, offsets, a hex dump and export |

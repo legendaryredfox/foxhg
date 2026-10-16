@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,7 +24,7 @@ import io.github.romulofer.foxhg.app.ui.ToggleChip
 import io.github.romulofer.foxhg.core.data.mapheader.MapHeader
 
 @Composable
-fun MapHeaderEditor(model: MapHeaderEditorModel, modifier: Modifier = Modifier) {
+fun MapHeaderEditor(model: MapHeaderEditorModel, modifier: Modifier = Modifier, onOpen: (EditorKind, Int) -> Unit = { _, _ -> }) {
     model.loadError?.let {
         Text(it, color = MaterialTheme.colorScheme.error, modifier = modifier.padding(24.dp))
         return
@@ -41,12 +42,12 @@ fun MapHeaderEditor(model: MapHeaderEditorModel, modifier: Modifier = Modifier) 
             detail = { i -> model.all.getOrNull(i)?.let { "matrix ${it.matrix}" } },
             leading = { i -> AsyncMapPicture(i) { model.pictures.ofHeader(i) } },
         )
-        model.selected?.let { h -> DetailPane { Detail(model, h) } }
+        model.selected?.let { h -> DetailPane { Detail(model, h, onOpen) } }
     }
 }
 
 @Composable
-private fun Detail(model: MapHeaderEditorModel, h: MapHeader) {
+private fun Detail(model: MapHeaderEditorModel, h: MapHeader, onOpen: (EditorKind, Int) -> Unit) {
     val locations = model.names?.locations ?: emptyList()
     EditorHeader(model.selectedIndex.toString(), model.locationName(model.selectedIndex), trailing = {
         AsyncMapPicture(model.selectedIndex, 96.dp) { model.pictures.ofHeader(model.selectedIndex) }
@@ -70,12 +71,17 @@ private fun Detail(model: MapHeaderEditorModel, h: MapHeader) {
     SectionCard("What the map uses", subtitle = "Numbers are file indexes in the ROM; the matching editors open them") {
         FieldFlow {
             NumberField("Matrix", h.matrix, 0..65535, { v -> model.update { it.copy(matrix = v) } }, Modifier.width(100.dp))
+            TextButton(onClick = { onOpen(EditorKind.MATRICES, h.matrix) }) { Text("Open matrix") }
             NumberField("Area data", h.areaData, 0..255, { v -> model.update { it.copy(areaData = v) } }, Modifier.width(100.dp))
             NumberField("Script file", h.script, 0..65535, { v -> model.update { it.copy(script = v) } }, Modifier.width(110.dp))
+            TextButton(onClick = { onOpen(EditorKind.SCRIPTS, h.script) }) { Text("Open script file") }
             NumberField("Level script", h.levelScript, 0..65535, { v -> model.update { it.copy(levelScript = v) } }, Modifier.width(110.dp))
             NumberField("Text archive", h.textArchive, 0..65535, { v -> model.update { it.copy(textArchive = v) } }, Modifier.width(110.dp))
+            TextButton(onClick = { onOpen(EditorKind.TEXT, h.textArchive * 100000) }) { Text("Open text archive") }
             NumberField("Event file", h.eventFile, 0..65535, { v -> model.update { it.copy(eventFile = v) } }, Modifier.width(110.dp))
+            TextButton(onClick = { onOpen(EditorKind.EVENTS, h.eventFile) }) { Text("Open event file") }
             NumberField("Wild file (255 none)", h.wildEncounterFile, 0..255, { v -> model.update { it.copy(wildEncounterFile = v) } }, Modifier.width(150.dp))
+            if (h.wildEncounterFile != MapHeader.NO_ENCOUNTERS) TextButton(onClick = { onOpen(EditorKind.ENCOUNTERS, h.wildEncounterFile) }) { Text("Open wild file") }
         }
     }
 

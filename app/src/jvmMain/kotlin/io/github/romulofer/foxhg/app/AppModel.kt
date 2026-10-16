@@ -122,6 +122,12 @@ class AppModel(
     /** The record each editor had selected, so rebuilding an editor (undo, switching screens) keeps the place. */
     val selectionMemory = HashMap<EditorKind, Int>()
 
+    /** Opens [kind] on the record [index] (the same number [selectionMemory] keeps for it), for links between editors. */
+    fun openAt(kind: EditorKind, index: Int) {
+        selectionMemory[kind] = index
+        selected = kind
+    }
+
     private var source: FileRomSource? = null
     private var pendingSave: AutoCloseable? = null
 

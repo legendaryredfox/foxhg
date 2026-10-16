@@ -72,6 +72,12 @@ object HgssLayout {
     const val SYNTHETIC_OVERLAY_ADDRESS = 0x023C8000
     const val SYNTHETIC_OVERLAY_SIZE = 0x16000
 
+    /** A plain file (not a NARC): the Bug Catching Contest tables, 4 sets of 10 entries of 8 bytes. */
+    const val BUG_CONTEST = "data/mushi/mushi_encount.bin"
+
+    /** One file per map header: the Headbutt encounters and tree coordinates of that map (4 bytes when the map has no trees). Same in HG and SS. */
+    const val HEADBUTT = "a/2/5/2"
+
     /** One 4-byte file per map header: Rock Smash item drop odds and the item table it draws from. */
     const val ROCK_SMASH = "a/2/5/3"
 

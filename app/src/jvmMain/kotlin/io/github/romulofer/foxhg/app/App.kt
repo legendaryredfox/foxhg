@@ -296,9 +296,15 @@ private fun Content(model: AppModel, modifier: Modifier) {
         }) { editor ->
             RockSmashEditor(editor, modifier.padding(16.dp))
         }
+        selected == EditorKind.HEADBUTT -> Loading(project, "headbutt trees", { HeadbuttEditorModel(project, model::projectChanged, model.selectionMemory[EditorKind.HEADBUTT] ?: 0, { model.selectionMemory[EditorKind.HEADBUTT] = it }) }) { editor ->
+            HeadbuttEditor(editor, modifier.padding(16.dp))
+        }
+        selected == EditorKind.BUG_CONTEST -> Loading(project, "bug contest", { BugContestEditorModel(project, model::projectChanged) }) { editor ->
+            BugContestEditor(editor, modifier)
+        }
         selected == EditorKind.HEADERS -> Loading(project, "map headers", { MapHeaderEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.HEADERS]?.let(m::select) } }) { editor ->
             KeepSelection(model, EditorKind.HEADERS, editor.selectedIndex)
-            MapHeaderEditor(editor, modifier.padding(16.dp))
+            MapHeaderEditor(editor, modifier.padding(16.dp), onOpen = model::openAt)
         }
         selected == EditorKind.MATRICES -> Loading(project, "matrices", { createMatrixEditor(project, model::projectChanged, model.selectionMemory[EditorKind.MATRICES] ?: 0) }) { editor ->
             KeepSelection(model, EditorKind.MATRICES, editor.records.selectedIndex)

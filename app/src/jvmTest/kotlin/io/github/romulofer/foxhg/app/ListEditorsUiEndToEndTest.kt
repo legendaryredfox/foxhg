@@ -20,6 +20,8 @@ import io.github.romulofer.foxhg.core.data.fly.FlyTable
 import io.github.romulofer.foxhg.core.patch.PatchStatus
 import io.github.romulofer.foxhg.core.patch.dspre.DsprePatches
 import io.github.romulofer.foxhg.core.data.hiddenitem.HiddenItems
+import io.github.romulofer.foxhg.core.data.bugcontest.BugContestTable
+import io.github.romulofer.foxhg.core.data.headbutt.HeadbuttFile
 import io.github.romulofer.foxhg.core.data.rocksmash.RockSmashItems
 import io.github.romulofer.foxhg.core.data.rocksmash.RockSmashSite
 import io.github.romulofer.foxhg.core.data.starter.Starters
@@ -231,6 +233,64 @@ class ListEditorsUiEndToEndTest {
     }
 
     @Test
+    fun editingHeadbuttTablesAndTreesOnItsScreen() = withHeartGoldApp { model, project ->
+        val route29 = EventLabels(project).let { labels -> (0 until 540).first { labels.mapName(it) == "Route 29" } }
+        val files = { (NarcRecords.load(project, HeadbuttFile.SPEC) as FoxResult.Ok).value.records }
+        val before = files()[route29]
+        assertTrue(before.hasTrees, "Route 29 has Headbutt trees")
+        val pidgey = project.names!!.species.indexOf("PIDGEY")
+
+        open("Headbutt")
+        onNodeWithTag("search:Search…").performTextInput("route 29")
+        waitForIdle()
+        clickFirstText("Route 29", substring = true)
+        pick("Common 1", "PIDGEY")
+        assertEquals(pidgey, files()[route29].normal[0].species)
+        onNodeWithTag("number:Common 1 max").typeNumber(9)
+        onNodeWithTag("number:Common 1 min").typeNumber(4)
+        waitForIdle()
+        assertEquals(listOf(4, 9), files()[route29].normal[0].let { listOf(it.minLevel, it.maxLevel) })
+        onNodeWithTag("number:Normal 1 tile 1 X").typeNumber(100)
+        waitForIdle()
+        assertEquals(100, files()[route29].normalGroups[0].trees[0].x)
+        assertEquals(before.normalGroups[0].trees[0].y, files()[route29].normalGroups[0].trees[0].y, "only X moved")
+
+        tap(onAllNodesWithText("Add tree")[0])
+        waitForIdle()
+        assertEquals(before.normalGroups.size + 1, files()[route29].normalGroups.size)
+        assertTrue(files()[route29].normalGroups.last().trees.all { it.isUnused }, "a new group starts empty")
+        assertEquals(before.specialGroups, files()[route29].specialGroups)
+
+        buildAndReopen(model) { rebuilt ->
+            val h = (NarcRecords.load(rebuilt, HeadbuttFile.SPEC) as FoxResult.Ok).value.records[route29]
+            assertEquals(files()[route29], h)
+            assertEquals(pidgey, h.normal[0].species)
+        }
+    }
+
+    @Test
+    fun editingTheBugContestSetsOnItsScreen() = withHeartGoldApp { model, project ->
+        val table = { (BugContestTable.load(project) as FoxResult.Ok).value }
+        val before = table()
+        val scyther = project.names!!.species.indexOf("SCYTHER")
+
+        open("Bug Contest")
+        tap(onNodeWithTag("chip:Set 2"))
+        waitForIdle()
+        pick("Slot 1", "SCYTHER")
+        assertEquals(scyther, table().sets[2][0].species)
+        assertEquals(before.sets[0], table().sets[0], "other sets stay")
+        onNodeWithTag("number:Slot 1 rate").typeNumber(60)
+        waitForIdle()
+        assertEquals(60, table().sets[2][0].rate)
+        onNodeWithText("Slot 2 can never appear", substring = true).assertExists()
+
+        buildAndReopen(model) { rebuilt ->
+            assertEquals(table(), (BugContestTable.load(rebuilt) as FoxResult.Ok).value)
+        }
+    }
+
+    @Test
     fun editingRockSmashOddsTableAndItemsOnItsScreen() = withHeartGoldApp { model, project ->
         val route29 = EventLabels(project).let { labels -> (0 until 540).first { labels.mapName(it) == "Route 29" } }
         val sites = { (NarcRecords.load(project, RockSmashSite.SPEC) as FoxResult.Ok).value.records }
@@ -290,6 +350,28 @@ class ListEditorsUiEndToEndTest {
             assertEquals(listOf(7, 1234, before.locationName), listOf(h.weather, h.musicDay, h.locationName))
             assertFalse(h.permissions and 1 != 0)
         }
+    }
+
+    @Test
+    fun mapHeaderLinksOpenTheMatchingEditors() = withHeartGoldApp { model, project ->
+        val route29 = MapHeaderEditorModel(project).let { m -> m.search = "route 29"; m.rows().first() }
+        val h = (MapHeaderTable.load(project) as FoxResult.Ok).value[route29]
+
+        open("Map headers")
+        onNodeWithTag("search:Search maps…").performTextInput("route 29")
+        waitForIdle()
+        clickFirstText("Route 29", substring = true)
+        tap(onNodeWithText("Open matrix"))
+        waitForIdle()
+        assertEquals(EditorKind.MATRICES, model.selected)
+        assertEquals(h.matrix, model.selectionMemory[EditorKind.MATRICES])
+
+        model.selected = EditorKind.HEADERS
+        waitLoaded()
+        tap(onNodeWithText("Open event file"))
+        waitForIdle()
+        assertEquals(EditorKind.EVENTS, model.selected)
+        assertEquals(h.eventFile, model.selectionMemory[EditorKind.EVENTS])
     }
 
     @Test

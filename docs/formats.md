@@ -134,6 +134,28 @@ Add an entry here whenever a layout, offset or quirk is confirmed.
   the ROM match the wiki guide (default: Max Ether, Revive, Heart Scale, four shards, Star Piece); SoulSilver's Ruins and Cliff Cave tables hold other
   shards and fossils. Layout from the DS Pokémon Hacking wiki's Rock Smash guide and DSPRE's `RockSmashData`; `RealRomRecordsTest`.
 
+## Headbutt (`a/2/5/2`)
+
+- `a/2/5/2`: one file per map header (540). Maps without trees are the 4-byte stub `00 00 00 00` (no encounters stored); the others are
+  `4 + 72 + 24 * (normal groups + special groups)` bytes: u8 normal group count, pad, u8 special group count, pad; 12 normal encounters (the
+  common table of 6, then the rare table of 6) and 6 special ones (u16 species, u8 min level, u8 max level); then the tree groups, normal first,
+  each 6 tiles of u16 x, u16 y in map-wide coordinates (matrix cell x 32 + tile), unused tiles 65535 x 65535. A table slot is picked with
+  50, 15, 15, 10, 5, 5 percent. Normal groups use table A or B depending on the Trainer ID's last digit and the group's index, special groups
+  always table C. A tree only works on a tile of type 6 that is blocked. All files of the ROM parse and write back byte for byte, and no
+  vanilla group is empty (`RealRomRecordsTest`). Layout from the DS Pokémon Hacking wiki's Headbutt guide and DSPRE's `HeadbuttEncounterFile`.
+  **[UNVERIFIED]** in game: only the layout is checked against the ROM.
+
+## Bug Catching Contest (`data/mushi/mushi_encount.bin`)
+
+- A plain file, not a NARC: 320 bytes, 4 sets of 10 entries of 8 bytes (u16 species, u8 min level, u8 max level, u8 rate, u8 score, u16
+  padding, always 0). Set 0 is used without the National Dex and on Sunday and Monday; with it, set = weekday / 2 (Tuesday and Wednesday 1,
+  Thursday and Friday 2, Saturday 3), from the DS clock. The game rolls 0 to 99 and takes the first slot whose rate is at or below the roll,
+  so the chance of slot 0 is 100 minus its rate and of each later slot the gap to the slot above; rates must fall and the last must be 0, or
+  a slot never appears or some rolls match nothing. Score is the rarity part of the judge's score. Vanilla: all four sets use rates 80, 60,
+  50, 40, 30, 20, 15, 10, 5, 0 (20, 20, 10, 10, 10, 10, 5, 5, 5, 5 percent); set 0 starts with Caterpie 7-18 score 60 and ends with Pinsir
+  13-14 score 100. The file reads and writes back byte for byte (`RealRomRecordsTest`). Layout from the DS Pokémon Hacking wiki's Bug
+  Catching Contests guide and DSPRE's `BugContestEncounterFile`. **[UNVERIFIED]** in game.
+
 ## Starters (ARM9, chooser overlay, scripts, text)
 
 - Not a table: the chooser code of the decompressed ARM9 builds `{CHIKORITA, CYNDAQUIL, TOTODILE}` (decomp `choose_starter.c`). The three
