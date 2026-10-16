@@ -35,7 +35,11 @@ import io.github.legendaryredfox.foxhg.core.data.personal.TmHmBulk
 import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerSet
 import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerTrainer
 import io.github.legendaryredfox.foxhg.core.data.mart.BadgeMartEntry
+import io.github.legendaryredfox.foxhg.core.data.mart.MartGrowth
 import io.github.legendaryredfox.foxhg.core.data.mart.Marts
+import io.github.legendaryredfox.foxhg.core.patch.PatchTarget
+import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
+import io.github.legendaryredfox.foxhg.core.u32
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerFlagBulk
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
@@ -435,7 +439,9 @@ class RealRomRecordsTest {
     fun martsRoundTripAndMatchTheDecomp() = withProject { project ->
         val arm9 = (project.readArm9() as FoxResult.Ok).value
         val marts = Marts.load(project).ok()
-        assertContentEquals(arm9, marts.applyTo(arm9), "an unedited table writes back the same bytes")
+        assertContentEquals(arm9, marts.applyTo(arm9, null).first, "an unedited table writes back the same bytes")
+        assertEquals(MartGrowth.NEEDS_EXPANSION, marts.growth, "no synthetic overlay before the ARM9 expansion")
+        assertEquals(Marts.VANILLA_CAPACITY, marts.specials.map { it.size }, "the capacities are the retail list sizes")
         val items = project.names!!.items
         fun names(mart: Int) = marts.specials[mart].map { items[it] }
         assertEquals(30, marts.specials.size)
@@ -452,17 +458,55 @@ class RealRomRecordsTest {
         val edited = marts.withItem(0, 1, ball).withRemoved(3, 0).withBadge(0, BadgeMartEntry(potion, 6))
         assertEquals(listOf(items.indexOf("Air Mail"), ball), edited.specials[0])
         assertEquals(10, edited.specials[3].size)
-        assertTrue(edited.canAdd(3) && !edited.canAdd(0), "a shorter list can take an item back, a full one cannot")
+        assertTrue(edited.canAdd(3) && !edited.canAdd(0), "a shorter list can take an item back, a full one cannot before the expansion")
         assertEquals(edited, edited.withAdded(0, potion), "a full list takes nothing")
         val added = edited.withAdded(3, potion)
         assertEquals(marts.specials[3].drop(1) + potion, added.specials[3])
 
-        val written = added.applyTo(arm9)
+        val written = added.applyTo(arm9, null).first
         val changed = arm9.indices.filter { arm9[it] != written[it] }
         assertTrue(changed.isNotEmpty() && changed.all { it in 0xFBA54..0xFBC80 || it in HgssLayout.BADGE_MART until HgssLayout.BADGE_MART + 4 * 19 }, "only the mart bytes change")
         added.save(project).ok()
         assertEquals(added.specials, Marts.load(project).ok().specials)
         assertEquals(added.badge, Marts.load(project).ok().badge)
+        project.revertAll()
+        assertTrue(!project.isDirty)
+    }
+
+    @Test
+    fun martsGrowIntoTheSyntheticOverlayAndShrinkBack() = withProject { project ->
+        val potion = project.names!!.items.indexOf("Potion")
+        val tooLong = Marts.load(project).ok().withAdded(0, potion)
+        assertEquals(Marts.load(project).ok(), tooLong, "no room before the expansion")
+        DsprePatches.arm9Expansion.apply(project).ok()
+        val base = Marts.load(project).ok()
+        assertEquals(MartGrowth.AVAILABLE, base.growth)
+        val beforeArm9 = (project.readArm9() as FoxResult.Ok).value
+        val beforeSynth = (PatchTarget.SyntheticOverlay.read(project) as FoxResult.Ok).value
+        assertContentEquals(beforeArm9, base.applyTo(beforeArm9, beforeSynth).first)
+        assertContentEquals(beforeSynth, base.applyTo(beforeArm9, beforeSynth).second, "nothing moved, so the overlay is as it was")
+
+        var grown = base
+        repeat(6) { grown = grown.withAdded(0, potion + it) }
+        grown = grown.withAdded(28, potion)
+        assertEquals(8, grown.specials[0].size)
+        assertTrue(grown.isMoved(0) && grown.isMoved(28) && !grown.isMoved(1))
+        assertEquals(2 * (8 + 1) + 2 * (4 + 1), grown.areaBytes)
+        grown.save(project).ok()
+        val loaded = Marts.load(project).ok()
+        assertEquals(grown.specials, loaded.specials, "the moved lists read back through the repointed table")
+        assertEquals(MartGrowth.AVAILABLE, loaded.growth)
+        val arm9 = (project.readArm9() as FoxResult.Ok).value
+        assertEquals(HgssLayout.SYNTHETIC_OVERLAY_ADDRESS + HgssLayout.MART_AREA, arm9.u32(HgssLayout.SPECIAL_MART_POINTERS).toInt(), "mart 0 now points into the synthetic overlay")
+        assertEquals(HgssLayout.ARM9_BASE + Marts.VANILLA_ADDRESSES[1], arm9.u32(HgssLayout.SPECIAL_MART_POINTERS + 4).toInt(), "an untouched mart keeps its pointer")
+
+        // Cut them back to their old size: the pointers return to the ARM9 and the mart area is empty again.
+        var shrunk = loaded
+        repeat(6) { shrunk = shrunk.withRemoved(0, shrunk.specials[0].lastIndex) }
+        shrunk = shrunk.withRemoved(28, shrunk.specials[28].lastIndex)
+        shrunk.save(project).ok()
+        assertContentEquals(beforeArm9, (project.readArm9() as FoxResult.Ok).value, "the ARM9 is as it was")
+        assertContentEquals(beforeSynth, (PatchTarget.SyntheticOverlay.read(project) as FoxResult.Ok).value, "the overlay is as it was")
         project.revertAll()
         assertTrue(!project.isDirty)
     }

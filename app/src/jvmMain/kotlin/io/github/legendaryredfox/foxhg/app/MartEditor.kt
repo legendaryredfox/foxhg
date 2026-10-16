@@ -24,7 +24,9 @@ import io.github.legendaryredfox.foxhg.app.ui.SectionCard
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.item.ItemData
 import io.github.legendaryredfox.foxhg.core.data.mart.BadgeMartEntry
+import io.github.legendaryredfox.foxhg.core.data.mart.MartGrowth
 import io.github.legendaryredfox.foxhg.core.data.mart.Marts
+import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.game.GameNames
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
@@ -124,11 +126,14 @@ private fun BadgeMart(model: MartEditorModel, marts: Marts) {
 private fun SpecialMart(model: MartEditorModel, marts: Marts, mart: Int) {
     val items = model.names?.items ?: emptyList()
     val list = marts.specials[mart]
-    EditorHeader(mart.toString(), "Special mart $mart")
+    EditorHeader(mart.toString(), "Special mart $mart", trailing = { if (marts.isMoved(mart)) Chip("Moved to the synthetic overlay", emphasis = true) })
     SectionCard(
         "Items",
-        subtitle = "Opened by the script command SpMartScreen $mart. It holds up to ${marts.capacity[mart]} items (${list.size} now): the lists sit one after another in the ARM9, so a mart cannot grow past its original size. " +
-            "Prices are set per item in the Items editor",
+        subtitle = "Opened by the script command SpMartScreen $mart. Prices are set per item in the Items editor. " + when {
+            marts.growth == MartGrowth.AVAILABLE -> "It holds ${marts.capacity[mart]} items in the ARM9; more are kept in the synthetic overlay (${marts.areaBytes} of ${HgssLayout.MART_AREA_SIZE} bytes used by all marts)."
+            marts.growth == MartGrowth.NEEDS_EXPANSION -> "It holds up to ${marts.capacity[mart]} items (${list.size} now): the lists sit one after another in the ARM9. Apply the ARM9 expansion patch in the ROM toolbox to let marts grow."
+            else -> "It holds up to ${marts.capacity[mart]} items: the mart area of the synthetic overlay is in use by something else, so marts cannot grow."
+        },
     ) {
         list.forEachIndexed { slot, item ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
@@ -138,11 +143,11 @@ private fun SpecialMart(model: MartEditorModel, marts: Marts, mart: Int) {
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedButton(onClick = { model.update { it.withAdded(mart, POKE_BALL) } }, enabled = marts.canAdd(mart), modifier = Modifier.testTag("mart-add")) { Text("Add item") }
-            if (!marts.canAdd(mart)) Text("Full: remove an item to add another", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedButton(onClick = { model.update { it.withAdded(mart, POTION) } }, enabled = marts.canAdd(mart), modifier = Modifier.testTag("mart-add")) { Text("Add item") }
+            if (!marts.canAdd(mart)) Text(if (marts.growth == MartGrowth.AVAILABLE) "Full: no room left for more items" else "Full: remove an item to add another", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
-/** The item a new mart slot starts as. */
-private const val POKE_BALL = 4
+/** The item a new mart slot starts as (not the Poké Ball: some marts hide it). */
+private const val POTION = 17

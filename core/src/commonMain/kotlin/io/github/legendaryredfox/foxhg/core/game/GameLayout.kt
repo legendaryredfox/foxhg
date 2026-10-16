@@ -96,6 +96,14 @@ object HgssLayout {
     const val BADGE_MART = 0xFBF22
     const val BADGE_MART_ENTRIES = 19
 
+    /**
+     * Where foxhg puts a special mart that outgrows its place in the ARM9: a block of the synthetic overlay (offsets in it are runtime
+     * address - [SYNTHETIC_OVERLAY_ADDRESS]), after the script command table copy at 0x200 and before the camera routine at 0x115B0.
+     * It must be empty (zeros) or hold only mart lists foxhg wrote.
+     */
+    const val MART_AREA = 0x4000
+    const val MART_AREA_SIZE = 0x1000
+
     /** One member of 494 records of 89 bytes (one per species): two-frame animation data, then movement byte at 1 and, in the last 3 bytes, sprite Y, shadow X and shadow size. */
     const val BATTLE_DISPLAY = "a/1/8/0"
 

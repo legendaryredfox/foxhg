@@ -414,8 +414,37 @@ class ListEditorsUiEndToEndTest {
         assertEquals(before.specials[3].drop(1), marts().specials[3], "the first item is gone")
         tap(onNodeWithTag("mart-add"))
         waitForIdle()
-        assertEquals(before.specials[3].drop(1) + 4, marts().specials[3], "it is back at the end as a Poké Ball")
+        assertEquals(before.specials[3].drop(1) + 17, marts().specials[3], "it is back at the end as a Potion")
         assertEquals(before.specials.filterIndexed { i, _ -> i != 3 }, marts().specials.filterIndexed { i, _ -> i != 3 }, "other marts stay")
+
+        buildAndReopen(model) { rebuilt ->
+            assertEquals(marts().specials, (Marts.load(rebuilt) as FoxResult.Ok).value.specials)
+        }
+    }
+
+    @Test
+    fun aPokeMartGrowsPastItsPlaceOnceTheArm9IsExpanded() = withHeartGoldApp { model, project ->
+        val marts = { (Marts.load(project) as FoxResult.Ok).value }
+        val before = marts()
+        open("Poké Marts")
+        onAllNodesWithText("Air Mail, Heal Ball").onFirst().performClick()
+        waitForIdle()
+        onNodeWithText("Apply the ARM9 expansion patch", substring = true).assertExists()
+        tap(onNodeWithTag("mart-add"))
+        waitForIdle()
+        assertEquals(before.specials[0], marts().specials[0], "no room before the expansion")
+
+        assertTrue(DsprePatches.arm9Expansion.apply(project) is FoxResult.Ok)
+        model.openAt(EditorKind.TOOLBOX, 0) // leave and come back so the screen reads the expanded ROM
+        waitForIdle()
+        open("Poké Marts")
+        onAllNodesWithText("Air Mail, Heal Ball").onFirst().performClick()
+        waitForIdle()
+        repeat(3) { tap(onNodeWithTag("mart-add")); waitForIdle() }
+        assertEquals(5, marts().specials[0].size)
+        assertTrue(marts().isMoved(0))
+        onNodeWithText("Moved to the synthetic overlay").assertExists()
+        assertEquals(before.specials.drop(1), marts().specials.drop(1), "other marts stay")
 
         buildAndReopen(model) { rebuilt ->
             assertEquals(marts().specials, (Marts.load(rebuilt) as FoxResult.Ok).value.specials)
