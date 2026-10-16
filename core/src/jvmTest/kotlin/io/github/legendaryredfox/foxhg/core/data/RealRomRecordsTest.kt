@@ -29,6 +29,7 @@ import io.github.legendaryredfox.foxhg.core.data.mapheader.MapHeaderTable
 import io.github.legendaryredfox.foxhg.core.data.battledisplay.BattleDisplay
 import io.github.legendaryredfox.foxhg.core.data.battledisplay.BattleDisplayTable
 import io.github.legendaryredfox.foxhg.core.data.bugcontest.BugContestTable
+import io.github.legendaryredfox.foxhg.core.data.growth.GrowthCurve
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttEncounter
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttFile
@@ -303,6 +304,39 @@ class RealRomRecordsTest {
         assertEquals(edited, reloaded.get(25))
         assertEquals(all[24], reloaded.get(24), "the neighbours are untouched")
         assertEquals(all[26], reloaded.get(26))
+        project.revertAll()
+        assertTrue(!project.isDirty)
+    }
+
+    @Test
+    fun growthRatesRoundTripAndMatchTheGame() = withProject { project ->
+        val table = NarcRecords.load(project, GrowthCurve.SPEC).ok()
+        table.assertNarcRoundTrips(project)
+        assertEquals(8, table.records.size)
+        for (curve in table.records) {
+            assertEquals(listOf(0, 0), curve.exp.take(2), "no experience is needed at levels 0 and 1")
+            assertEquals(emptyList(), curve.problems())
+        }
+        val (mediumFast, erratic, fluctuating, mediumSlow, fast) = table.records
+        val slow = table.records[5]
+        assertEquals(1_000_000, mediumFast.exp[100])
+        assertEquals(125_000, mediumFast.exp[50], "the guide's example")
+        assertEquals(600_000, erratic.exp[100])
+        assertEquals(1_640_000, fluctuating.exp[100])
+        assertEquals(1_059_860, mediumSlow.exp[100])
+        assertEquals(800_000, fast.exp[100])
+        assertEquals(1_250_000, slow.exp[100])
+        assertEquals(mediumFast, table.records[6], "unused rate 1 equals Medium Fast")
+        assertEquals(mediumFast, table.records[7], "unused rate 2 equals Medium Fast")
+
+        val shifted = mediumFast.withLevel(10, mediumFast.exp[10] + 50)
+        assertEquals(List(91) { mediumFast.exp[it + 10] + 50 }, shifted.exp.drop(10), "later levels move together")
+        assertEquals(mediumFast.exp.take(10), shifted.exp.take(10))
+        val alone = mediumFast.withLevel(10, mediumFast.exp[10] + 1000, shiftLater = false)
+        assertEquals(mediumFast.exp[11], alone.exp[11], "only the one level moved")
+        assertEquals(listOf(11), alone.problems(), "level 11 now needs less than level 10")
+        table.with(0, shifted).save(project).ok()
+        assertEquals(shifted, NarcRecords.load(project, GrowthCurve.SPEC).ok().records[0])
         project.revertAll()
         assertTrue(!project.isDirty)
     }

@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTextInput
@@ -22,6 +23,7 @@ import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
 import io.github.legendaryredfox.foxhg.core.data.hiddenitem.HiddenItems
 import io.github.legendaryredfox.foxhg.core.data.battledisplay.BattleDisplayTable
 import io.github.legendaryredfox.foxhg.core.data.bugcontest.BugContestTable
+import io.github.legendaryredfox.foxhg.core.data.growth.GrowthCurve
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttFile
 import io.github.legendaryredfox.foxhg.core.data.rocksmash.RockSmashItems
@@ -287,6 +289,23 @@ class ListEditorsUiEndToEndTest {
 
         buildAndReopen(model) { rebuilt ->
             assertEquals(table().get(25), (BattleDisplayTable.load(rebuilt) as FoxResult.Ok).value.get(25))
+        }
+    }
+
+    @Test
+    fun editingAGrowthRateOnItsScreen() = withHeartGoldApp { model, project ->
+        val table = { (NarcRecords.load(project, GrowthCurve.SPEC) as FoxResult.Ok).value.records }
+        val before = table()
+        open("Growth rates")
+        tap(onNodeWithTag("chip:Fast"))
+        waitForIdle()
+        onNodeWithTag("number:Level 10").performScrollTo().typeNumber(before[4].exp[10] + 100)
+        waitForIdle()
+        assertEquals(before[4].withLevel(10, before[4].exp[10] + 100), table()[4], "later levels moved with it")
+        assertEquals(before[0], table()[0], "other rates stay")
+
+        buildAndReopen(model) { rebuilt ->
+            assertEquals(table()[4], (NarcRecords.load(rebuilt, GrowthCurve.SPEC) as FoxResult.Ok).value.records[4])
         }
     }
 

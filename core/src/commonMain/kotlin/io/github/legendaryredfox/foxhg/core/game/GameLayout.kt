@@ -75,6 +75,9 @@ object HgssLayout {
     /** A plain file (not a NARC): the Bug Catching Contest tables, 4 sets of 10 entries of 8 bytes. */
     const val BUG_CONTEST = "data/mushi/mushi_encount.bin"
 
+    /** Eight members of 404 bytes: the total experience needed at levels 0 to 100 (u32 each) for each growth rate, in the personal data's growth rate order. */
+    const val GROWTH_RATES = "a/0/0/3"
+
     /** One member of 494 records of 89 bytes (one per species): two-frame animation data, then movement byte at 1 and, in the last 3 bytes, sprite Y, shadow X and shadow size. */
     const val BATTLE_DISPLAY = "a/1/8/0"
 

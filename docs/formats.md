@@ -145,6 +145,10 @@ Add an entry here whenever a layout, offset or quirk is confirmed.
   vanilla group is empty (`RealRomRecordsTest`). Layout from the DS Pokémon Hacking wiki's Headbutt guide and DSPRE's `HeadbuttEncounterFile`.
   **[UNVERIFIED]** in game: only the layout is checked against the ROM.
 
+## Growth rates (`a/0/0/3`)
+
+- A NARC of 8 members of 404 bytes: 101 u32 values, the total experience needed at levels 0 to 100 (levels 0 and 1 are 0), one member per growth rate in the personal data's order: Medium Fast, Erratic, Fluctuating, Medium Slow, Fast, Slow, then two unused ones equal to Medium Fast. The game looks levels up in these tables (decomp `LoadGrowthTable`). Level 100 totals in the ROM: 1000000, 600000, 1640000, 1059860, 800000, 1250000; Medium Fast at level 50 is 125000. Editing a level means moving every later one by the same amount (wiki guide). All eight round-trip byte for byte (`RealRomRecordsTest`). **[UNVERIFIED]** in game.
+
 ## Pickup (overlay 12)
 
 - In the decompressed image of overlay 12 (battle), HeartGold English: 18 u16 common items at 0x34B44, 11 u16 rare items at 0x34A4C, the activation divisor (1 byte) at 0xC852 and 9 weight bytes at 0x3518C. Vanilla: divisor 10, weights 30, 40, 50, 60, 70, 80, 90, 94, 98 (slots of 30, 10, 10, 10, 10, 10, 10, 4, 4 rolls out of 100), the common table starts with Potion, Antidote, Super Potion and ends with PP Up, Max Elixir, the rare one starts with Hyper Potion, Nugget, King's Rock.
