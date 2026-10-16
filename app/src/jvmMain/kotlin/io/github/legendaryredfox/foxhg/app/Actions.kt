@@ -45,6 +45,9 @@ object Actions {
 
     fun openRom(model: AppModel) = model.guard { chooseRomToOpen()?.let(model::openRom) }
 
+    /** Opens a save file in the save editor; asks first when the save that is open has edits that are not written. */
+    fun openSave(model: AppModel) = model.guardSave { pickFile("Open save file (.sav or .dsv)", java.awt.FileDialog.LOAD, "")?.let(model::openSave) }
+
     /** A file or folder dropped on the window: a project folder opens as a project, a `.nds` as a ROM, anything else is refused. */
     fun openDropped(model: AppModel, files: List<java.nio.file.Path>) {
         val path = files.firstOrNull() ?: return
@@ -52,7 +55,8 @@ object Actions {
             java.nio.file.Files.isDirectory(path) ->
                 if (ProjectStore.isProject(path)) model.guard { model.openProject(path) } else model.error = "$path is not a foxhg project folder"
             path.fileName.toString().endsWith(".nds", ignoreCase = true) -> model.guard { model.openRom(path) }
-            else -> model.error = "Drop a .nds ROM or a foxhg project folder, not ${path.fileName}"
+            path.fileName.toString().let { it.endsWith(".sav", ignoreCase = true) || it.endsWith(".dsv", ignoreCase = true) } -> model.guardSave { model.openSave(path) }
+            else -> model.error = "Drop a .nds ROM, a .sav save or a foxhg project folder, not ${path.fileName}"
         }
     }
 
@@ -65,6 +69,8 @@ object Actions {
 
     /** Ctrl+S: saves the project, or asks where to create one when only a ROM is open. */
     fun save(model: AppModel) {
+        // On a screen of the save editor Ctrl+S writes the save file.
+        if (model.selected?.group == SAVE_GROUP) { model.save?.takeIf { it.dirty }?.write(); return }
         if (model.project == null) return
         if (model.projectDir != null) model.saveProject() else model.dialog = AppDialog.SaveProjectAs()
     }

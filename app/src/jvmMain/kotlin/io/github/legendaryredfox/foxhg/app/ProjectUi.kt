@@ -48,6 +48,8 @@ fun ProjectMenu(model: AppModel) {
             item("New project…          Ctrl+N") { Actions.newProject(model) }
             item("Open project…         Ctrl+O") { Actions.openProject(model) }
             item("Open ROM without a project…") { Actions.openRom(model) }
+            item("Open save file…") { Actions.openSave(model) }
+            item("Close save file", enabled = model.save != null) { model.guardSave { model.closeSave() } }
             HorizontalDivider()
             item("${model.undoLabel}     Ctrl+Z", enabled = model.canUndo) { model.undo() }
             item("${model.redoLabel}     Ctrl+Shift+Z", enabled = model.canRedo) { model.redo() }
@@ -81,6 +83,7 @@ fun AppDialogs(model: AppModel) {
         AppDialog.NewProject -> ProjectDialog(model, askRom = true, then = null)
         is AppDialog.SaveProjectAs -> ProjectDialog(model, askRom = false, then = d.then)
         is AppDialog.UnsavedWork -> UnsavedWorkDialog(model, d)
+        is AppDialog.UnsavedSave -> UnsavedSaveDialog(model, d)
         is AppDialog.RelinkRom -> RelinkDialog(model, d)
         is AppDialog.Settings -> SettingsDialog(model, d)
     }
@@ -147,6 +150,25 @@ private fun UnsavedWorkDialog(model: AppModel, d: AppDialog.UnsavedWork) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(onClick = { model.dialog = null }) { Text("Cancel") }
                 TextButton(onClick = { model.dialog = null; d.then() }) { Text("Discard changes", color = MaterialTheme.colorScheme.error) }
+            }
+        },
+    )
+}
+
+@Composable
+private fun UnsavedSaveDialog(model: AppModel, d: AppDialog.UnsavedSave) {
+    val name = model.save?.path?.fileName ?: ""
+    AlertDialog(
+        onDismissRequest = { model.dialog = null },
+        title = { Text("The save file is not written") },
+        text = { Text("You edited $name but did not write it. Write it (the file that is there is kept as .bak), or discard the changes.", style = MaterialTheme.typography.bodyMedium) },
+        confirmButton = {
+            Button(onClick = { if (model.save?.write() == true) { model.dialog = null; model.guard(d.then) } }, modifier = Modifier.testTag("unsaved-save-write")) { Text("Write the save") }
+        },
+        dismissButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = { model.dialog = null }) { Text("Cancel") }
+                TextButton(onClick = { model.save?.discard(); model.dialog = null; model.guard(d.then) }) { Text("Discard changes", color = MaterialTheme.colorScheme.error) }
             }
         },
     )
@@ -227,7 +249,7 @@ private fun SettingsDialog(model: AppModel, d: AppDialog.Settings) {
 }
 
 @Composable
-private fun LabeledText(label: String, value: String, onChange: (String) -> Unit) {
+internal fun LabeledText(label: String, value: String, onChange: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         BasicTextField(

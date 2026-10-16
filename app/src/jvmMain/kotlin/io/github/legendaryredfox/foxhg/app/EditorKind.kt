@@ -37,4 +37,9 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     SOUNDS("Audio", "Sounds", implemented = true),
     TOOLBOX("Tools", "ROM toolbox", implemented = true),
     FILES("Tools", "Files", implemented = true),
+    SAVE_PLAYER(SAVE_GROUP, "Player", implemented = true),
+    SAVE_FILE(SAVE_GROUP, "Save file", implemented = true),
 }
+
+/** The group of the editors of a save file: they need an open save, not a ROM. */
+const val SAVE_GROUP = "Save file"

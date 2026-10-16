@@ -19,6 +19,9 @@ import java.nio.file.Path
 sealed interface AppDialog {
     object NewProject : AppDialog
 
+    /** The open save file has edits that are not written; [then] runs once they are written or thrown away. */
+    class UnsavedSave(val then: () -> Unit) : AppDialog
+
     /** Name and place a project for the open ROM session; [then] runs once it is saved. */
     class SaveProjectAs(val then: (() -> Unit)? = null) : AppDialog
 
@@ -101,6 +104,10 @@ class AppModel(
         private set
     var project: RomProject? by mutableStateOf(null)
         private set
+
+    /** The open save file, or null. A save is its own session next to the ROM one: it needs no ROM and writes only when asked. */
+    var save: SaveEditorModel? by mutableStateOf(null)
+        private set
     /** The folder of the open project, or null when only a ROM is open. */
     var projectDir: Path? by mutableStateOf(null)
         private set
@@ -145,6 +152,26 @@ class AppModel(
     val isDirty: Boolean get() = revision >= 0 && project?.isDirty == true
 
     // --- opening ---------------------------------------------------------------------------------------------------
+
+    /** Opens the save file at [path] (a raw `.sav` or a DeSmuME `.dsv`) in the save editor. */
+    fun openSave(path: Path): Boolean {
+        if (task != null) return false
+        return when (val opened = SaveEditorModel.open(path)) {
+            is FoxResult.Ok -> {
+                save = opened.value
+                selected = EditorKind.SAVE_PLAYER
+                error = null
+                status = "Opened save ${path.fileName}"
+                true
+            }
+            is FoxResult.Err -> { fail(opened.message); false }
+        }
+    }
+
+    fun closeSave() {
+        save = null
+        if (selected?.group == SAVE_GROUP) selected = null
+    }
 
     /** Opens a ROM with no project. Edits stay in memory until saved as a project or built. */
     fun openRom(path: Path) {
@@ -346,7 +373,15 @@ class AppModel(
      * Runs [action] now when nothing would be lost; otherwise asks first. A project is flushed to disk instead of
      * asking, since its edits are already meant to be kept.
      */
-    fun guard(action: () -> Unit) {
+    fun guard(action: () -> Unit) = guardSave { guardRom(action) }
+
+    /** Runs [action] now, or after asking what to do with edits of the open save file that are not written. */
+    fun guardSave(action: () -> Unit) {
+        val open = save
+        if (open != null && open.dirty) dialog = AppDialog.UnsavedSave(action) else action()
+    }
+
+    private fun guardRom(action: () -> Unit) {
         // A project whose work cannot be saved must not be left: the reason is in the status bar.
         if (projectDir != null && hasUnsavedWork && !saveProject()) return
         if (needsProjectToKeepWork) dialog = AppDialog.UnsavedWork(action) else action()

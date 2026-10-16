@@ -425,7 +425,7 @@ fun StatBar(value: Int, max: Int = 160, modifier: Modifier = Modifier) {
 @Composable
 fun EditorHeader(id: String, name: String, modifier: Modifier = Modifier, trailing: (@Composable RowScope.() -> Unit)? = null) {
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(id.padStart(3, '0'), style = Fox.mono.copy(fontSize = 14.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (id.isNotEmpty()) Text(id.padStart(3, '0'), style = Fox.mono.copy(fontSize = 14.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(name, style = MaterialTheme.typography.headlineSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
         trailing?.invoke(this)
     }

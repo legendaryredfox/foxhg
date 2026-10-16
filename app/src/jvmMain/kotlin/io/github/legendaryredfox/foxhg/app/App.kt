@@ -73,8 +73,8 @@ fun App(model: AppModel) {
                 TopBar(model)
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Row(Modifier.weight(1f).fillMaxWidth()) {
-                    // The editor tabs only exist once a ROM or project is open.
-                    if (model.project != null) {
+                    // The editor tabs only exist once a ROM, a project or a save file is open.
+                    if (model.project != null || model.save != null) {
                         Sidebar(model, Modifier.width(232.dp).fillMaxHeight())
                         Box(Modifier.width(1.dp).fillMaxHeight().background(MaterialTheme.colorScheme.outlineVariant))
                     }
@@ -136,17 +136,18 @@ private fun SaveIndicator(model: AppModel) {
 
 @Composable
 private fun Sidebar(model: AppModel, modifier: Modifier) {
-    val enabled = model.project != null
+    val hasRom = model.project != null
     val scroll = rememberScrollState()
     Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))) {
     Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(start = 12.dp, top = 12.dp, bottom = 12.dp, end = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        val ready = EditorKind.entries.filter { it.implemented }.groupBy { it.group }
+        // The ROM editors need a ROM or project, the save editors an open save file; each kind shows only when its file is open.
+        val ready = EditorKind.entries.filter { it.implemented && if (it.group == SAVE_GROUP) model.save != null else hasRom }.groupBy { it.group }
         ready.forEach { (group, editors) ->
             GroupLabel(group)
-            editors.forEach { NavItem(it.title, model.selected == it, enabled, soon = false) { model.selected = it } }
+            editors.forEach { NavItem(it.title, model.selected == it, enabled = true, soon = false) { model.selected = it } }
         }
         val soon = EditorKind.entries.filter { !it.implemented }
-        if (soon.isNotEmpty()) {
+        if (hasRom && soon.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
             GroupLabel("Coming soon")
             soon.forEach { NavItem(it.title, selected = false, enabled = false, soon = true) {} }
@@ -219,6 +220,8 @@ private fun Content(model: AppModel, modifier: Modifier) {
     ProvideIcons(icons) {
     androidx.compose.runtime.key(model.undoEpoch) {
     when {
+        selected == EditorKind.SAVE_PLAYER && model.save != null -> SavePlayerScreen(model.save!!, modifier)
+        selected == EditorKind.SAVE_FILE && model.save != null -> SaveFileScreen(model.save!!, modifier)
         project == null -> EmptyState(model, modifier)
         selected == null -> Welcome(model, modifier)
         selected == EditorKind.PERSONAL -> Loading(project, "Personal data", { PersonalEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.PERSONAL]?.let(m::select) } }) { editor ->
@@ -395,6 +398,7 @@ private fun EmptyState(model: AppModel, modifier: Modifier) {
                 Button(onClick = { Actions.newProject(model) }) { Text("New project…") }
                 OutlinedButton(onClick = { Actions.openProject(model) }) { Text("Open project…") }
                 OutlinedButton(onClick = { Actions.openRom(model) }) { Text("Open ROM only…") }
+                OutlinedButton(onClick = { Actions.openSave(model) }, modifier = Modifier.testTag("open-save")) { Text("Open save file…") }
             }
             if (model.recent.isNotEmpty()) {
                 SectionCard("Recent") {
