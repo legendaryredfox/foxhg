@@ -98,6 +98,60 @@ class BootFixtures {
         }
     }
 
+    /** Cherrygrove's Poke Mart (map 68), next to the clerk of the badge mart at (2, 6), facing west. */
+    @Test
+    fun martStart() {
+        val dir = outDir ?: return
+        if (Files.exists(romPath)) io.github.legendaryredfox.foxhg.core.emulator.MartStartRom.build(romPath, dir.resolve("mart-start.nds"), io.github.legendaryredfox.foxhg.core.emulator.MartStartRom.CHERRYGROVE)
+    }
+
+    /** Viridian's Poke Mart (map 500), next to the second clerk at (2, 4), who sells special mart 26 (Steel Mail, Net Ball, Heal Ball). */
+    @Test
+    fun viridianStart() {
+        val dir = outDir ?: return
+        if (Files.exists(romPath)) io.github.legendaryredfox.foxhg.core.emulator.MartStartRom.build(romPath, dir.resolve("viridian-start.nds"), io.github.legendaryredfox.foxhg.core.emulator.MartStartRom.VIRIDIAN)
+    }
+
+    /** The badge mart and an item price edited, for the emulator to show: Antidote's place sells Rare Candy for 1234 and Parlyz Heal waits for 8 badges. */
+    @Test
+    fun badgeMartEdits() {
+        val dir = outDir ?: return
+        if (!Files.exists(romPath)) return
+        FileRomSource(romPath).use { source ->
+            val project = open(source)
+            val items = project.names!!.items
+            val candy = items.indexOf("Rare Candy")
+            val marts = (io.github.legendaryredfox.foxhg.core.data.mart.Marts.load(project) as FoxResult.Ok).value
+            val antidote = marts.badge.indexOfFirst { items[it.item] == "Antidote" }
+            val parlyz = marts.badge.indexOfFirst { items[it.item] == "Parlyz Heal" }
+            check(marts.withBadge(antidote, io.github.legendaryredfox.foxhg.core.data.mart.BadgeMartEntry(candy, 1))
+                .withBadge(parlyz, marts.badge[parlyz].copy(tier = 6)).save(project) is FoxResult.Ok)
+            val itemData = (io.github.legendaryredfox.foxhg.core.data.item.ItemData.load(project) as FoxResult.Ok).value
+            check(itemData.with(candy, itemData.records[candy].copy(price = 1234)).save(project) is FoxResult.Ok)
+            Files.createDirectories(dir)
+            build(project, dir.resolve("heartgold-marts.nds"))
+        }
+    }
+
+    /** Viridian's special mart 26 (Steel Mail, Net Ball, Heal Ball) with Rare Candy first and three more items: it outgrows its place and moves into the synthetic overlay. */
+    @Test
+    fun movedMart26() {
+        val dir = outDir ?: return
+        if (!Files.exists(romPath)) return
+        FileRomSource(romPath).use { source ->
+            val project = open(source)
+            val items = project.names!!.items
+            check(io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches.arm9Expansion.apply(project) is FoxResult.Ok)
+            var marts = (io.github.legendaryredfox.foxhg.core.data.mart.Marts.load(project) as FoxResult.Ok).value
+            marts = marts.withItem(26, 0, items.indexOf("Rare Candy"))
+            for (name in listOf("Potion", "Super Potion", "Hyper Potion")) marts = marts.withAdded(26, items.indexOf(name))
+            check(marts.isMoved(26) && marts.specials[26].size == 6)
+            check(marts.save(project) is FoxResult.Ok)
+            Files.createDirectories(dir)
+            build(project, dir.resolve("heartgold-moved26.nds"))
+        }
+    }
+
     @Test
     fun toolboxPatches() {
         val dir = outDir ?: return

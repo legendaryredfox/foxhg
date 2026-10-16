@@ -46,6 +46,7 @@ The ROM data model and the editors are ported from DSPRE; the file formats are d
 | Settings file | `~/.config/foxhg/settings.properties` (theme, emulator command for Run, autosave); recents in `recent.txt` beside it. Tests give every model its own temporary settings file (`testSettings()`), never the real one |
 | `scripts/screenshot.sh out.png [rom.nds] [editor]` | run the app under xvfb and screenshot it (clears the GNOME variables that crash Java's GTK look and feel under a bare Xvfb) |
 | `scripts/live-click-test.sh [rom.nds] [out-dir]` | live click test: runs the real app under xvfb and drives it with real X mouse and keyboard events (xdotool): edit an item, save as a project, autosave, quit, reopen. Screenshots of each step go to `build/live-click/`; exit code 0 = all checks passed; skips without the ROM |
+| `./gradlew :core:emulatorTest` | tests that run ROMs on the DeSmuME libretro core (`libretro-kmp`, no display needed; the core is `/usr/lib/x86_64-linux-gnu/libretro/desmume_libretro.so` or `DESMUME_CORE`; they skip with a notice without it). `emulatorSetup` plays the new game once to make the saved games in `core/build/emulator-saves` (about 3 minutes the first time). Pictures of what the game showed go to `core/build/emulator-shots`. `./gradlew build` runs them too |
 | `scripts/boot-test.sh rom.nds out.png [frames]` | boot a ROM headless in RetroArch + DeSmuME and save a screenshot; compare with the vanilla frame (`BootFixtures` writes test ROMs when `FOXHG_BOOT_DIR` is set) |
 
 ## Layout
