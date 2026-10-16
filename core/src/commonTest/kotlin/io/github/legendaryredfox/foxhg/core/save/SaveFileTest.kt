@@ -87,4 +87,19 @@ class SaveFileTest {
         assertIs<FoxResult.Err>(SaveFile.parse(raw + ByteArray(SaveFormat.DSV_FOOTER_SIZE)), "a footer without the DeSmuME text")
         assertIs<FoxResult.Err>(SaveFile.parse(ByteArray(1234)))
     }
+
+    @Test
+    fun theFlagBitmapFollowsTheVarsAndFlag966IsOneBit() {
+        val chunk = ByteArray(0x44C)
+        assertFalse(SaveVarsFlags.isSet(chunk, 0x966))
+        val set = SaveVarsFlags.with(chunk, 0x966, true)
+        assertTrue(SaveVarsFlags.isSet(set, 0x966))
+        assertEquals(0x40, set[0x2E0 + 0x966 / 8].toInt() and 0xFF, "flag 0x966 is bit 6 of byte 0x12C of the bitmap, 0x40C in the chunk")
+        assertEquals(0x40C, 0x2E0 + 0x966 / 8)
+        assertEquals(1, set.count { it != 0.toByte() })
+        assertContentEquals(chunk, SaveVarsFlags.with(set, 0x966, false))
+        assertEquals(0x1234, SaveVarsFlags.variable(ByteArray(0x44C).also { it[6] = 0x34; it[7] = 0x12 }, 3))
+        kotlin.test.assertFailsWith<IllegalArgumentException> { SaveVarsFlags.isSet(chunk, 0) }
+        kotlin.test.assertFailsWith<IllegalArgumentException> { SaveVarsFlags.isSet(chunk, 2912) }
+    }
 }

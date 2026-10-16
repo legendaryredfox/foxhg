@@ -120,4 +120,27 @@ class SaveEditorUiEndToEndTest {
             dir.deleteRecursively()
         }
     }
+
+    @Test
+    fun movingTheSaveSetsThePlaceTheDynamicWarpAndTheFlag() = withSave { path, _ ->
+        val model = testModel()
+        model.openSave(path)
+        model.selected = EditorKind.SAVE_POSITION
+        runApp(model) {
+            tap(onNodeWithTag("preset:500"), inScrollPane = false)
+            waitForIdle()
+            tap(onNodeWithTag("save-move"), inScrollPane = false)
+            waitForIdle()
+            val field = model.save!!.position!!
+            assertEquals(io.github.legendaryredfox.foxhg.core.save.Location(500, -1, 3, 4, 2), field.current)
+            assertEquals(field.current, field.dynamicWarp)
+            val general = model.save!!.file.current(BlockKind.GENERAL)!!
+            assertTrue(io.github.legendaryredfox.foxhg.core.save.SaveVarsFlags.isSet(model.save!!.file.chunk(general, SaveChunks.byId(SaveChunks.FLAGS)), 0x966))
+            onNodeWithTag("save-dirty").assertIsDisplayed()
+            assertEquals(1500, money(path), "nothing is written until asked")
+            tap(onNodeWithTag("save-write"), inScrollPane = false)
+            waitForIdle()
+            assertTrue((SaveFile.parse(Files.readAllBytes(path)) as FoxResult.Ok).value.blocks.count { it.valid } == 2)
+        }
+    }
 }

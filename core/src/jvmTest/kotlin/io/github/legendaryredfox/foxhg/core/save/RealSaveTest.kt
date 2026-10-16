@@ -79,4 +79,34 @@ class RealSaveTest {
             assertEquals(player.trainerId, again.trainerId, "the ID is left alone")
         }
     }
+
+    @Test
+    fun theFieldChunkHoldsThePlaceOfTheMartAndWritesBack() {
+        val dir = Path.of("build", "emulator-saves")
+        val places = mapOf("cherrygrove" to Location(68, -1, 3, 6, 2), "viridian" to Location(500, -1, 3, 4, 2)) // where those saves were made
+        val files = places.keys.filter { Files.exists(dir.resolve("$it.dsv")) }
+        if (files.isEmpty()) { println("SKIPPED: no saves in ${dir.toAbsolutePath()}"); return }
+        for (name in files) {
+            val file = Files.readAllBytes(dir.resolve("$name.dsv"))
+            val save = (SaveFile.parse(file) as FoxResult.Ok).value
+            val field = (LocalFieldData.read(save) as? FoxResult.Ok)?.value ?: error("$name: no field data")
+            assertEquals(places[name], field.current, "$name: where the player stood when saving")
+            assertEquals(field.current, field.previous)
+            assertContentEquals(save.chunk(save.current(BlockKind.GENERAL)!!, SaveChunks.byId(SaveChunks.LOCAL_FIELD_DATA)), field.toBytes(), "$name: the chunk writes back as it was")
+            assertContentEquals(file, (save.withLocalFieldData(field) as FoxResult.Ok).value.toFileBytes(), "$name: writing it back changes no byte")
+            val moved = (save.withLocalFieldData(field.movedTo(Location(1, -1, 5, 6, 0))) as FoxResult.Ok).value
+            assertEquals(Location(1, -1, 5, 6, 0), (LocalFieldData.read(moved) as FoxResult.Ok).value.current)
+            assertTrue(moved.blocks.count { it.valid } == 2)
+
+            // moving a save sets the place, the dynamic warp and the flag that makes Continue take it
+            val general = save.current(BlockKind.GENERAL)!!
+            val flagsChunk = SaveChunks.byId(SaveChunks.FLAGS)
+            assertTrue(!SaveVarsFlags.isSet(save.chunk(general, flagsChunk), SaveVarsFlags.CONTINUE_AT_DYNAMIC_WARP), "the game's own save does not have it")
+            val relocated = (save.movedTo(Location(500, -1, 3, 4, 2)) as FoxResult.Ok).value
+            val after = (LocalFieldData.read(relocated) as FoxResult.Ok).value
+            assertEquals(listOf(Location(500, -1, 3, 4, 2), Location(500, -1, 3, 4, 2), Location(500, -1, 3, 4, 2)), listOf(after.current, after.previous, after.dynamicWarp))
+            assertTrue(SaveVarsFlags.isSet(relocated.chunk(relocated.current(BlockKind.GENERAL)!!, flagsChunk), SaveVarsFlags.CONTINUE_AT_DYNAMIC_WARP))
+            assertContentEquals(save.chunk(general, SaveChunks.byId(SaveChunks.MAP_OBJECTS)), relocated.chunk(relocated.current(BlockKind.GENERAL)!!, SaveChunks.byId(SaveChunks.MAP_OBJECTS)), "the saved map objects are left alone")
+        }
+    }
 }

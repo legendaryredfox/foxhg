@@ -221,6 +221,7 @@ private fun Content(model: AppModel, modifier: Modifier) {
     androidx.compose.runtime.key(model.undoEpoch) {
     when {
         selected == EditorKind.SAVE_PLAYER && model.save != null -> SavePlayerScreen(model.save!!, modifier)
+        selected == EditorKind.SAVE_POSITION && model.save != null -> SavePositionScreen(model.save!!, model::mapName, modifier)
         selected == EditorKind.SAVE_FILE && model.save != null -> SaveFileScreen(model.save!!, modifier)
         project == null -> EmptyState(model, modifier)
         selected == null -> Welcome(model, modifier)
@@ -394,7 +395,9 @@ private fun EmptyState(model: AppModel, modifier: Modifier) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            // FlowRow: four buttons are wider than the column, so the last one goes to a second line instead of squeezing its text
+            @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Button(onClick = { Actions.newProject(model) }) { Text("New project…") }
                 OutlinedButton(onClick = { Actions.openProject(model) }) { Text("Open project…") }
                 OutlinedButton(onClick = { Actions.openRom(model) }) { Text("Open ROM only…") }

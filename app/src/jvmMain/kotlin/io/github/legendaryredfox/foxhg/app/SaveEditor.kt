@@ -27,6 +27,9 @@ import io.github.legendaryredfox.foxhg.app.ui.SectionCard
 import io.github.legendaryredfox.foxhg.app.ui.ToggleChip
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.save.BlockKind
+import io.github.legendaryredfox.foxhg.core.save.LocalFieldData
+import io.github.legendaryredfox.foxhg.core.save.Location
+import io.github.legendaryredfox.foxhg.core.save.movedTo
 import io.github.legendaryredfox.foxhg.core.save.PlayerData
 import io.github.legendaryredfox.foxhg.core.save.SaveChunks
 import io.github.legendaryredfox.foxhg.core.save.SaveFile
@@ -52,6 +55,16 @@ class SaveEditorModel(val path: Path, file: SaveFile) {
     val dirty: Boolean get() = !file.toFileBytes().contentEquals(onDisk)
 
     val player: PlayerData? get() = (PlayerData.read(file) as? FoxResult.Ok)?.value
+
+    val position: LocalFieldData? get() = (LocalFieldData.read(file) as? FoxResult.Ok)?.value
+
+    /** Makes the save continue at [place] (see [movedTo]). */
+    fun moveTo(place: Location) {
+        when (val r = file.movedTo(place)) {
+            is FoxResult.Ok -> { file = r.value; error = null }
+            is FoxResult.Err -> error = r.message
+        }
+    }
 
     /** Replaces the player data; the reason is shown when the save refuses it. */
     fun updatePlayer(change: (PlayerData) -> PlayerData) {
@@ -185,3 +198,54 @@ fun SavePlayerScreen(model: SaveEditorModel, modifier: Modifier = Modifier) {
         }
     }
 }
+
+/** A place the save was moved to and the game followed (in the emulator): the standing tile next to a Poke Mart clerk. */
+private class Preset(val label: String, val place: Location)
+
+private val PRESETS = listOf(
+    Preset("Cherrygrove Poké Mart, badge clerk", Location(68, -1, 3, 6, 2)),
+    Preset("Viridian Poké Mart, special clerk (mart 26)", Location(500, -1, 3, 4, 2)),
+)
+
+/** Where the player is, and moving the save so Continue starts somewhere else. [mapName] names a map number when a ROM is open. */
+@Composable
+fun SavePositionScreen(model: SaveEditorModel, mapName: (Int) -> String?, modifier: Modifier = Modifier) {
+    val field = model.position
+    DetailPane(modifier.padding(16.dp)) {
+        EditorHeader("", model.path.fileName.toString(), trailing = { SaveStatus(model) })
+        if (field == null) {
+            Text("This save has no sound general block, so there is no position to show.", color = MaterialTheme.colorScheme.error)
+            return@DetailPane
+        }
+        val here = field.current
+        SectionCard("Where the player is") {
+            FieldFlow {
+                Chip("Map ${here.map}" + (mapName(here.map)?.let { " - $it" } ?: ""))
+                Chip("Tile ${here.x}, ${here.y}")
+                Chip("Facing ${Location.DIRECTIONS.getOrElse(here.direction) { "?" }.lowercase()}")
+            }
+        }
+        var map by remember(here) { mutableStateOf(here.map) }
+        var x by remember(here) { mutableStateOf(here.x) }
+        var y by remember(here) { mutableStateOf(here.y) }
+        var direction by remember(here) { mutableStateOf(here.direction.coerceIn(0, 3)) }
+        SectionCard(
+            "Move the player",
+            subtitle = "Continue then starts on this tile, with the map's own NPCs. The map and tile must exist and be walkable: the game does not check, and a wall or a tile outside the map leaves the player where nothing works. Use a tile the player can stand on, as the ones below.",
+        ) {
+            FieldFlow {
+                NumberField("Map", map, 0..65535, { map = it }, Modifier.width(100.dp), tag = "Map")
+                NumberField("Tile X", x, 0..1023, { x = it }, Modifier.width(100.dp), tag = "Tile X")
+                NumberField("Tile Y", y, 0..1023, { y = it }, Modifier.width(100.dp), tag = "Tile Y")
+                PickerField("Facing", direction, Location.DIRECTIONS, { direction = it }, Modifier.width(140.dp))
+            }
+            mapName(map)?.let { Text("Map $map: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            Button(onClick = { model.moveTo(Location(map, -1, x, y, direction)) }, modifier = Modifier.testTag("save-move")) { Text("Move the player here") }
+            Text("Places the game was seen to continue at:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            PRESETS.forEach { p ->
+                OutlinedButton(onClick = { map = p.place.map; x = p.place.x; y = p.place.y; direction = p.place.direction }, modifier = Modifier.testTag("preset:${p.place.map}")) { Text(p.label) }
+            }
+        }
+    }
+}
+

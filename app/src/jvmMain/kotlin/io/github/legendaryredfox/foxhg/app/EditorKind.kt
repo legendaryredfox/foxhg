@@ -38,6 +38,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     TOOLBOX("Tools", "ROM toolbox", implemented = true),
     FILES("Tools", "Files", implemented = true),
     SAVE_PLAYER(SAVE_GROUP, "Player", implemented = true),
+    SAVE_POSITION(SAVE_GROUP, "Position", implemented = true),
     SAVE_FILE(SAVE_GROUP, "Save file", implemented = true),
 }
 

@@ -50,6 +50,7 @@ object SaveChunks {
     const val FLAGS = 4
     const val LOCAL_FIELD_DATA = 5
     const val POKEDEX = 6
+    const val MAP_OBJECTS = 10
     const val PCSTORAGE = 41
 
     fun byId(id: Int): SaveChunk = all[id]

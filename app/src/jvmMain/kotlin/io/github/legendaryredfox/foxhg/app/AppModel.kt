@@ -168,6 +168,19 @@ class AppModel(
         }
     }
 
+    private var mapNames: Pair<RomProject, List<String>>? = null
+
+    /** The name of map [map] (a map header number) from the open ROM, or null without one or for a number it does not have. */
+    fun mapName(map: Int): String? {
+        val p = project ?: return null
+        val names = mapNames?.takeIf { it.first === p }?.second ?: run {
+            val text = p.names
+            val headers = (io.github.legendaryredfox.foxhg.core.data.mapheader.MapHeaderTable.load(p) as? FoxResult.Ok)?.value ?: emptyList()
+            headers.map { h -> text?.locations?.getOrNull(h.locationName)?.takeIf { it.isNotBlank() } ?: "" }.also { mapNames = p to it }
+        }
+        return names.getOrNull(map)?.takeIf { it.isNotBlank() }
+    }
+
     fun closeSave() {
         save = null
         if (selected?.group == SAVE_GROUP) selected = null
