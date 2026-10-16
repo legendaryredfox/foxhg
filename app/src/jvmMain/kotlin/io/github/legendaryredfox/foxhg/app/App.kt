@@ -231,6 +231,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.GROWTH -> Loading(project, "growth rates", { GrowthEditorModel(project, model::projectChanged) }) { editor ->
             GrowthEditor(editor, modifier)
         }
+        selected == EditorKind.TMHM_BULK -> Loading(project, "TM/HM compatibility", { TmHmBulkEditorModel(project, model::projectChanged) }) { editor ->
+            TmHmBulkEditor(editor, modifier)
+        }
         selected == EditorKind.LEARNSET -> Loading(project, "learnsets", { model.recordEditor(EditorKind.LEARNSET, project, Learnset.SPEC, RecordEditorModel.speciesLabel(project.names), 1) }) { editor ->
             LearnsetEditor(editor, modifier.padding(16.dp))
         }

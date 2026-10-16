@@ -30,6 +30,8 @@ import io.github.legendaryredfox.foxhg.core.data.battledisplay.BattleDisplay
 import io.github.legendaryredfox.foxhg.core.data.battledisplay.BattleDisplayTable
 import io.github.legendaryredfox.foxhg.core.data.bugcontest.BugContestTable
 import io.github.legendaryredfox.foxhg.core.data.growth.GrowthCurve
+import io.github.legendaryredfox.foxhg.core.data.personal.PersonalTable
+import io.github.legendaryredfox.foxhg.core.data.personal.TmHmBulk
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttEncounter
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttFile
@@ -337,6 +339,34 @@ class RealRomRecordsTest {
         assertEquals(listOf(11), alone.problems(), "level 11 now needs less than level 10")
         table.with(0, shifted).save(project).ok()
         assertEquals(shifted, NarcRecords.load(project, GrowthCurve.SPEC).ok().records[0])
+        project.revertAll()
+        assertTrue(!project.isDirty)
+    }
+
+    @Test
+    fun tmHmBulkEditsKeepOtherBitsAndSaveBack() = withProject { project ->
+        val personal = PersonalTable.load(project).ok()
+        val evolutions = EvolutionData.load(project).ok().records
+        val families = TmHmBulk.families(evolutions)
+        val familyOf = { species: Int -> families.first { species in it } }
+        assertEquals(listOf(1, 2, 3), familyOf(1), "Bulbasaur, Ivysaur, Venusaur")
+        assertEquals(listOf(133, 134, 135, 136, 196, 197, 470, 471), familyOf(133), "Eevee and its evolutions")
+        assertEquals(listOf(132), familyOf(132), "Ditto is alone")
+
+        // The first machine: teach it to the Bulbasaur family only, then undo it.
+        val before = TmHmBulk.learners(personal, 0)
+        val taught = TmHmBulk.set(personal, 0, familyOf(1), learns = true)
+        assertTrue(familyOf(1).all { it in TmHmBulk.learners(taught, 0) })
+        assertEquals((before + familyOf(1)).toSet(), TmHmBulk.learners(taught, 0).toSet())
+        val untouched = (1 until personal.records.size).filter { it !in familyOf(1) }
+        assertTrue(untouched.all { taught.records[it] == personal.records[it] }, "other species are not touched")
+        assertTrue(TmHmBulk.set(taught, 0, familyOf(1).filter { it !in before }, learns = false).records == personal.records, "undoing restores every byte")
+
+        val copied = TmHmBulk.copy(personal, from = 25, to = familyOf(133))
+        assertTrue(familyOf(133).all { s -> (0 until 100).all { copied.records[s].learnsTmHm(it) == personal.records[25].learnsTmHm(it) } })
+        assertEquals(personal.records[133].copy(tmHmWords = copied.records[133].tmHmWords).toBytes().toList(), copied.records[133].toBytes().toList(), "only the machine bits change")
+        taught.save(project).ok()
+        assertEquals(taught.records, PersonalTable.load(project).ok().records)
         project.revertAll()
         assertTrue(!project.isDirty)
     }

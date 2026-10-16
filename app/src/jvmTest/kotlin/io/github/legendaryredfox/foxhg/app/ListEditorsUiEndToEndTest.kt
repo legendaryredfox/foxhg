@@ -24,6 +24,8 @@ import io.github.legendaryredfox.foxhg.core.data.hiddenitem.HiddenItems
 import io.github.legendaryredfox.foxhg.core.data.battledisplay.BattleDisplayTable
 import io.github.legendaryredfox.foxhg.core.data.bugcontest.BugContestTable
 import io.github.legendaryredfox.foxhg.core.data.growth.GrowthCurve
+import io.github.legendaryredfox.foxhg.core.data.personal.PersonalTable
+import io.github.legendaryredfox.foxhg.core.data.personal.TmHmBulk
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttFile
 import io.github.legendaryredfox.foxhg.core.data.rocksmash.RockSmashItems
@@ -306,6 +308,27 @@ class ListEditorsUiEndToEndTest {
 
         buildAndReopen(model) { rebuilt ->
             assertEquals(table()[4], (NarcRecords.load(rebuilt, GrowthCurve.SPEC) as FoxResult.Ok).value.records[4])
+        }
+    }
+
+    @Test
+    fun editingTmHmCompatibilityInBulkOnItsScreen() = withHeartGoldApp { model, project ->
+        val table = { (PersonalTable.load(project) as FoxResult.Ok).value }
+        val before = table()
+        open("TM/HM compatibility")
+        onNodeWithTag("search:Search species…").performTextInput("bulbasaur")
+        waitForIdle()
+        val had = before.records[1].learnsTmHm(0)
+        tap(onNodeWithTag("tmhm:1"))
+        waitForIdle()
+        assertEquals(!had, table().records[1].learnsTmHm(0), "one species toggled")
+        assertEquals(before.records[2], table().records[2], "the rest of the family is not touched by a single toggle")
+        tap(onNodeWithTag("tmhm-family:1"))
+        waitForIdle()
+        assertEquals(List(3) { had }, listOf(1, 2, 3).map { table().records[it].learnsTmHm(0) }, "the family button gives the whole family the opposite of this species' new state")
+
+        buildAndReopen(model) { rebuilt ->
+            assertEquals(table().records, (PersonalTable.load(rebuilt) as FoxResult.Ok).value.records)
         }
     }
 
