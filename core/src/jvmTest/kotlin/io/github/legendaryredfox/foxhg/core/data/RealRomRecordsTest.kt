@@ -32,6 +32,8 @@ import io.github.legendaryredfox.foxhg.core.data.bugcontest.BugContestTable
 import io.github.legendaryredfox.foxhg.core.data.growth.GrowthCurve
 import io.github.legendaryredfox.foxhg.core.data.personal.PersonalTable
 import io.github.legendaryredfox.foxhg.core.data.personal.TmHmBulk
+import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerSet
+import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerTrainer
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerFlagBulk
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
@@ -396,6 +398,33 @@ class RealRomRecordsTest {
 
         on.save(project).ok()
         assertEquals(on.trainers, TrainerTable.load(project).ok().trainers)
+        project.revertAll()
+        assertTrue(!project.isDirty)
+    }
+
+    @Test
+    fun battleTowerRoundTripsAndEditsSaveBack() = withProject { project ->
+        val trainers = NarcRecords.load(project, BattleTowerTrainer.SPEC).ok()
+        val sets = NarcRecords.load(project, BattleTowerSet.SPEC).ok()
+        trainers.assertNarcRoundTrips(project)
+        sets.assertNarcRoundTrips(project)
+        val names = project.names!!
+        println("battle tower: trainers=${trainers.records.size} sets=${sets.records.size} names=${names.battleTowerNames.size} messages=${names.battleTowerMessages.size} firstName=${names.battleTowerNames.take(3)} setSpecies=${sets.records.take(3)}")
+        assertEquals(315, trainers.records.size)
+        assertEquals(951, sets.records.size)
+        assertTrue(trainers.records.all { t -> t.trainerClass < names.trainerClasses.size && t.setIds.all { it < sets.records.size } }, "every set number exists")
+        assertTrue(sets.records.drop(1).all { s -> s.species in 1 until names.species.size && s.nature < 25 && s.moves.all { it < names.moves.size } && s.evFlags < 64 })
+        assertEquals(trainers.records.size, names.battleTowerNames.size, "one name per trainer file")
+        assertEquals(trainers.records.size * 3, names.battleTowerMessages.size, "three messages per trainer")
+
+        val trainer = trainers.records[5]
+        val editedTrainer = trainer.addSet(7).withSet(0, 9).removeSet(1)
+        val editedSet = sets.records[1].withMove(2, 33).withEv(3, !sets.records[1].hasEv(3)).copy(nature = 3)
+        trainers.with(5, editedTrainer).save(project).ok()
+        sets.with(1, editedSet).save(project).ok()
+        assertEquals(editedTrainer, NarcRecords.load(project, BattleTowerTrainer.SPEC).ok().records[5])
+        assertEquals(editedSet, NarcRecords.load(project, BattleTowerSet.SPEC).ok().records[1])
+        assertEquals(BattleTowerTrainer.sizeFor(editedTrainer.setIds.size), editedTrainer.toBytes().size, "the file grows and shrinks with the list")
         project.revertAll()
         assertTrue(!project.isDirty)
     }

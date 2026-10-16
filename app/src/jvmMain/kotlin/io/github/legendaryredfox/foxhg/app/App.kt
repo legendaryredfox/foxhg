@@ -58,6 +58,10 @@ import io.github.legendaryredfox.foxhg.core.data.eggmove.EggMoves
 import io.github.legendaryredfox.foxhg.core.graphics.Icons
 import io.github.legendaryredfox.foxhg.core.data.event.EventFile
 import io.github.legendaryredfox.foxhg.core.data.item.ItemData
+import io.github.legendaryredfox.foxhg.core.FoxResult
+import io.github.legendaryredfox.foxhg.core.data.NarcRecords
+import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerSet
+import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerTrainer
 import io.github.legendaryredfox.foxhg.core.data.move.MoveData
 import io.github.legendaryredfox.foxhg.core.data.trade.NpcTrade
 
@@ -236,6 +240,16 @@ private fun Content(model: AppModel, modifier: Modifier) {
         }
         selected == EditorKind.TRAINER_FLAGS -> Loading(project, "trainer flags", { TrainerFlagBulkEditorModel(project, model::projectChanged) }) { editor ->
             TrainerFlagBulkEditor(editor, modifier)
+        }
+        selected == EditorKind.BATTLE_TOWER_TRAINERS -> Loading(project, "Battle Tower", {
+            val sets = (NarcRecords.load(project, BattleTowerSet.SPEC) as? FoxResult.Ok)?.value?.records ?: emptyList()
+            val classes = (NarcRecords.load(project, BattleTowerTrainer.SPEC) as? FoxResult.Ok)?.value?.records?.map { it.trainerClass } ?: emptyList()
+            model.recordEditor(EditorKind.BATTLE_TOWER_TRAINERS, project, BattleTowerTrainer.SPEC, battleTowerTrainerLabel(project.names) { classes.getOrNull(it) ?: 0 }, 0) to sets
+        }) { (editor, sets) ->
+            BattleTowerTrainerEditor(editor, sets, modifier.padding(16.dp))
+        }
+        selected == EditorKind.BATTLE_TOWER_SETS -> Loading(project, "Battle Tower sets", { model.recordEditor(EditorKind.BATTLE_TOWER_SETS, project, BattleTowerSet.SPEC, RecordEditorModel.speciesLabel(project.names), 1) }) { editor ->
+            BattleTowerSetEditor(editor, modifier.padding(16.dp))
         }
         selected == EditorKind.LEARNSET -> Loading(project, "learnsets", { model.recordEditor(EditorKind.LEARNSET, project, Learnset.SPEC, RecordEditorModel.speciesLabel(project.names), 1) }) { editor ->
             LearnsetEditor(editor, modifier.padding(16.dp))

@@ -48,6 +48,8 @@ class GameNames(text: GameText) {
     val trainerNames: List<String> = load(text, TextBanks.TRAINER_NAMES)
     val locations: List<String> = load(text, TextBanks.LOCATIONS)
     val tradeNames: List<String> = load(text, TextBanks.TRADE_NAMES)
+    val battleTowerNames: List<String> = load(text, TextBanks.BATTLE_TOWER_NAMES)
+    val battleTowerMessages: List<String> = load(text, TextBanks.BATTLE_TOWER_MESSAGES)
 
     companion object {
         /** The charmap spells the "PK" and "MN" glyphs of "Pokémon" as two currency signs; names show them as letters. */

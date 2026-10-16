@@ -26,6 +26,8 @@ import io.github.legendaryredfox.foxhg.core.data.bugcontest.BugContestTable
 import io.github.legendaryredfox.foxhg.core.data.growth.GrowthCurve
 import io.github.legendaryredfox.foxhg.core.data.personal.PersonalTable
 import io.github.legendaryredfox.foxhg.core.data.personal.TmHmBulk
+import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerSet
+import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerTrainer
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerFlagBulk
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttFile
@@ -355,6 +357,42 @@ class ListEditorsUiEndToEndTest {
 
         buildAndReopen(model) { rebuilt ->
             assertEquals(table().trainers, (TrainerTable.load(rebuilt) as FoxResult.Ok).value.trainers)
+        }
+    }
+
+    @Test
+    fun editingBattleTowerTrainersAndSetsOnTheirScreens() = withHeartGoldApp { model, project ->
+        val trainers = { (NarcRecords.load(project, BattleTowerTrainer.SPEC) as FoxResult.Ok).value.records }
+        val sets = { (NarcRecords.load(project, BattleTowerSet.SPEC) as FoxResult.Ok).value.records }
+        val beforeTrainers = trainers()
+        val beforeSets = sets()
+
+        model.openAt(EditorKind.BATTLE_TOWER_TRAINERS, 5) // the list shows ids and names in separate texts, so go there by number
+        waitForIdle()
+        waitLoaded()
+        val count = beforeTrainers[5].setIds.size
+        onNodeWithTag("number:Set to add").performScrollTo().typeNumber(7)
+        waitForIdle()
+        tap(onNodeWithTag("bt-add"))
+        waitForIdle()
+        assertEquals(beforeTrainers[5].addSet(7), trainers()[5], "the set was appended")
+        tap(onNodeWithTag("bt-remove:0"))
+        waitForIdle()
+        assertEquals(beforeTrainers[5].addSet(7).removeSet(0), trainers()[5])
+        assertEquals(count, trainers()[5].setIds.size)
+        assertEquals(beforeTrainers[4], trainers()[4], "other trainers stay")
+
+        model.openAt(EditorKind.BATTLE_TOWER_SETS, 2)
+        waitForIdle()
+        waitLoaded()
+        tap(onNodeWithTag("chip:Speed"))
+        waitForIdle()
+        assertEquals(beforeSets[2].withEv(3, !beforeSets[2].hasEv(3)), sets()[2])
+        assertEquals(beforeSets[1], sets()[1], "other sets stay")
+
+        buildAndReopen(model) { rebuilt ->
+            assertEquals(trainers(), (NarcRecords.load(rebuilt, BattleTowerTrainer.SPEC) as FoxResult.Ok).value.records)
+            assertEquals(sets(), (NarcRecords.load(rebuilt, BattleTowerSet.SPEC) as FoxResult.Ok).value.records)
         }
     }
 

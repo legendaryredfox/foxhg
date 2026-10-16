@@ -75,6 +75,12 @@ object HgssLayout {
     /** A plain file (not a NARC): the Bug Catching Contest tables, 4 sets of 10 entries of 8 bytes. */
     const val BUG_CONTEST = "data/mushi/mushi_encount.bin"
 
+    /** One file per Battle Tower trainer (315): u16 trainer class, u16 count, then that many u16 ids of the Pokémon sets it draws from. Names and messages are in [TextBanks.BATTLE_TOWER_NAMES] and [TextBanks.BATTLE_TOWER_MESSAGES]. */
+    const val BATTLE_TOWER_TRAINERS = "a/2/0/2"
+
+    /** One 16-byte file per Battle Tower Pokémon set (951, set 0 is empty): species, four moves, EV flags, nature, item, form. */
+    const val BATTLE_TOWER_SETS = "a/2/0/3"
+
     /** Eight members of 404 bytes: the total experience needed at levels 0 to 100 (u32 each) for each growth rate, in the personal data's growth rate order. */
     const val GROWTH_RATES = "a/0/0/3"
 
@@ -138,6 +144,10 @@ object TextBanks {
     const val TRAINER_CLASSES = 730
     /** 235 entries, index = map header name id. */
     const val LOCATIONS = 279
+    /** Entry `n` is the name of Battle Tower trainer `n` (same numbers as the files of [HgssLayout.BATTLE_TOWER_TRAINERS]). */
+    const val BATTLE_TOWER_NAMES = 27
+    /** Entries `3n` to `3n + 2` are the three messages of Battle Tower trainer `n`. */
+    const val BATTLE_TOWER_MESSAGES = 724
     /** Entry `n` is the nickname of trade `n`, entry `n + 13` the name of its original trainer. */
     const val TRADE_NAMES = 200
 
