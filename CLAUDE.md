@@ -12,6 +12,9 @@ goal is every DS Pokémon ROM (other HGSS languages, Platinum, Diamond, Pearl, l
 is out of scope until HGSS English is solid, but write code so a second game is a new profile and layout, not a rewrite
 (docs/spec.md 3.3 and 9, docs/plan.md M8).
 
+A **save editor** for the games' `.sav` files is in scope too (requested 2026-10-16, docs/spec.md section 11 and docs/plan.md M10): it
+is a second kind of file next to the ROM, never mixed with ROM data, and saves are never committed.
+
 The ROM data model and the editors are ported from DSPRE; the file formats are documented by the
 [DS Pokémon Hacking wiki](https://ds-pokemon-hacking.github.io/) and the
 [pret/pokeheartgold](https://github.com/pret/pokeheartgold) decomp. Spec and plan:
@@ -73,7 +76,7 @@ Record every address, offset or quirk you confirm in `docs/formats.md`.
 - every format in `core` has a round-trip test: `parse(bytes)` then `serialize()` must reproduce the original bytes for every entry of the real HeartGold ROM
 - a change is done only when `./gradlew build` passes; anything not built or run must be stated explicitly, never described as done
 - an editor must not write to the ROM unless the user asked to save; saving must keep a backup of the original file
-- never commit `*.nds`, `roms/`, `references/`, or any commercial ROM or extracted ROM data
+- never commit `*.nds`, `*.sav`, `roms/`, `references/`, or any commercial ROM, save file or extracted ROM data
 
 ## Do
 
