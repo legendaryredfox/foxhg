@@ -38,6 +38,8 @@ class RecordEditorModel<T>(
             is FoxResult.Ok -> table = loaded.value
             is FoxResult.Err -> loadError = loaded.message
         }
+        // A link from another editor can carry a number the file does not have: start on the first record then, not on nothing.
+        if (selectedIndex !in 0 until recordCount) selectedIndex = 0
     }
 
     val recordCount: Int get() = table?.records?.size ?: 0

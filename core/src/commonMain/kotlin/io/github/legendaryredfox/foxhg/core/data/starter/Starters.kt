@@ -72,7 +72,7 @@ data class Starters(val species: List<Int>, val heldItem: Int?, val level: Int?)
             (project.writeArm9(patched) as? FoxResult.Err)?.let { return it }
 
             val chooser = (project.readOverlay(HgssLayout.STARTER_CHOOSER_OVERLAY) as? FoxResult.Ok)?.value?.let { new.applyToOverlay(it) }
-                ?.also { project.writeOverlay(HgssLayout.STARTER_CHOOSER_OVERLAY, it) } != null
+                ?.let { project.writeOverlay(HgssLayout.STARTER_CHOOSER_OVERLAY, it) is FoxResult.Ok } ?: false
             if (old.sameSpecies(new)) return FoxResult.Ok(Report(0, false, chooser))
             val scripts = RivalScripts.retarget(project, old.species, new.species)
             val text = StarterText.retarget(project, old.species, new.species)

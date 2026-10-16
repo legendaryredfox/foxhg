@@ -74,7 +74,8 @@ class Arm9ReplacedSource private constructor(
 
             val header = source.read(0, NdsHeader.SIZE)
             header.putU32(0x2C, newArm9.size.toLong())
-            for (field in listOf(0x30, 0x40, 0x48, 0x68, 0x80)) header.putU32(field, header.u32(field) + delta)
+            // A ROM without a banner has 0 at 0x68: that is not an address to move.
+            for (field in listOf(0x30, 0x40, 0x48, 0x68, 0x80)) if (field != 0x68 || header.u32(field) != 0L) header.putU32(field, header.u32(field) + delta)
             if (h.arm9Overlays.size > 0) header.putU32(0x50, header.u32(0x50) + delta)
             if (h.arm7Overlays.size > 0) header.putU32(0x58, header.u32(0x58) + delta)
             header.putU16(Crc16.HEADER_CRC_OFFSET, Crc16.compute(header, 0, Crc16.HEADER_CRC_LENGTH))

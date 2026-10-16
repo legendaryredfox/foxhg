@@ -143,6 +143,7 @@ class Icons(private val project: RomProject) {
             val chars = findSection(out, "RAHC") ?: return out
             val length = out.u32(chars + 24).toInt()
             val start = chars + 8 + out.u32(chars + 28).toInt()
+            if (start < 0 || start + 2 > out.size) return out
             var key = out.u16(start).toLong()
             var i = 0
             while (i + 1 < length && start + i + 1 < out.size) {

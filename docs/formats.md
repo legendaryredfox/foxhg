@@ -161,6 +161,10 @@ Add an entry here whenever a layout, offset or quirk is confirmed.
 
 - A NARC of 8 members of 404 bytes: 101 u32 values, the total experience needed at levels 0 to 100 (levels 0 and 1 are 0), one member per growth rate in the personal data's order: Medium Fast, Erratic, Fluctuating, Medium Slow, Fast, Slow, then two unused ones equal to Medium Fast. The game looks levels up in these tables (decomp `LoadGrowthTable`). Level 100 totals in the ROM: 1000000, 600000, 1640000, 1059860, 800000, 1250000; Medium Fast at level 50 is 125000. Editing a level means moving every later one by the same amount (wiki guide). All eight round-trip byte for byte (`RealRomRecordsTest`). **[UNVERIFIED]** in game.
 
+## Type chart (overlay 12)
+
+- In the decompressed overlay 12, HeartGold English: the effectiveness table at 0x353BC, 112 slots of 3 bytes (u8 attacker type, u8 defender type, u8 multiplier times 10: 0, 5 or 20 only, neutral pairs are not listed). Slots 0 to 107 are the main entries, slot 108 is the divider `FE FE 00` (the decomp's `TYPE_FORESIGHT`), slots 109 and 110 are Normal and Fighting against Ghost (0), slot 111 is the terminator `FF FF 00` (`TYPE_ENDTABLE`). The battle code reads every entry whose attacker is the move's type, for each of the target's types; when the target is under Foresight or Odd-Eye, or the attacker has Scrappy, it stops at the divider, which is why those two immunities come after it. The table is completely full in the retail ROM, so the next bytes after the terminator are other data and a new non-neutral pair needs a slot freed first. Types: 0 Normal, 1 Fighting, 2 Flying, 3 Poison, 4 Ground, 5 Rock, 6 Bug, 7 Ghost, 8 Steel, 9 ???, 10 Fire, 11 Water, 12 Grass, 13 Electric, 14 Psychic, 15 Ice, 16 Dragon, 17 Dark (text bank 735). The table reads and writes back byte for byte (`RealRomRecordsTest`). Table and logic from the decomp's `sTypeEffectiveness` and `ov12_02251D28`. **[UNVERIFIED]** in game; the Trainer AI's own use of the table is not checked.
+
 ## Pickup (overlay 12)
 
 - In the decompressed image of overlay 12 (battle), HeartGold English: 18 u16 common items at 0x34B44, 11 u16 rare items at 0x34A4C, the activation divisor (1 byte) at 0xC852 and 9 weight bytes at 0x3518C. Vanilla: divisor 10, weights 30, 40, 50, 60, 70, 80, 90, 94, 98 (slots of 30, 10, 10, 10, 10, 10, 10, 4, 4 rolls out of 100), the common table starts with Potion, Antidote, Super Potion and ends with PP Up, Max Elixir, the rare one starts with Hyper Potion, Nugget, King's Rock.
@@ -284,7 +288,7 @@ and `scripts/boot-test.sh`, 2400 frames). Nothing was tried in game past the int
   area properties (byte), 32 packed flag bits (weather, camera, battle background, ...). Layout from DSPRE's `HeaderHGSS`.
 - The table is in the **decompressed** ARM9. In English HeartGold header 0 is at `0xF6BE0` (24 bytes after the offset DSPRE
   quotes, because DSPRE's image differs by one entry); there are **540** headers, 135 with encounters, all encounter ids
-  below 142. **[UNVERIFIED]** for SoulSilver (assumed `0xF6BE8`).
+  below 142. **[UNVERIFIED]** for SoulSilver (assumed to be the same `0xF6BE0`, as in DSPRE).
 - Packed fields (from DSPRE's `HeaderHGSS`, all 32+16+8 bits covered so a header round-trips exactly): coordinate word =
   4 unknown bits, world-map X (6), Y (6); area-properties byte = area icon (low 4) and Mom's-call intro (high 4); flag word
   = Kanto flag (bit 0), weather (7 bits), location type (4), camera (6), follower mode (2), battle background (5),

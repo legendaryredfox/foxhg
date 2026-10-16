@@ -40,9 +40,10 @@ class Recents(private val file: Path, private val limit: Int = 8) {
     private fun parse(line: String): RecentEntry? {
         if (line.isBlank()) return null
         val tab = line.indexOf('\t')
-        if (tab < 0) return RecentEntry(RecentKind.ROM, Path.of(line))
+        // A line that is not a valid path (a hand edit, a file from another system) is skipped, not a crash.
+        if (tab < 0) return runCatching { Path.of(line) }.getOrNull()?.let { RecentEntry(RecentKind.ROM, it) }
         val kind = RecentKind.entries.firstOrNull { it.name.equals(line.substring(0, tab), ignoreCase = true) } ?: return null
-        return RecentEntry(kind, Path.of(line.substring(tab + 1)))
+        return runCatching { Path.of(line.substring(tab + 1)) }.getOrNull()?.let { RecentEntry(kind, it) }
     }
 
     companion object {

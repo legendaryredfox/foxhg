@@ -41,6 +41,8 @@ import io.github.legendaryredfox.foxhg.core.patch.PatchTarget
 import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
 import io.github.legendaryredfox.foxhg.core.u32
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
+import io.github.legendaryredfox.foxhg.core.data.typechart.TypeChart
+import io.github.legendaryredfox.foxhg.core.data.typechart.TypeEntry
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerFlagBulk
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttEncounter
@@ -507,6 +509,47 @@ class RealRomRecordsTest {
         shrunk.save(project).ok()
         assertContentEquals(beforeArm9, (project.readArm9() as FoxResult.Ok).value, "the ARM9 is as it was")
         assertContentEquals(beforeSynth, (PatchTarget.SyntheticOverlay.read(project) as FoxResult.Ok).value, "the overlay is as it was")
+        project.revertAll()
+        assertTrue(!project.isDirty)
+    }
+
+    @Test
+    fun typeChartRoundTripsAndMatchesTheGame() = withProject { project ->
+        val overlay = (project.readOverlay(HgssLayout.TYPE_CHART_OVERLAY) as FoxResult.Ok).value
+        val chart = TypeChart.load(project).ok()
+        assertContentEquals(overlay, chart.applyTo(overlay), "an unedited table writes back the same bytes")
+        println("type chart: main=${chart.main.size} foresight=${chart.foresight.size} slots=${chart.slotsUsed}")
+        assertEquals(108, chart.main.size)
+        assertEquals(listOf(TypeEntry(0, 7, 0), TypeEntry(1, 7, 0)), chart.foresight, "Normal and Fighting against Ghost")
+        assertEquals(HgssLayout.TYPE_CHART_SLOTS, chart.slotsUsed, "the table is full")
+        val types = project.names!!.types
+        fun type(name: String) = types.indexOfFirst { it.equals(name, ignoreCase = true) }.also { assertTrue(it >= 0, "no type $name in $types") }
+        assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17), listOf("Normal", "Fighting", "Flying", "Poison", "Ground", "Rock", "Bug", "Ghost", "Steel", "Fire", "Water", "Grass", "Electric", "Psychic", "Ice", "Dragon", "Dark").map { type(it) }, "the type numbers of the decomp")
+        assertEquals(20, chart.multiplier(type("Fire"), type("Grass")))
+        assertEquals(5, chart.multiplier(type("Fire"), type("Water")))
+        assertEquals(0, chart.multiplier(type("Electric"), type("Ground")))
+        assertEquals(0, chart.multiplier(type("Normal"), type("Ghost")))
+        assertEquals(10, chart.multiplier(type("Normal"), type("Fire")))
+        assertTrue(chart.isForesightPart(type("Fighting"), type("Ghost")))
+        assertTrue((chart.main + chart.foresight).all { it.multiplier in listOf(0, 5, 20) }, "only the three non-neutral multipliers")
+
+        // The table is full: a new pair has no room, but freeing one makes room.
+        val fire = type("Fire"); val fighting = type("Fighting"); val grass = type("Grass")
+        assertEquals(chart, chart.with(type("Normal"), type("Fire"), 20), "no free slot")
+        val freed = chart.with(fire, grass, 10)
+        assertEquals(10, freed.multiplier(fire, grass))
+        assertEquals(HgssLayout.TYPE_CHART_SLOTS - 1, freed.slotsUsed)
+        val moved = freed.with(type("Normal"), type("Fire"), 5).with(fighting, type("Ghost"), 20).with(fighting, type("Ghost"), 0)
+        assertEquals(5, moved.multiplier(type("Normal"), type("Fire")))
+        val electricImmuneGhost = freed.with(type("Electric"), type("Ghost"), 0)
+        assertEquals(0, electricImmuneGhost.multiplier(type("Electric"), type("Ghost")))
+        assertTrue(!electricImmuneGhost.isForesightPart(type("Electric"), type("Ghost")), "only Normal and Fighting immunities depend on Foresight")
+        assertTrue(moved.isForesightPart(fighting, type("Ghost")), "a Ghost immunity returns to the Foresight part")
+        val written = moved.applyTo(overlay)
+        val changed = overlay.indices.filter { overlay[it] != written[it] }
+        assertTrue(changed.isNotEmpty() && changed.all { it in HgssLayout.TYPE_CHART_OFFSET until HgssLayout.TYPE_CHART_OFFSET + 3 * (HgssLayout.TYPE_CHART_SLOTS + 1) }, "only the table changes")
+        moved.save(project).ok()
+        assertEquals(moved, TypeChart.load(project).ok())
         project.revertAll()
         assertTrue(!project.isDirty)
     }

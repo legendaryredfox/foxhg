@@ -104,6 +104,14 @@ object HgssLayout {
     const val MART_AREA = 0x4000
     const val MART_AREA_SIZE = 0x1000
 
+    /**
+     * Overlay 12 (battle, decompressed image): the type effectiveness table, [TYPE_CHART_SLOTS] slots of 3 bytes (attacker type, defender type,
+     * multiplier times 10) holding the pairs and the Foresight divider, then one terminator slot; the data after it is something else.
+     */
+    const val TYPE_CHART_OVERLAY = 12
+    const val TYPE_CHART_OFFSET = 0x353BC
+    const val TYPE_CHART_SLOTS = 111
+
     /** One member of 494 records of 89 bytes (one per species): two-frame animation data, then movement byte at 1 and, in the last 3 bytes, sprite Y, shadow X and shadow size. */
     const val BATTLE_DISPLAY = "a/1/8/0"
 

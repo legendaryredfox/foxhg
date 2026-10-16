@@ -30,6 +30,7 @@ import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerSet
 import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerTrainer
 import io.github.legendaryredfox.foxhg.core.data.mart.Marts
 import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
+import io.github.legendaryredfox.foxhg.core.data.typechart.TypeChart
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerFlagBulk
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttFile
 import io.github.legendaryredfox.foxhg.core.data.rocksmash.RockSmashItems
@@ -448,6 +449,34 @@ class ListEditorsUiEndToEndTest {
 
         buildAndReopen(model) { rebuilt ->
             assertEquals(marts().specials, (Marts.load(rebuilt) as FoxResult.Ok).value.specials)
+        }
+    }
+
+    @Test
+    fun editingTheTypeChartOnItsScreen() = withHeartGoldApp { model, project ->
+        val chart = { (TypeChart.load(project) as FoxResult.Ok).value }
+        val before = chart()
+        open("Type chart")
+        // Fire (10) against Grass (12) is 2x: three clicks cycle 2x -> 1/2x -> 0x -> 1x, which frees a slot
+        tap(onNodeWithTag("type:10:12"))
+        waitForIdle()
+        assertEquals(5, chart().multiplier(10, 12))
+        tap(onNodeWithTag("type:10:12")); waitForIdle()
+        tap(onNodeWithTag("type:10:12")); waitForIdle()
+        assertEquals(10, chart().multiplier(10, 12))
+        assertEquals(before.slotsUsed - 1, chart().slotsUsed)
+        // Normal (0) against Fire (10) is 1x: it takes the freed slot
+        tap(onNodeWithTag("type:0:10"))
+        waitForIdle()
+        assertEquals(20, chart().multiplier(0, 10))
+        // the table is full again: Normal against Water cannot be added
+        tap(onNodeWithTag("type:0:11"))
+        waitForIdle()
+        assertEquals(10, chart().multiplier(0, 11), "no free slot")
+        onNodeWithText("No free slot", substring = true).assertExists()
+
+        buildAndReopen(model) { rebuilt ->
+            assertEquals(chart(), (TypeChart.load(rebuilt) as FoxResult.Ok).value)
         }
     }
 

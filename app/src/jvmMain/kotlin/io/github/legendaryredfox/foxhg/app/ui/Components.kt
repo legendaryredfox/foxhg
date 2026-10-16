@@ -239,7 +239,8 @@ private fun PickerPopup(selected: Int, options: List<String>, onSelect: (Int) ->
                 if (e.type != KeyEventType.KeyDown) false
                 else when (e.key) {
                     Key.Escape -> { onDismiss(); true }
-                    Key.Enter -> { matches.firstOrNull()?.let(onSelect); true }
+                    // With nothing typed Enter must not pick the first entry (id 0, usually the blank one).
+                    Key.Enter -> { if (query.isNotBlank()) matches.firstOrNull()?.let(onSelect); true }
                     else -> false
                 }
             },

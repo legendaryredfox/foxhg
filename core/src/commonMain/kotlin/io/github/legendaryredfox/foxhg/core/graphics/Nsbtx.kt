@@ -1,6 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.graphics
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
+import io.github.legendaryredfox.foxhg.core.parsing
 import io.github.legendaryredfox.foxhg.core.u16
 import io.github.legendaryredfox.foxhg.core.u32
 
@@ -31,11 +32,12 @@ class Nsbtx private constructor(
     /** Texture [index] drawn with palette [palette] (0 when the file has fewer palettes); null if the format is not supported. */
     fun image(index: Int, palette: Int = 0): RgbaImage? {
         val t = textures.getOrNull(index) ?: return null
-        val paletteAt = palettes.getOrNull(palette) ?: palettes.firstOrNull() ?: return null
+        // Direct colour (format 7) needs no palette, so a file without any still draws those.
+        val paletteAt = palettes.getOrNull(palette) ?: palettes.firstOrNull() ?: if (t.format == 7) 0 else return null
         val start = textureData + t.offset
         val pixels = t.width * t.height
         val bitsPerPixel = when (t.format) { 1, 6 -> 8; 2 -> 2; 3 -> 4; 4 -> 8; 7 -> 16; else -> return null }
-        if (start + pixels * bitsPerPixel / 8 > bytes.size) return null
+        if (start < 0 || start.toLong() + pixels * bitsPerPixel / 8 > bytes.size) return null
         fun color(i: Int): Int = if (paletteAt + i * 2 + 2 <= bytes.size) Nclr.rgb555(bytes.u16(paletteAt + i * 2)) else 0
         val out = IntArray(pixels) { k ->
             when (t.format) {
@@ -65,7 +67,9 @@ class Nsbtx private constructor(
             if (start + 16 > bytes.size) "" else bytes.decodeToString(start, start + 16).substringBefore('\u0000')
         }
 
-        fun parse(bytes: ByteArray): FoxResult<Nsbtx> {
+        fun parse(bytes: ByteArray): FoxResult<Nsbtx> = parsing("The texture file") { parseChecked(bytes) }
+
+        private fun parseChecked(bytes: ByteArray): FoxResult<Nsbtx> {
             if (bytes.size < 0x14 || bytes.decodeToString(0, 4).let { it != "BTX0" && it != "BMD0" }) return FoxResult.Err("Not an NSBTX file")
             val blockCount = bytes.u16(0xE)
             var block = -1

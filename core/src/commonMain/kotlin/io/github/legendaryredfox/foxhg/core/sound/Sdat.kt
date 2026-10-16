@@ -1,6 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.sound
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
+import io.github.legendaryredfox.foxhg.core.parsing
 import io.github.legendaryredfox.foxhg.core.u16
 import io.github.legendaryredfox.foxhg.core.u32
 
@@ -32,7 +33,15 @@ class Sdat private constructor(
     fun waveArchive(id: Int): ByteArray? = waveArchiveFiles.getOrNull(id)?.let { file(it) }
 
     companion object {
-        fun parse(bytes: ByteArray): FoxResult<Sdat> {
+        fun parse(bytes: ByteArray): FoxResult<Sdat> = parsing("The sound archive") { parseChecked(bytes) }
+
+        /** A count in the header can claim billions of entries; every entry takes at least [perEntry] bytes of the file. */
+        private fun checkedCount(bytes: ByteArray, count: Int, perEntry: Int): Int {
+            require(count in 0..bytes.size / perEntry) { "a list claims $count entries" }
+            return count
+        }
+
+        private fun parseChecked(bytes: ByteArray): FoxResult<Sdat> {
             if (bytes.size < 0x40 || bytes.decodeToString(0, 4) != "SDAT") return FoxResult.Err("Not a sound archive (SDAT)")
             val symb = bytes.u32(0x10).toInt()
             val info = bytes.u32(0x18).toInt()
@@ -40,21 +49,22 @@ class Sdat private constructor(
             if (bytes.decodeToString(info, info + 4) != "INFO" || bytes.decodeToString(fat, fat + 4) != "FAT ") return FoxResult.Err("SDAT blocks are missing")
             val hasNames = symb > 0 && bytes.decodeToString(symb, symb + 4) == "SYMB"
 
-            val fileCount = bytes.u32(fat + 8).toInt()
+            val fileCount = checkedCount(bytes, bytes.u32(fat + 8).toInt(), 16)
             val files = List(fileCount) { i ->
                 val offset = bytes.u32(fat + 12 + i * 16).toInt()
                 val size = bytes.u32(fat + 16 + i * 16).toInt()
-                offset until minOf(bytes.size, offset + size)
+                require(offset in 0..bytes.size && size >= 0) { "file $i lies outside the archive" }
+                offset until minOf(bytes.size.toLong(), offset.toLong() + size).toInt()
             }
 
             fun recordOffsets(listOffset: Int): List<Int?> {
-                val count = bytes.u32(listOffset).toInt()
+                val count = checkedCount(bytes, bytes.u32(listOffset).toInt(), 4)
                 return List(count) { i -> bytes.u32(listOffset + 4 + i * 4).toInt().takeIf { it != 0 } }
             }
             fun names(kind: Int, count: Int): List<String> {
                 if (!hasNames) return List(count) { "" }
                 val list = symb + bytes.u32(symb + 8 + kind * 4).toInt()
-                val n = bytes.u32(list).toInt()
+                val n = checkedCount(bytes, bytes.u32(list).toInt(), 4)
                 return List(count) { i ->
                     val off = if (i < n) bytes.u32(list + 4 + i * 4).toInt() else 0
                     if (off == 0) "" else cString(bytes, symb + off)

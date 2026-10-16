@@ -96,7 +96,7 @@ private fun ProjectDialog(model: AppModel, askRom: Boolean, then: (() -> Unit)?)
     val problem = when {
         folder == null -> "Use a name without slashes"
         askRom && (rom == null || !Files.exists(rom!!)) -> "Choose the ROM this project edits"
-        !AppModel.isUsableProjectFolder(folder) -> "A project already exists in that folder"
+        !AppModel.isUsableProjectFolder(folder) -> "Choose a folder that does not exist yet or is empty"
         else -> null
     }
     AlertDialog(
@@ -215,8 +215,10 @@ private fun SettingsDialog(model: AppModel, d: AppDialog.Settings) {
         },
         confirmButton = {
             Button(onClick = {
+                // The Project menu's switch is for this session: it only follows the setting when the setting was changed here.
+                val changedHere = autosave != model.settings.autosave
                 model.updateSettings(AppSettings(theme, emulator.trim(), autosave))
-                model.autosave = autosave
+                if (changedHere) model.autosave = autosave
                 model.dialog = null
             }, modifier = Modifier.testTag("settings-save")) { Text("Save") }
         },

@@ -254,6 +254,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.MARTS -> Loading(project, "Poké Marts", { MartEditorModel(project, model::projectChanged) }) { editor ->
             MartEditor(editor, modifier.padding(16.dp))
         }
+        selected == EditorKind.TYPE_CHART -> Loading(project, "type chart", { TypeChartEditorModel(project, model::projectChanged) }) { editor ->
+            TypeChartEditor(editor, modifier)
+        }
         selected == EditorKind.LEARNSET -> Loading(project, "learnsets", { model.recordEditor(EditorKind.LEARNSET, project, Learnset.SPEC, RecordEditorModel.speciesLabel(project.names), 1) }) { editor ->
             LearnsetEditor(editor, modifier.padding(16.dp))
         }

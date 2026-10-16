@@ -44,4 +44,17 @@ class NarcTest {
         val truncated = sample.toBytes().copyOf(40)
         assertIs<FoxResult.Err>(Narc.parse(truncated))
     }
+
+    @Test
+    fun aDamagedHeaderIsAnErrorNotAnException() {
+        val good = sample.toBytes()
+        val badHeaderSize = good.copyOf().also { it[12] = 0xFF.toByte(); it[13] = 0xFF.toByte() }
+        assertIs<FoxResult.Err>(Narc.parse(badHeaderSize))
+        val hugeEnd = good.copyOf().also { b ->
+            // the end of the first file: BTAF starts at 16, entries after its 12 byte head
+            b[16 + 16] = 0xFF.toByte(); b[16 + 17] = 0xFF.toByte(); b[16 + 18] = 0xFF.toByte(); b[16 + 19] = 0x7F
+        }
+        assertIs<FoxResult.Err>(Narc.parse(hugeEnd))
+        for (cut in listOf(15, 20, 30, good.size - 3)) assertIs<FoxResult.Err>(Narc.parse(good.copyOf(cut)), "cut at $cut")
+    }
 }

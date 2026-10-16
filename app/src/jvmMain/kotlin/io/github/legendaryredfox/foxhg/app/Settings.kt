@@ -33,6 +33,9 @@ class SettingsStore(private val file: Path, private val detectEmulator: () -> St
         }
     } catch (e: IOException) {
         AppSettings()
+    } catch (e: IllegalArgumentException) {
+        // A hand-edited file with a broken escape such as C:\users\...: the defaults, not a crash at start-up.
+        AppSettings()
     }
 
     /** Returns false when the file could not be written. */

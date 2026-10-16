@@ -105,10 +105,15 @@ class NdsRom private constructor(
             val fatBytes = source.read(fat.offset, fat.size.toInt())
             val fileCount = (fat.size / 8).toInt()
 
+            for ((name, region) in listOf("ARM9" to header.arm9, "ARM7" to header.arm7)) {
+                if (region.size > Int.MAX_VALUE || region.offset + region.size > source.size) return FoxResult.Err("The $name binary lies outside the ROM image")
+            }
             val tree = try {
                 buildTree(fntBytes, fatBytes, fileCount, source.size)
             } catch (e: IllegalArgumentException) {
                 return FoxResult.Err("Corrupt file name table: ${e.message}")
+            } catch (e: IndexOutOfBoundsException) {
+                return FoxResult.Err("Corrupt file name table: an entry lies outside the table")
             }
             val (root, files) = tree
 
@@ -136,9 +141,11 @@ class NdsRom private constructor(
 
             fun walk(dirIndex: Int, name: String, path: String): RomDirectory {
                 require(visited.add(dirIndex)) { "directory $dirIndex is referenced twice" }
-                require(dirIndex < directoryCount) { "directory id out of range: $dirIndex" }
+                require(dirIndex in 0 until directoryCount) { "directory id out of range: $dirIndex" }
                 val dir = RomDirectory(ROOT_DIRECTORY_ID + dirIndex, name, path)
-                var p = fnt.u32(dirIndex * 8).toInt()
+                val tableOffset = fnt.u32(dirIndex * 8)
+                require(tableOffset < fnt.size) { "directory $dirIndex starts outside the table" }
+                var p = tableOffset.toInt()
                 var nextFileId = fnt.u16(dirIndex * 8 + 4)
                 while (true) {
                     require(p < fnt.size) { "directory $dirIndex runs past the table" }

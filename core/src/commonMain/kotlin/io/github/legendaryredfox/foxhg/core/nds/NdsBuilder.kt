@@ -31,6 +31,9 @@ object NdsBuilder {
     const val ALIGNMENT = 0x200L
     private const val CAPACITY_UNIT = 0x20000L
 
+    /** The cartridge capacity byte is a shift of [CAPACITY_UNIT]; a header claiming more is corrupt. */
+    private const val MAX_CAPACITY = 15
+
     /** [progress] is told how far along the build is, 0.0 to 1.0, as the ROM is copied. */
     fun build(rom: NdsRom, source: RomSource, edits: RomEdits, sink: RomSink, progress: (Double) -> Unit = {}): FoxResult<Unit> {
         if (edits.arm9 != null) {
@@ -58,7 +61,8 @@ object NdsBuilder {
         val fat = source.read(header.fileAllocationTable.offset, header.fileAllocationTable.size.toInt())
         val starts = LongArray(rom.fileCount) { fat.u32(it * 8) }
         val ends = LongArray(rom.fileCount) { fat.u32(it * 8 + 4) }
-        var cursor = alignUp(header.usedRomSize)
+        // Appended files go after everything the ROM holds, so a trimmed or odd ROM whose files pass the size in the header loses nothing.
+        var cursor = alignUp(maxOf(header.usedRomSize, ends.max()))
 
         for ((id, data) in edits.files.toSortedMap()) {
             val oldStart = starts[id]
@@ -92,7 +96,7 @@ object NdsBuilder {
         val headerBytes = source.read(0, NdsHeader.SIZE)
         headerBytes.putU32(0x80, usedEnd)
         var capacity = headerBytes[0x14].toInt() and 0xFF
-        while (CAPACITY_UNIT shl capacity < usedEnd) capacity++
+        while (capacity < MAX_CAPACITY && CAPACITY_UNIT shl capacity < usedEnd) capacity++
         headerBytes[0x14] = capacity.toByte()
         headerBytes.putU16(Crc16.HEADER_CRC_OFFSET, Crc16.compute(headerBytes, 0, Crc16.HEADER_CRC_LENGTH))
         sink.write(0, headerBytes)

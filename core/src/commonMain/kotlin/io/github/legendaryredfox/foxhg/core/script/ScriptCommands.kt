@@ -46,7 +46,10 @@ object ScriptCommands {
     val endCodes = setOf(0x02, 0x16, 0x1B)
 
     /** Commands with a relative jump to code, and the index of that parameter. */
-    val functionJumps = mapOf(0x16 to 0, 0x17 to 1, 0x18 to 1, 0x19 to 1, 0x1A to 0, 0x1C to 1, 0x1D to 1)
+    val functionJumps = mapOf(0x16 to 0, 0x17 to 1, 0x18 to 1, 0x19 to 1, 0x1A to 0, 0x1C to 1, 0x1D to 1, GO_TO_IF_TRAINER_DEFEATED to 0)
+
+    /** `GoToIfTrainerDefeated` (225): its first parameter is a relative jump to code, like GoToIf's. */
+    const val GO_TO_IF_TRAINER_DEFEATED = 0xE1
 
     /** ApplyMovement: parameter 1 jumps to a movement list. */
     const val APPLY_MOVEMENT = 0x5E

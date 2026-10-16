@@ -65,4 +65,14 @@ class BlzTest {
         assertIs<FoxResult.Err>(Blz.decompress(ByteArray(4)))
         assertIs<FoxResult.Err>(Blz.decompress(ByteArray(64) { 0x55 }))
     }
+
+    @Test
+    fun aHeaderThatClaimsAHugeGrowthIsAnError() {
+        val packed = (Blz.compress(ByteArray(64) { (it % 7).toByte() }) as FoxResult.Ok).value
+        val huge = packed.copyOf()
+        // the last four bytes are the growth: 0x7FFF0000
+        huge[huge.size - 4] = 0; huge[huge.size - 3] = 0; huge[huge.size - 2] = 0xFF.toByte(); huge[huge.size - 1] = 0x7F
+        assertIs<FoxResult.Err>(Blz.decompress(huge))
+        assertTrue(!Blz.looksCompressed(huge))
+    }
 }

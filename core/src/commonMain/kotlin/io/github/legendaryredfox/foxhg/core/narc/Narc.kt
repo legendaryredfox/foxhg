@@ -75,10 +75,11 @@ class Narc(val files: List<ByteArray>, val nameTable: ByteArray = EMPTY_NAME_TAB
                 return FoxResult.Err("Not a NARC: missing magic")
             }
             var p = bytes.u16(12)
+            if (p < HEADER_SIZE || p + 12 > bytes.size) return FoxResult.Err("NARC: bad header size $p")
             if (bytes.ascii(p, 4) != "BTAF") return FoxResult.Err("NARC: expected BTAF at $p")
             val fatbSize = bytes.u32(p + 4).toInt()
             val count = bytes.u16(p + 8)
-            if (fatbSize != 12 + 8 * count || p + fatbSize > bytes.size) {
+            if (fatbSize != 12 + 8 * count || fatbSize > bytes.size - p) {
                 return FoxResult.Err("NARC: BTAF size $fatbSize does not match $count files")
             }
             val ranges = List(count) { bytes.u32(p + 12 + 8 * it).toInt() to bytes.u32(p + 16 + 8 * it).toInt() }
@@ -86,7 +87,7 @@ class Narc(val files: List<ByteArray>, val nameTable: ByteArray = EMPTY_NAME_TAB
 
             if (p + 8 > bytes.size || bytes.ascii(p, 4) != "BTNF") return FoxResult.Err("NARC: expected BTNF at $p")
             val fntbSize = bytes.u32(p + 4).toInt()
-            if (fntbSize < 8 || p + fntbSize > bytes.size) return FoxResult.Err("NARC: bad BTNF size $fntbSize")
+            if (fntbSize < 8 || fntbSize > bytes.size - p) return FoxResult.Err("NARC: bad BTNF size $fntbSize")
             val nameTable = bytes.copyOfRange(p + 8, p + fntbSize)
             p += fntbSize
 
@@ -95,7 +96,7 @@ class Narc(val files: List<ByteArray>, val nameTable: ByteArray = EMPTY_NAME_TAB
             val files = ArrayList<ByteArray>(count)
             for ((i, range) in ranges.withIndex()) {
                 val (start, end) = range
-                if (start < 0 || end < start || dataStart + end > bytes.size) {
+                if (start < 0 || end < start || end > bytes.size - dataStart) {
                     return FoxResult.Err("NARC: file $i range $start..$end is outside the archive")
                 }
                 files += bytes.copyOfRange(dataStart + start, dataStart + end)

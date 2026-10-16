@@ -1,6 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.data.map
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
+import io.github.legendaryredfox.foxhg.core.parsing
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
 import io.github.legendaryredfox.foxhg.core.game.HgssLayout
@@ -147,12 +148,20 @@ class MapFile(
         const val PERMISSION_BYTES = SIZE * SIZE * 2
         const val SOUND_SIGNATURE = 0x1234
 
-        fun parse(bytes: ByteArray): FoxResult<MapFile> {
+        fun parse(bytes: ByteArray): FoxResult<MapFile> = parsing("The map file") { parseChecked(bytes) }
+
+        private fun parseChecked(bytes: ByteArray): FoxResult<MapFile> {
             if (bytes.size < 20) return FoxResult.Err("Map file is shorter than its header")
             val permissionLength = bytes.u32(0)
-            val buildingLength = bytes.u32(4).toInt()
-            val modelLength = bytes.u32(8).toInt()
-            val bdhcLength = bytes.u32(12).toInt()
+            val buildingLong = bytes.u32(4)
+            val modelLong = bytes.u32(8)
+            val bdhcLong = bytes.u32(12)
+            val soundSum = 4 + bytes.u16(18).toLong() + PERMISSION_BYTES + buildingLong + modelLong + bdhcLong
+            // Compared as longs: three huge lengths must not wrap around to the file size.
+            if (bytes.size < 20 || 16 + soundSum != bytes.size.toLong()) return FoxResult.Err("Map file: section sizes do not add up to the file size")
+            val buildingLength = buildingLong.toInt()
+            val modelLength = modelLong.toInt()
+            val bdhcLength = bdhcLong.toInt()
             if (permissionLength != PERMISSION_BYTES.toLong()) return FoxResult.Err("Map file: permissions section is $permissionLength bytes, expected $PERMISSION_BYTES")
             if (buildingLength % Building.SIZE != 0) return FoxResult.Err("Map file: buildings section is not a multiple of ${Building.SIZE}")
             if (bytes.u16(16) != SOUND_SIGNATURE) return FoxResult.Err("Map file: no background sound block")

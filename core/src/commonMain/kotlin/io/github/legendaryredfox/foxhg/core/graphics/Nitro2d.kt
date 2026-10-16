@@ -1,6 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.graphics
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
+import io.github.legendaryredfox.foxhg.core.parsing
 import io.github.legendaryredfox.foxhg.core.u16
 import io.github.legendaryredfox.foxhg.core.u32
 
@@ -28,7 +29,9 @@ class Nclr(val colors: IntArray) {
     fun palette16(index: Int): IntArray = IntArray(16) { colors.getOrElse(index * 16 + it) { 0 } }
 
     companion object {
-        fun parse(bytes: ByteArray): FoxResult<Nclr> {
+        fun parse(bytes: ByteArray): FoxResult<Nclr> = parsing("The NCLR file") { parseChecked(bytes) }
+
+        private fun parseChecked(bytes: ByteArray): FoxResult<Nclr> {
             if (bytes.size < 0x28 || bytes.decodeToString(0, 4) != "RLCN") return FoxResult.Err("Not an NCLR file")
             val section = findSection(bytes, "TTLP") ?: return FoxResult.Err("NCLR has no palette section")
             val length = bytes.u32(section + 0x10).toInt()
@@ -60,7 +63,12 @@ class Ncgr(val width: Int, val height: Int, val bitsPerPixel: Int, val indices: 
          * Reads the picture. Tiles are 8x8 and laid out row by row; a file that does not say how wide it is (width -1)
          * is read [defaultWidthTiles] tiles wide. A line buffer (flag 1) is read pixel row by pixel row instead.
          */
-        fun parse(bytes: ByteArray, defaultWidthTiles: Int = 4): FoxResult<Ncgr> {
+        fun parse(bytes: ByteArray, defaultWidthTiles: Int = 4): FoxResult<Ncgr> = parsing("The NCGR file") { parseChecked(bytes, defaultWidthTiles) }
+
+        /** The most pixels a picture may have: the biggest real one is a few thousand, and a header can claim a thousand times that. */
+        private const val MAX_PIXELS = 4 * 1024 * 1024
+
+        private fun parseChecked(bytes: ByteArray, defaultWidthTiles: Int): FoxResult<Ncgr> {
             if (bytes.size < 0x30 || bytes.decodeToString(0, 4) != "RGCN") return FoxResult.Err("Not an NCGR file")
             val section = findSection(bytes, "RAHC") ?: return FoxResult.Err("NCGR has no character section")
             val heightTiles = bytes.u16(section + 8).toShort().toInt()
@@ -70,8 +78,9 @@ class Ncgr(val width: Int, val height: Int, val bitsPerPixel: Int, val indices: 
             val length = bytes.u32(section + 24).toInt()
             val offset = bytes.u32(section + 28).toInt()
             val bpp = when (format) { 3 -> 4; 4 -> 8; else -> return FoxResult.Err("NCGR pixel format $format is not supported") }
-            val dataStart = section + 8 + offset
-            val data = bytes.copyOfRange(dataStart, minOf(bytes.size, dataStart + length))
+            val dataStart = section.toLong() + 8 + offset
+            if (offset < 0 || length < 0 || dataStart > bytes.size) return FoxResult.Err("NCGR pixel data lies outside the file")
+            val data = bytes.copyOfRange(dataStart.toInt(), minOf(bytes.size.toLong(), dataStart + length).toInt())
             val pixels = if (bpp == 4) data.size * 2 else data.size
             fun pixel(i: Int): Byte = if (bpp == 4) ((data[i / 2].toInt() shr ((i % 2) * 4)) and 0xF).toByte() else data[i]
             val wTiles = if (widthTiles > 0) widthTiles else defaultWidthTiles
@@ -79,6 +88,7 @@ class Ncgr(val width: Int, val height: Int, val bitsPerPixel: Int, val indices: 
             val tiles = pixels / 64
             val hTiles = if (heightTiles > 0) heightTiles else (tiles + wTiles - 1) / wTiles
             val height = hTiles * 8
+            if (wTiles < 1 || hTiles < 1 || width.toLong() * height > MAX_PIXELS) return FoxResult.Err("NCGR size of $wTiles x $hTiles tiles is not plausible")
             val out = ByteArray(width * height)
             if (flags and 1 != 0) {
                 for (i in 0 until minOf(pixels, out.size)) out[i] = pixel(i)
@@ -100,7 +110,7 @@ internal fun findSection(bytes: ByteArray, signature: String): Int? {
     while (p + 8 <= bytes.size) {
         if (bytes.decodeToString(p, p + 4) == signature) return p
         val length = bytes.u32(p + 4).toInt()
-        if (length < 8) return null
+        if (length < 8 || length > bytes.size - p) return null
         p += length
     }
     return null

@@ -18,7 +18,8 @@ class Charmap(private val tokens: Map<Int, String>) {
         longestToken = reverse.keys.maxOf { it.length }
     }
 
-    fun render(code: Int): String = tokens[code] ?: "\\x" + code.toString(16).uppercase().padStart(4, '0')
+    /** A token that two codes share (the table spells full-width 'z' twice) is written for the lower code only, so the other one stays `\xNNNN` and decoding then encoding is lossless. */
+    fun render(code: Int): String = tokens[code]?.takeIf { codes[it] == code } ?: "\\x" + code.toString(16).uppercase().padStart(4, '0')
 
     fun decode(chars: IntArray): String = buildString { for (c in chars) append(render(c)) }
 

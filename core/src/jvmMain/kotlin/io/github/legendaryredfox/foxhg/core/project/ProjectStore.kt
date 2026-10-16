@@ -6,6 +6,7 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import java.nio.file.StandardOpenOption
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
@@ -58,6 +59,8 @@ object ProjectStore {
         }
     } catch (e: IOException) {
         FoxResult.Err("Cannot update project $directory: ${e.message}")
+    } catch (e: RuntimeException) {
+        FoxResult.Err("$newRom is not a ROM foxhg can read: ${e.message ?: e::class.simpleName}")
     }
 
     /** The ROM path a project points at, whether or not it still exists. */
@@ -87,7 +90,12 @@ object ProjectStore {
         properties["compressArm9"] = project.compressArm9.toString()
         writeProperties(directory, properties)
         val edited = project.editedFiles()
-        for ((path, bytes) in edited) atomicWrite(filesDir.resolve(path), bytes)
+        for ((path, bytes) in edited) {
+            // Edit keys come from file names in the ROM: a hacked ROM must not make a project write outside its own folder.
+            val target = filesDir.resolve(path).normalize()
+            if (!target.startsWith(filesDir.normalize())) return FoxResult.Err("Refusing to save '$path': it lies outside the project folder")
+            atomicWrite(target, bytes)
+        }
         val arm9File = directory.resolve(ARM9_FILE)
         val arm9 = project.editedArm9
         if (arm9 != null) atomicWrite(arm9File, arm9) else arm9File.deleteIfExists()
@@ -127,7 +135,10 @@ object ProjectStore {
         val filesDir = directory.resolve(FILES)
         if (filesDir.exists()) {
             Files.walk(filesDir).use { stream ->
-                stream.filter { it.isRegularFile() }.forEach { edits[it.relativeTo(filesDir).joinToString("/")] = Files.readAllBytes(it) }
+                stream.filter { it.isRegularFile() }.forEach { file ->
+                    // A save that was cut short leaves its temp file behind; it is not an edit.
+                    if (isTempFile(file)) file.deleteIfExists() else edits[file.relativeTo(filesDir).joinToString("/")] = Files.readAllBytes(file)
+                }
             }
         }
         val arm9Path = directory.resolve(ARM9_FILE)
@@ -142,23 +153,31 @@ object ProjectStore {
             }
         }
         val source = FileRomSource(romPath)
-        when (val project = RomProject.open(source, edits, arm9, overlays)) {
-            is FoxResult.Ok -> {
-                properties["compressArm9"]?.toBooleanStrictOrNull()?.let { project.value.compressArm9 = it }
-                // The undo history is a convenience: a missing, damaged or out-of-date file just means no history.
-                directory.resolve(HISTORY_FILE).takeIf { it.exists() }?.let { file ->
-                    (UndoSnapshot.parse(Files.readAllBytes(file)) as? FoxResult.Ok)?.let { project.value.restoreHistory(it.value) }
+        try {
+            when (val project = RomProject.open(source, edits, arm9, overlays)) {
+                is FoxResult.Ok -> {
+                    properties["compressArm9"]?.toBooleanStrictOrNull()?.let { project.value.compressArm9 = it }
+                    // The undo history is a convenience: a missing, damaged or out-of-date file just means no history.
+                    directory.resolve(HISTORY_FILE).takeIf { it.exists() }?.let { file ->
+                        (UndoSnapshot.parse(Files.readAllBytes(file)) as? FoxResult.Ok)?.let { project.value.restoreHistory(it.value) }
+                    }
+                    FoxResult.Ok(Loaded(project.value, source, romPath))
                 }
-                FoxResult.Ok(Loaded(project.value, source, romPath))
+                is FoxResult.Err -> {
+                    source.close()
+                    project
+                }
             }
-            is FoxResult.Err -> {
-                source.close()
-                project
-            }
+        } catch (e: RuntimeException) {
+            // A ROM that parses as far as the header but is not sound must not leave its file open or take the app down.
+            source.close()
+            FoxResult.Err("Cannot open the ROM $romPath of this project: ${e.message ?: e::class.simpleName}")
         }
     } catch (e: IOException) {
         FoxResult.Err("Cannot read project $directory: ${e.message}")
     }
+
+    private fun isTempFile(file: Path): Boolean = file.fileName.toString().let { it.startsWith(".foxhg") && it.endsWith(".tmp") }
 
     class Loaded(val project: RomProject, val source: FileRomSource, val romPath: Path)
 
@@ -166,7 +185,11 @@ object ProjectStore {
         Files.createDirectories(target.parent)
         val temp = Files.createTempFile(target.parent, ".foxhg", ".tmp")
         try {
-            Files.write(temp, bytes)
+            // Flushed to disk before the rename, so a power loss cannot leave an empty file under the final name.
+            java.nio.channels.FileChannel.open(temp, StandardOpenOption.WRITE).use { channel ->
+                channel.write(java.nio.ByteBuffer.wrap(bytes))
+                channel.force(true)
+            }
             Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
         } finally {
             temp.deleteIfExists()

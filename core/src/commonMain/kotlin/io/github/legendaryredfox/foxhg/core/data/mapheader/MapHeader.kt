@@ -112,11 +112,12 @@ object MapHeaderTable {
     /**
      * Offset of header 0 in the decompressed ARM9 image. HeartGold: confirmed (the dummy headers 0 and 1 start there,
      * the table has [COUNT] valid entries and the 135 encounter ids are all below the 142 encounter files).
-     * SoulSilver: **[UNVERIFIED]**, assumed 8 bytes later like DSPRE's offsets.
+     * SoulSilver: **[UNVERIFIED]**, the same offset: DSPRE's `RomInfo` uses one English offset for both games, as every other ARM9
+     * offset here is shared (no SoulSilver ROM was available to check).
      */
     fun offsetFor(game: Game): Int? = when (game) {
         Game.HEARTGOLD_EN -> 0xF6BE0
-        Game.SOULSILVER_EN -> 0xF6BE8
+        Game.SOULSILVER_EN -> 0xF6BE0
         else -> null
     }
 

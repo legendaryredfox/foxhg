@@ -148,6 +148,7 @@ class AppModel(
 
     /** Opens a ROM with no project. Edits stay in memory until saved as a project or built. */
     fun openRom(path: Path) {
+        if (task != null) return // a build is reading the open ROM
         val headerResult = readNdsHeader(path)
         if (headerResult is FoxResult.Err) {
             fail(headerResult.message)
@@ -166,7 +167,7 @@ class AppModel(
         }
         when (val opened = RomProject.open(newSource)) {
             is FoxResult.Ok -> {
-                attach(opened.value, newSource, path, projectDir = null)
+                if (!attach(opened.value, newSource, path, projectDir = null)) { newSource.close(); return }
                 recent = recents.add(RecentKind.ROM, path)
                 status = "Opened ${path.fileName}"
             }
@@ -179,6 +180,7 @@ class AppModel(
 
     /** Creates a project in [directory] for [rom] and opens it. */
     fun newProject(rom: Path, directory: Path): Boolean {
+        unsupported(rom)?.let { fail(it); return false }
         when (val created = ProjectStore.create(directory, rom)) {
             is FoxResult.Err -> { fail(created.message); return false }
             is FoxResult.Ok -> {}
@@ -188,6 +190,7 @@ class AppModel(
 
     /** Opens the project in [directory]. A missing ROM opens the relink dialog instead of failing outright. */
     fun openProject(directory: Path): Boolean {
+        if (task != null) return false
         when (val loaded = ProjectStore.load(directory)) {
             is FoxResult.Err -> {
                 if (loaded.message.contains("no longer exists")) {
@@ -199,7 +202,12 @@ class AppModel(
             }
             is FoxResult.Ok -> {
                 val l = loaded.value
-                attach(l.project, l.source, l.romPath, directory)
+                if (!l.project.rom.header.game.supported) {
+                    l.source.close()
+                    fail("${l.project.rom.header.game.displayName} is not supported yet (${l.project.rom.header.gameCode})")
+                    return false
+                }
+                if (!attach(l.project, l.source, l.romPath, directory)) { l.source.close(); return false }
                 recent = recents.add(RecentKind.PROJECT, directory)
                 status = "Opened project ${directory.fileName}"
                 return true
@@ -209,6 +217,7 @@ class AppModel(
 
     /** Points the project at a moved ROM, then opens it. */
     fun relinkRom(directory: Path, rom: Path): Boolean {
+        unsupported(rom)?.let { fail(it); return false }
         when (val r = ProjectStore.relink(directory, rom)) {
             is FoxResult.Err -> { fail(r.message); return false }
             is FoxResult.Ok -> {}
@@ -218,12 +227,18 @@ class AppModel(
     }
 
     /** Writes the edits and the undo history of the open project when either is not on disk yet. */
-    private fun flushProject() {
-        if (projectDir != null && (hasUnsavedWork || project?.historyDirty == true)) saveProject()
+    private fun flushProject(): Boolean =
+        if (projectDir != null && (hasUnsavedWork || project?.historyDirty == true)) saveProject() else true
+
+    /** Why [rom] cannot be edited (not a ROM, or a game foxhg has no layout for), or null when it can. */
+    private fun unsupported(rom: Path): String? = when (val h = readNdsHeader(rom)) {
+        is FoxResult.Err -> h.message
+        is FoxResult.Ok -> if (h.value.game.supported) null else "${h.value.game.displayName} is not supported yet (${h.value.gameCode})"
     }
 
-    private fun attach(newProject: RomProject, newSource: FileRomSource, rom: Path, projectDir: Path?) {
-        flushProject()
+    /** Makes [newProject] the open one. False, with the reason in [error], when the work of the current project cannot be saved first. */
+    private fun attach(newProject: RomProject, newSource: FileRomSource, rom: Path, projectDir: Path?): Boolean {
+        if (!flushProject()) return false
         cancelPendingSave()
         source?.close()
         source = newSource
@@ -236,6 +251,7 @@ class AppModel(
         selectionMemory.clear()
         revision++
         savedRevision = revision
+        return true
     }
 
     // --- undo ------------------------------------------------------------------------------------------------------
@@ -253,9 +269,9 @@ class AppModel(
         else -> "${targets.size} files"
     }
 
-    fun undo() = step("Undid", project?.undo())
+    fun undo() { if (task == null) step("Undid", project?.undo()) }
 
-    fun redo() = step("Redid", project?.redo())
+    fun redo() { if (task == null) step("Redid", project?.redo()) }
 
     private fun step(verb: String, targets: List<EditTarget>?) {
         if (targets == null) return
@@ -331,7 +347,8 @@ class AppModel(
      * asking, since its edits are already meant to be kept.
      */
     fun guard(action: () -> Unit) {
-        if (projectDir != null && hasUnsavedWork) saveProject()
+        // A project whose work cannot be saved must not be left: the reason is in the status bar.
+        if (projectDir != null && hasUnsavedWork && !saveProject()) return
         if (needsProjectToKeepWork) dialog = AppDialog.UnsavedWork(action) else action()
     }
 
@@ -369,37 +386,40 @@ class AppModel(
     /** [build] in the background, with the progress window. */
     fun buildInBackground(target: Path) = startTask("Building ${target.fileName}") { report -> build(target, report = report) }
 
-    /** Writes the ROM with every edit applied to [target]. The opened ROM is not modified. */
+    /**
+     * Writes the ROM with every edit applied to [target]. The opened ROM is not modified. The ROM is built into a `.part` file next
+     * to [target] and only moved into place once it is complete, so a failed or interrupted build leaves the file that was there as it was.
+     */
     fun build(target: Path, keepBackup: Boolean = true, report: (Double) -> Unit = {}) {
         val project = project ?: return
-        if (target.toAbsolutePath() == romPath?.toAbsolutePath()) {
+        val opened = romPath
+        if (opened != null && (target.toAbsolutePath() == opened.toAbsolutePath() || (Files.exists(target) && Files.exists(opened) && Files.isSameFile(target, opened)))) {
             fail("Choose a different file than the ROM you opened")
             return
         }
+        val part = target.resolveSibling(target.fileName.toString() + ".part")
         // A file that is there already is not lost: it is kept next to the new one as <name>.bak (the one before that goes).
         val backup = target.resolveSibling(target.fileName.toString() + ".bak")
-        var kept = false
-        if (keepBackup && Files.exists(target)) {
-            try {
-                Files.move(target, backup, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
-                kept = true
-            } catch (e: java.io.IOException) {
-                fail("Cannot keep a backup of $target: ${e.message}")
+        try {
+            val result = FileRomSink(part).use { sink -> project.build(sink, report) }
+            if (result is FoxResult.Err) {
+                Files.deleteIfExists(part)
+                fail(result.message)
                 return
             }
-        }
-        FileRomSink(target).use { sink ->
-            when (val result = project.build(sink, report)) {
-                is FoxResult.Ok -> {
-                    error = null
-                    status = if (kept) "Built $target (the previous file is ${backup.fileName})" else "Built $target"
-                }
-                is FoxResult.Err -> {
-                    // A failed build must not cost the user the file that was there.
-                    if (kept) runCatching { Files.move(backup, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING) }
-                    fail(result.message)
-                }
+            val kept = keepBackup && Files.exists(target)
+            if (kept) Files.move(target, backup, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            try {
+                Files.move(part, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            } catch (e: java.io.IOException) {
+                if (kept) runCatching { Files.move(backup, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING) }
+                throw e
             }
+            error = null
+            status = if (kept) "Built $target (the previous file is ${backup.fileName})" else "Built $target"
+        } catch (e: Exception) {
+            runCatching { Files.deleteIfExists(part) }
+            fail("Cannot build $target: ${e.message ?: e::class.simpleName}")
         }
     }
 
@@ -427,6 +447,8 @@ class AppModel(
 
         fun defaultProjectsDir(): Path = Path.of(System.getProperty("user.home"), "foxhg-projects")
 
-        fun isUsableProjectFolder(folder: Path): Boolean = !Files.exists(folder.resolve("project.properties"))
+        /** A folder a new project may use: one that does not exist yet or is empty, since saving a project deletes the files it does not own in its subfolders. */
+        fun isUsableProjectFolder(folder: Path): Boolean =
+            !Files.exists(folder) || (Files.isDirectory(folder) && Files.list(folder).use { !it.findAny().isPresent })
     }
 }

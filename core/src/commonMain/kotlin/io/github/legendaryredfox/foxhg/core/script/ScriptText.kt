@@ -103,6 +103,8 @@ object ScriptText {
             fun err(message: String) = FoxResult.Err("Line ${n + 1}: $message")
             if (line.endsWith(":")) {
                 val ref = parseLabel(line.dropLast(1).trim()) ?: return err("'${line.dropLast(1)}' is not a label (use script_N, function_N or action_N)")
+                // An action list the game runs ends with End: without it the game would read on into whatever follows.
+                if (inAction) return err("An action list must end with End before '${line.dropLast(1)}'")
                 items += ScriptItem.Label(ref)
                 inAction = ref.kind == LabelRef.Kind.ACTION
                 continue
@@ -125,6 +127,7 @@ object ScriptText {
             val command = when (val r = parseCommand(info, args)) { is FoxResult.Ok -> r.value; is FoxResult.Err -> return err(r.message) }
             items += ScriptItem.Instruction(command)
         }
+        if (inAction) return FoxResult.Err("The last action list must end with End")
         val file = ScriptFile(items)
         file.problem()?.let { return FoxResult.Err(it) }
         return FoxResult.Ok(file)

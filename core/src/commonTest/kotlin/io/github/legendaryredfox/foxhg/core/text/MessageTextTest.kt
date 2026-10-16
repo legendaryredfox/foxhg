@@ -31,4 +31,11 @@ class MessageTextTest {
             assertTrue(MessageText.encode(bad) is FoxResult.Err, bad)
         }
     }
+
+    @Test
+    fun aTokenTwoCodesShareStaysLosslessThroughDecodeAndEncode() {
+        // the charmap spells full-width 'z' for both 0x00DF and 0x00F5: the second is written as a code, so it comes back as itself
+        val chars = intArrayOf(0x00DF, 0x00F5, 0xFFFF)
+        assertContentEquals(chars, encode(MessageText.decode(chars)))
+    }
 }

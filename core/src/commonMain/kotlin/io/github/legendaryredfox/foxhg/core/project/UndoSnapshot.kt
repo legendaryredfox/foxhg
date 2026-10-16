@@ -85,6 +85,7 @@ class UndoSnapshot(val undo: List<List<UndoChange>>, val redo: List<List<UndoCha
                     fun side(): ByteArray? {
                         if (b.u8(p++) == 0) return null
                         val n = b.u32(p).toInt(); p += 4
+                        if (n < 0 || n > b.size - p) throw IndexOutOfBoundsException("a stored file is $n bytes but only ${b.size - p} are left")
                         return b.copyOfRange(p, p + n).also { p += n }
                     }
                     val before = side()

@@ -30,6 +30,9 @@ object Blz {
     private const val MAX_DISP = 0x1002
     private const val MAX_CHAIN = 96
 
+    /** The most a stream may grow when decompressed: a header that claims more is corrupt (the ARM9 and the overlays are a few megabytes). */
+    private const val MAX_EXTRA = 64 * 1024 * 1024
+
     private class Header(val length: Int, val headerLen: Int, val compressedLen: Int, val extraSize: Int) {
         val passthrough: Int get() = length - compressedLen
         val outputLength: Int get() = length + extraSize - passthrough
@@ -41,6 +44,7 @@ object Blz {
         val headerLen = (word ushr 24).toInt()
         val compressedLen = (word and 0xFFFFFF).toInt()
         val extra = data.u32(data.size - 4).toInt()
+        if (extra < 0 || extra > MAX_EXTRA) return FoxResult.Err("BLZ: implausible growth of $extra bytes")
         if (headerLen < 8 || headerLen > compressedLen || compressedLen > data.size) {
             return FoxResult.Err("BLZ: implausible header (headerLen=$headerLen compressedLen=$compressedLen size=${data.size})")
         }

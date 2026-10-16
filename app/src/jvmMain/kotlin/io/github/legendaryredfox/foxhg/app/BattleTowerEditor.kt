@@ -56,7 +56,7 @@ fun BattleTowerTrainerEditor(model: RecordEditorModel<BattleTowerTrainer>, sets:
             @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 t.setIds.forEachIndexed { i, id ->
-                    OutlinedButton(onClick = { model.update { it.removeSet(i) } }, modifier = Modifier.testTag("bt-remove:$i")) {
+                    OutlinedButton(onClick = { model.update { it.removeSet(i) } }, enabled = t.setIds.size > 1, modifier = Modifier.testTag("bt-remove:$i")) {
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                             sets.getOrNull(id)?.let { PokemonIcon(it.species, 20.dp) }
                             Text("%03d  %s  ✕".format(id, sets.getOrNull(id)?.let { names?.species?.getOrNull(it.species) } ?: "?"))
@@ -64,10 +64,10 @@ fun BattleTowerTrainerEditor(model: RecordEditorModel<BattleTowerTrainer>, sets:
                     }
                 }
             }
-            var next by remember(index) { mutableIntStateOf(1) }
+            var next by remember(index) { mutableIntStateOf(minOf(1, maxOf(sets.size - 1, 0))) }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
                 NumberField("Set to add", next, 0..maxOf(sets.size - 1, 0), { next = it }, Modifier.width(120.dp), tag = "Set to add")
-                OutlinedButton(onClick = { model.update { it.addSet(next) } }, modifier = Modifier.testTag("bt-add")) {
+                OutlinedButton(onClick = { model.update { it.addSet(next) } }, enabled = next in sets.indices, modifier = Modifier.testTag("bt-add")) {
                     Text("Add ${sets.getOrNull(next)?.let { names?.species?.getOrNull(it.species) } ?: ""}".trim())
                 }
             }

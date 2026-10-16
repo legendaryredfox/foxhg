@@ -75,4 +75,10 @@ class ScriptTextTest {
         assertEquals(f, file(text))
         assertTrue(!ScriptText.toText(f).contains(";"), "without a message source there is no note")
     }
+
+    @Test
+    fun goToIfTrainerDefeatedJumpsLikeTheOtherRelativeJumps() {
+        // command 225 takes a relative jump as its first parameter: without it the target would not follow an edit
+        kotlin.test.assertEquals(0, io.github.legendaryredfox.foxhg.core.script.ScriptCommands.jumpIndex(225))
+    }
 }

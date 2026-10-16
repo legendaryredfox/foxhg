@@ -96,7 +96,7 @@ class ProjectUiEndToEndTest {
                 menu("New project…          Ctrl+N")
                 onNodeWithTag("field:Name").performTextReplacement("hack-one")
                 waitForIdle()
-                onNodeWithText("A project already exists in that folder").assertIsDisplayed()
+                onNodeWithText("Choose a folder that does not exist yet or is empty").assertIsDisplayed()
                 onNodeWithText("Create project").assertIsNotEnabled()
                 tap(onNodeWithText("Cancel"), inScrollPane = false)
                 assertNull(model.dialog)
@@ -262,6 +262,8 @@ class ProjectUiEndToEndTest {
 
                 val built = base.resolve("built.nds")
                 withChoosers(file = { title, _, _ -> assertEquals("Build ROM", title); built }) { tap(onNodeWithText("Build ROM…"), inScrollPane = false) }
+                model.awaitTask() // the build runs in the background
+                waitForIdle()
                 onNodeWithText("Built $built").assertIsDisplayed()
                 FileRomSource(built).use { source ->
                     assertEquals(321, price((RomProject.open(source) as FoxResult.Ok).value))

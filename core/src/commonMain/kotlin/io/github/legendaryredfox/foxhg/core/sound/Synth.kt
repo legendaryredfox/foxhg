@@ -84,10 +84,14 @@ class Synth(private val sdat: Sdat) {
         var master = 127
         var sample = 0.0
         var guard = 0
+        try {
         while (sample < limit && tracks.any { !it.ended } && guard++ < 2_000_000) {
             for (t in tracks.toList()) {
                 if (t.ended) continue
+                var commands = 0
                 while (t.wait <= 0 && !t.ended) {
+                    // A track that loops without ever waiting would hang the render and fill the note list: cut it off.
+                    if (++commands > MAX_COMMANDS_PER_TICK || out.size > MAX_NOTES) { t.ended = true; break }
                     if (t.pc !in base until data.size) { t.ended = true; break }
                     val cmd = u8(t.pc++)
                     when {
@@ -107,7 +111,7 @@ class Synth(private val sdat: Sdat) {
                         cmd == 0xFD -> if (t.calls.isNotEmpty()) t.pc = t.calls.removeAt(t.calls.size - 1) else t.ended = true
                         cmd == 0xFF -> t.ended = true
                         cmd == 0xFE -> t.pc += 2
-                        cmd == 0xD4 -> t.loops += intArrayOf(t.pc + 1, u8(t.pc))
+                        cmd == 0xD4 -> { t.loops += intArrayOf(t.pc + 1, u8(t.pc)); t.pc += 1 }
                         cmd == 0xFC -> if (t.loops.isNotEmpty()) {
                             val loop = t.loops.last()
                             if (loop[1] == 0 || loop[1] > 1) { if (loop[1] > 1) loop[1]--; t.pc = loop[0] } else t.loops.removeAt(t.loops.size - 1)
@@ -143,6 +147,9 @@ class Synth(private val sdat: Sdat) {
             // advance one tick
             sample += RATE * 60.0 / (tempo * 48.0)
             for (t in tracks) if (!t.ended) t.wait--
+        }
+        } catch (e: IndexOutOfBoundsException) {
+            // A command cut off by the end of the data: keep the notes found so far.
         }
     }
 
@@ -234,5 +241,9 @@ class Synth(private val sdat: Sdat) {
 
     companion object {
         const val RATE = 32768
+
+        /** Most commands one track may run without waiting, and most notes a render keeps: a loop that never waits is cut off. */
+        private const val MAX_COMMANDS_PER_TICK = 10_000
+        private const val MAX_NOTES = 200_000
     }
 }

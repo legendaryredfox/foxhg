@@ -19,6 +19,7 @@ data class PickupOutcome(val common: Int? = null, val rare: Int? = null)
 data class PickupTable(val common: List<Int>, val rare: List<Int>, val divisor: Int, val weights: List<Int>) {
     init {
         require(common.size == COMMON && rare.size == RARE && weights.size == SLOTS) { "$COMMON common items, $RARE rare items, $SLOTS weights" }
+        require(divisor in 1..255) { "The divisor is a byte and the game divides by it: 1 to 255" }
     }
 
     /** The common item a Pokémon of level bracket [bracket] (0 to 9) gets from [slot] (0 to 8). */

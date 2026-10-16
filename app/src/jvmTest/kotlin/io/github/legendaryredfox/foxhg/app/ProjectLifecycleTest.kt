@@ -219,4 +219,47 @@ class ProjectLifecycleTest {
             dir.deleteRecursively()
         }
     }
+
+    @Test
+    fun buildRefusesAnotherPathToTheOpenRomAndKeepsAnExistingFileWhenItFails() {
+        if (!romAvailable()) return
+        val dir = tempDir("foxhg-build-guard")
+        try {
+            val model = testModel()
+            model.openRom(romPath)
+            // a symlink to the opened ROM is the same file: building there would overwrite the ROM
+            val link = dir.resolve("same.nds")
+            Files.createSymbolicLink(link, romPath.toAbsolutePath())
+            model.build(link)
+            assertNotNull(model.error)
+            assertTrue(model.error!!.contains("different file"), model.error)
+            assertTrue(Files.isSymbolicLink(link), "the link is untouched")
+
+            // a build into a folder that does not exist fails and leaves the file that was there alone
+            val existing = dir.resolve("out.nds").also { Files.write(it, byteArrayOf(1, 2, 3)) }
+            val impossible = dir.resolve("missing-folder/out.nds")
+            model.build(impossible)
+            assertNotNull(model.error)
+            assertTrue(Files.readAllBytes(existing).contentEquals(byteArrayOf(1, 2, 3)))
+            assertFalse(Files.exists(dir.resolve("out.nds.part")))
+            model.close()
+        } finally {
+            dir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun aFolderWithOtherFilesIsNotAProjectFolder() {
+        val dir = tempDir("foxhg-folders")
+        try {
+            assertTrue(AppModel.isUsableProjectFolder(dir.resolve("new")))
+            val empty = Files.createDirectories(dir.resolve("empty"))
+            assertTrue(AppModel.isUsableProjectFolder(empty))
+            val busy = Files.createDirectories(dir.resolve("busy/files"))
+            Files.write(busy.resolve("mine.txt"), byteArrayOf(1))
+            assertFalse(AppModel.isUsableProjectFolder(dir.resolve("busy")), "saving would delete files it does not own")
+        } finally {
+            dir.deleteRecursively()
+        }
+    }
 }
