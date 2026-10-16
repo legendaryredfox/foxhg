@@ -23,6 +23,7 @@ import io.github.legendaryredfox.foxhg.app.ui.EditorHeader
 import io.github.legendaryredfox.foxhg.app.ui.PokemonIcon
 import io.github.legendaryredfox.foxhg.app.ui.PickerField
 import io.github.legendaryredfox.foxhg.app.ui.SectionCard
+import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.eggmove.EggMoves
 
 /** The egg move list is one file for every species; [model] holds that single record, species is picked here. */
@@ -58,7 +59,19 @@ fun EggMoveEditor(model: RecordEditorModel<EggMoves>, modifier: Modifier = Modif
             SectionCard(
                 "Egg moves",
                 subtitle = if (eggs.overLimit) "Over the limit: the game only finds species whose header is within the first ${EggMoves.SCAN_LIMIT} words" else "Only moves the parents can pass down appear here",
-                actions = { Chip("${list.size} / ${EggMoves.MAX_PER_SPECIES}", emphasis = list.size > EggMoves.MAX_PER_SPECIES || eggs.overLimit) },
+                actions = {
+                    Chip("${list.size} / ${EggMoves.MAX_PER_SPECIES}", emphasis = list.size > EggMoves.MAX_PER_SPECIES || eggs.overLimit)
+                    CsvFileButtons(
+                        "egg moves",
+                        { EggMoves.toCsv(eggs, { model.names?.species?.getOrNull(it) ?: "" }, { moves.getOrNull(it) ?: "" }) },
+                        { text ->
+                            when (val r = EggMoves.fromCsv(text, eggs)) {
+                                is FoxResult.Ok -> { model.update { r.value }; null }
+                                is FoxResult.Err -> r.message
+                            }
+                        },
+                    )
+                },
             ) {
                 if (list.isEmpty()) Text("No egg moves.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 list.forEachIndexed { i, move ->

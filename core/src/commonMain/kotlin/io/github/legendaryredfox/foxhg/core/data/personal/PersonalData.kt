@@ -1,6 +1,8 @@
 package io.github.legendaryredfox.foxhg.core.data.personal
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
+import io.github.legendaryredfox.foxhg.core.data.csv.CsvColumn
+import io.github.legendaryredfox.foxhg.core.data.csv.RecordCsv
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.putU32
 import io.github.legendaryredfox.foxhg.core.u16
@@ -89,6 +91,51 @@ data class PersonalData(
 
     companion object {
         const val SIZE = 44
+
+        /**
+         * CSV columns of the personal data: the stats, types, catch rate, EV yield, held items, gender, hatching, friendship, growth rate, egg
+         * groups, abilities, flee rate, dex colour and flip, then one 0 or 1 column per TM and HM (`tm01` to `tm92`, `hm01` to `hm08`).
+         * The unused EV bits, the padding and the tutor bits are not in the file and stay as they are.
+         */
+        val CSV: RecordCsv<PersonalData> by lazy {
+            fun col(name: String, range: IntRange, get: (PersonalData) -> Int, set: (PersonalData, Int) -> PersonalData) = CsvColumn(name, range, get, set)
+            RecordCsv(
+                listOf(
+                    col("hp", 0..255, { it.baseHp }, { r, v -> r.copy(baseHp = v) }),
+                    col("attack", 0..255, { it.baseAttack }, { r, v -> r.copy(baseAttack = v) }),
+                    col("defense", 0..255, { it.baseDefense }, { r, v -> r.copy(baseDefense = v) }),
+                    col("speed", 0..255, { it.baseSpeed }, { r, v -> r.copy(baseSpeed = v) }),
+                    col("sp_attack", 0..255, { it.baseSpAttack }, { r, v -> r.copy(baseSpAttack = v) }),
+                    col("sp_defense", 0..255, { it.baseSpDefense }, { r, v -> r.copy(baseSpDefense = v) }),
+                    col("type1", 0..17, { it.type1 }, { r, v -> r.copy(type1 = v) }),
+                    col("type2", 0..17, { it.type2 }, { r, v -> r.copy(type2 = v) }),
+                    col("catch_rate", 0..255, { it.catchRate }, { r, v -> r.copy(catchRate = v) }),
+                    col("base_exp", 0..255, { it.baseExp }, { r, v -> r.copy(baseExp = v) }),
+                    col("ev_hp", 0..3, { it.evHp }, { r, v -> r.copy(evHp = v) }),
+                    col("ev_attack", 0..3, { it.evAttack }, { r, v -> r.copy(evAttack = v) }),
+                    col("ev_defense", 0..3, { it.evDefense }, { r, v -> r.copy(evDefense = v) }),
+                    col("ev_speed", 0..3, { it.evSpeed }, { r, v -> r.copy(evSpeed = v) }),
+                    col("ev_sp_attack", 0..3, { it.evSpAttack }, { r, v -> r.copy(evSpAttack = v) }),
+                    col("ev_sp_defense", 0..3, { it.evSpDefense }, { r, v -> r.copy(evSpDefense = v) }),
+                    col("held_item_common", 0..65535, { it.heldItemCommon }, { r, v -> r.copy(heldItemCommon = v) }),
+                    col("held_item_rare", 0..65535, { it.heldItemRare }, { r, v -> r.copy(heldItemRare = v) }),
+                    col("gender_ratio", 0..255, { it.genderRatio }, { r, v -> r.copy(genderRatio = v) }),
+                    col("hatch_cycles", 0..255, { it.hatchCycles }, { r, v -> r.copy(hatchCycles = v) }),
+                    col("base_friendship", 0..255, { it.baseFriendship }, { r, v -> r.copy(baseFriendship = v) }),
+                    col("growth_rate", 0..255, { it.growthRate }, { r, v -> r.copy(growthRate = v) }),
+                    col("egg_group1", 0..255, { it.eggGroup1 }, { r, v -> r.copy(eggGroup1 = v) }),
+                    col("egg_group2", 0..255, { it.eggGroup2 }, { r, v -> r.copy(eggGroup2 = v) }),
+                    col("ability1", 0..255, { it.ability1 }, { r, v -> r.copy(ability1 = v) }),
+                    col("ability2", 0..255, { it.ability2 }, { r, v -> r.copy(ability2 = v) }),
+                    col("safari_flee_rate", 0..255, { it.safariFleeRate }, { r, v -> r.copy(safariFleeRate = v) }),
+                    col("dex_color", 0..127, { it.color }, { r, v -> r.copy(color = v) }),
+                    col("flip", 0..1, { if (it.flip) 1 else 0 }, { r, v -> r.copy(flip = v == 1) }),
+                ) + (0 until 100).map { m ->
+                    val name = if (m < 92) "tm%02d".format(m + 1) else "hm%02d".format(m - 91)
+                    col(name, 0..1, { if (it.learnsTmHm(m)) 1 else 0 }, { r, v -> r.withTmHm(m, v == 1) })
+                },
+            )
+        }
 
         fun parse(bytes: ByteArray): FoxResult<PersonalData> {
             if (bytes.size != SIZE) return FoxResult.Err("Personal data record must be $SIZE bytes, got ${bytes.size}")

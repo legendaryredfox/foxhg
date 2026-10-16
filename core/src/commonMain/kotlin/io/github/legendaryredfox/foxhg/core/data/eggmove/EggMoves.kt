@@ -3,6 +3,7 @@ package io.github.legendaryredfox.foxhg.core.data.eggmove
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
+import io.github.legendaryredfox.foxhg.core.data.csv.Csv
 import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
@@ -87,6 +88,45 @@ data class EggMoves(val groups: List<EggMoveGroup>, val trailing: ByteArray = By
         }
 
         val SPEC = RecordSpec(HgssLayout.EGG_MOVES, ::parse, EggMoves::toBytes)
+
+        /** Species numbers the CSV accepts: a header is `20000 + species` in a u16. */
+        private val CSV_SPECIES = 1..1023
+        private const val CSV_MAX_MOVE = 0x1FF
+
+        /** `species,species_name,move,move_name`, one row per egg move in file order. */
+        fun toCsv(eggs: EggMoves, speciesName: (Int) -> String, moveName: (Int) -> String): String =
+            Csv.format(
+                listOf(listOf("species", "species_name", "move", "move_name")) +
+                    eggs.groups.flatMap { g -> g.moves.map { listOf(g.species.toString(), speciesName(g.species), it.toString(), moveName(it)) } },
+            )
+
+        /**
+         * Reads the file [toCsv] writes (the name columns are ignored). A species with rows gets exactly those egg moves (at most [MAX_PER_SPECIES]), a
+         * species without rows keeps its own; to remove a species' egg moves use the editor. A bad species or move rejects the whole file.
+         */
+        fun fromCsv(text: String, eggs: EggMoves): FoxResult<EggMoves> {
+            val rows = when (val parsed = Csv.parse(text)) {
+                is FoxResult.Ok -> parsed.value
+                is FoxResult.Err -> return parsed
+            }
+            val header = rows.firstOrNull() ?: return FoxResult.Err("The CSV file is empty")
+            val speciesCol = header.indexOf("species").also { if (it < 0) return FoxResult.Err("The CSV header has no 'species' column") }
+            val moveCol = header.indexOf("move").also { if (it < 0) return FoxResult.Err("The CSV header has no 'move' column") }
+            val bySpecies = LinkedHashMap<Int, MutableList<Int>>()
+            for ((n, row) in rows.drop(1).withIndex()) {
+                val line = n + 2
+                if (row.size != header.size) return FoxResult.Err("Line $line has ${row.size} fields, expected ${header.size}")
+                val species = row[speciesCol].trim().toIntOrNull() ?: return FoxResult.Err("Line $line: '${row[speciesCol]}' is not a whole number for species")
+                val move = row[moveCol].trim().toIntOrNull() ?: return FoxResult.Err("Line $line: '${row[moveCol]}' is not a whole number for move")
+                if (species !in CSV_SPECIES) return FoxResult.Err("Line $line: species $species is outside ${CSV_SPECIES.first}..${CSV_SPECIES.last}")
+                if (move !in 0..CSV_MAX_MOVE) return FoxResult.Err("Line $line: move $move is outside 0..$CSV_MAX_MOVE")
+                bySpecies.getOrPut(species) { ArrayList() } += move
+            }
+            bySpecies.entries.firstOrNull { it.value.size > MAX_PER_SPECIES }?.let { return FoxResult.Err("Species ${it.key} has ${it.value.size} egg moves, the most is $MAX_PER_SPECIES") }
+            var out = eggs
+            for ((species, moves) in bySpecies) out = out.withMoves(species, moves)
+            return FoxResult.Ok(out)
+        }
 
         fun load(project: RomProject): FoxResult<NarcRecords<EggMoves>> = NarcRecords.load(project, SPEC)
     }

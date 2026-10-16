@@ -1,6 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.data
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
+import io.github.legendaryredfox.foxhg.core.data.eggmove.EggMoveGroup
 import io.github.legendaryredfox.foxhg.core.data.eggmove.EggMoves
 import io.github.legendaryredfox.foxhg.core.data.event.EventFile
 import io.github.legendaryredfox.foxhg.core.data.event.OverworldSprites
@@ -30,6 +31,7 @@ import io.github.legendaryredfox.foxhg.core.data.battledisplay.BattleDisplay
 import io.github.legendaryredfox.foxhg.core.data.battledisplay.BattleDisplayTable
 import io.github.legendaryredfox.foxhg.core.data.bugcontest.BugContestTable
 import io.github.legendaryredfox.foxhg.core.data.growth.GrowthCurve
+import io.github.legendaryredfox.foxhg.core.data.personal.PersonalData
 import io.github.legendaryredfox.foxhg.core.data.personal.PersonalTable
 import io.github.legendaryredfox.foxhg.core.data.personal.TmHmBulk
 import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerSet
@@ -594,6 +596,70 @@ class RealRomRecordsTest {
         assertEquals(taught.records, Learnset.load(project).ok().records)
         project.revertAll()
         assertTrue(!project.isDirty)
+    }
+
+    @Test
+    fun personalDataCsvRoundTripsOverTheRealRecords() = withProject { project ->
+        val table = PersonalTable.load(project).ok()
+        val names = project.names!!.species
+        val csv = PersonalData.CSV.export(table.records) { names.getOrElse(it) { "Form $it" } }
+        assertEquals(table.records, PersonalData.CSV.import(csv, table.records).ok(), "export then import changes nothing (the padding and tutor bits stay)")
+        val header = csv.lines().first().split(',')
+        assertEquals(2 + 29 + 100, header.size, "id, name, 29 fields and 100 machine columns")
+
+        // Edit two cells in the text: Pikachu's HP and the first TM (a bit that is on or off).
+        val lines = csv.trimEnd().lines().toMutableList()
+        val hp = header.indexOf("hp")
+        val tm = header.indexOf("tm01")
+        val cells = lines[26].split(',').toMutableList()
+        assertEquals("25", cells[0])
+        cells[hp] = "99"
+        cells[tm] = if (cells[tm] == "1") "0" else "1"
+        lines[26] = cells.joinToString(",")
+        val edited = PersonalData.CSV.import(lines.joinToString("\r\n"), table.records).ok()
+        assertEquals(99, edited[25].baseHp)
+        assertEquals(!table.records[25].learnsTmHm(0), edited[25].learnsTmHm(0))
+        assertEquals(table.records[25].copy(baseHp = 99).withTmHm(0, !table.records[25].learnsTmHm(0)), edited[25])
+        assertEquals(table.records[24], edited[24])
+        assertTrue(PersonalData.CSV.import(csv.replaceFirst(",type1", ",nonsense"), table.records) is FoxResult.Err, "an unknown column rejects the file")
+        val badType = lines.toMutableList().also { l -> l[26] = l[26].split(',').toMutableList().also { it[header.indexOf("type1")] = "40" }.joinToString(",") }
+        assertTrue(PersonalData.CSV.import(badType.joinToString("\r\n"), table.records) is FoxResult.Err, "type 40 is out of range")
+        table.withAll(edited).save(project).ok()
+        assertEquals(edited, PersonalTable.load(project).ok().records)
+        project.revertAll()
+        assertTrue(!project.isDirty)
+    }
+
+    @Test
+    fun evolutionAndEggMoveCsvRoundTripOverTheRealData() = withProject { project ->
+        val names = project.names!!
+        val evolutions = EvolutionData.load(project).ok().records
+        val csv = EvolutionData.CSV.export(evolutions) { names.species.getOrElse(it) { "Form $it" } }
+        assertEquals(evolutions, EvolutionData.CSV.import(csv, evolutions).ok(), "export then import changes nothing")
+        val header = csv.lines().first().split(',')
+        assertEquals(2 + 21, header.size, "id, name and three columns for each of the seven slots")
+        val lines = csv.trimEnd().lines().toMutableList()
+        val ivysaur = lines[3].split(',').toMutableList() // line 0 is the header, then ids 0, 1, 2
+        assertEquals("2", ivysaur[0])
+        assertEquals(listOf("32", "3"), listOf(ivysaur[header.indexOf("param1")], ivysaur[header.indexOf("target1")]), "Ivysaur: level 32, Venusaur")
+        ivysaur[header.indexOf("param1")] = "30"
+        lines[3] = ivysaur.joinToString(",")
+        val edited = EvolutionData.CSV.import(lines.joinToString("\r\n"), evolutions).ok()
+        assertEquals(evolutions[2].with(0, evolutions[2].slots[0].copy(param = 30)), edited[2])
+        assertEquals(evolutions[1], edited[1])
+        assertTrue(EvolutionData.CSV.import(csv.replaceFirst("method2", "bogus"), evolutions) is FoxResult.Err)
+
+        val eggs = EggMoves.load(project).ok().records.single()
+        val eggCsv = EggMoves.toCsv(eggs, { names.species.getOrElse(it) { "" } }, { names.moves.getOrElse(it) { "" } })
+        assertEquals(eggs, EggMoves.fromCsv(eggCsv, eggs).ok(), "export then import changes nothing")
+        assertEquals(eggs.groups.sumOf { it.moves.size } + 1, eggCsv.trim().lines().size)
+        val withNew = EggMoves.fromCsv("species,move\n999,33\n999,45\n", eggs).ok()
+        assertEquals(listOf(33, 45), withNew.movesOf(999))
+        assertEquals(eggs.groups + EggMoveGroup(999, listOf(33, 45)), withNew.groups, "the vanilla groups stay and the new species goes last, in species order")
+        assertTrue(EggMoves.fromCsv("species,move\n5,9999\n", eggs) is FoxResult.Err, "move out of range")
+        assertTrue(EggMoves.fromCsv("species,move\n0,33\n", eggs) is FoxResult.Err, "species 0 is not a species")
+        val tooMany = "species,move\n" + (1..17).joinToString("") { "5,$it\n" }
+        assertTrue(EggMoves.fromCsv(tooMany, eggs) is FoxResult.Err, "17 egg moves for one species")
     }
 
     @Test

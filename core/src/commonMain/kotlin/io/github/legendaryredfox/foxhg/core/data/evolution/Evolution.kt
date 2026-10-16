@@ -1,6 +1,8 @@
 package io.github.legendaryredfox.foxhg.core.data.evolution
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
+import io.github.legendaryredfox.foxhg.core.data.csv.CsvColumn
+import io.github.legendaryredfox.foxhg.core.data.csv.RecordCsv
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
 import io.github.legendaryredfox.foxhg.core.game.HgssLayout
@@ -88,6 +90,19 @@ data class EvolutionData(val slots: List<EvolutionEntry>, val trailing: ByteArra
         }
 
         val SPEC = RecordSpec(HgssLayout.EVOLUTIONS, ::parse, EvolutionData::toBytes)
+
+        /** CSV columns: `method`, `param` and `target` of each of the [SLOTS] slots (`method1`, `param1`, `target1`, `method2`, ...). Bytes after the slots stay as they are. */
+        val CSV: RecordCsv<EvolutionData> by lazy {
+            RecordCsv(
+                (0 until SLOTS).flatMap { slot ->
+                    listOf(
+                        CsvColumn<EvolutionData>("method${slot + 1}", 0..65535, { it.slots[slot].method }, { r, v -> r.with(slot, r.slots[slot].copy(method = v)) }),
+                        CsvColumn("param${slot + 1}", 0..65535, { it.slots[slot].param }, { r, v -> r.with(slot, r.slots[slot].copy(param = v)) }),
+                        CsvColumn("target${slot + 1}", 0..65535, { it.slots[slot].target }, { r, v -> r.with(slot, r.slots[slot].copy(target = v)) }),
+                    )
+                },
+            )
+        }
 
         fun load(project: RomProject): FoxResult<NarcRecords<EvolutionData>> = NarcRecords.load(project, SPEC)
     }

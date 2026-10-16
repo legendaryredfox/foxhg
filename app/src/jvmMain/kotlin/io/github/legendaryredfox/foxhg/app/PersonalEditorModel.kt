@@ -52,6 +52,23 @@ class PersonalEditorModel(private val project: RomProject, private val onChanged
         return (0 until recordCount).filter { q.isEmpty() || label(it).contains(q, ignoreCase = true) }
     }
 
+    /** Every record, for the CSV buttons. */
+    val records: List<PersonalData>
+        get() {
+            version // read to subscribe
+            return table?.records ?: emptyList()
+        }
+
+    /** Replaces every record at once (CSV import). */
+    fun updateAll(new: List<PersonalData>) {
+        val current = table ?: return
+        val updated = current.withAll(new)
+        when (val saved = updated.save(project)) {
+            is FoxResult.Ok -> { table = updated; version++; onChanged() }
+            is FoxResult.Err -> loadError = saved.message
+        }
+    }
+
     fun select(index: Int) {
         if (index in 0 until recordCount) selectedIndex = index
     }

@@ -69,7 +69,10 @@ private fun Detail(model: RecordEditorModel<EvolutionData>, data: EvolutionData)
     val items = names?.items ?: emptyList()
     val moves = names?.moves ?: emptyList()
     val methods = EvolutionMethod.entries.map { it.label }
-    EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = { PokemonPortraits(model.selectedIndex) })
+    EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = {
+        CsvButtons(model, EvolutionData.CSV, "evolutions")
+        PokemonPortraits(model.selectedIndex)
+    })
     SectionCard("Evolutions", subtitle = "Up to ${EvolutionData.SLOTS} ways to evolve. Leave the method on None to unuse a slot.") {
         data.slots.forEachIndexed { slot, entry ->
             val method = entry.known

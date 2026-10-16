@@ -57,7 +57,11 @@ private fun Form(model: PersonalEditorModel, p: PersonalData) {
     val types = names?.types ?: emptyList()
     val abilities = names?.abilities ?: emptyList()
     val items = names?.items ?: emptyList()
-    EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = { CryButton(model.selectedIndex); PokemonPortraits(model.selectedIndex) })
+    EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = {
+        CsvButtons(PersonalData.CSV, "personal data", { model.records }, { nameOf(model.label(it)) }) { change -> model.updateAll(change(model.records)) }
+        CryButton(model.selectedIndex)
+        PokemonPortraits(model.selectedIndex)
+    })
 
     SectionCard("Base stats", subtitle = "Total ${p.baseStatTotal}") {
         StatRow("HP", p.baseHp) { v -> model.update { it.copy(baseHp = v) } }

@@ -11,6 +11,8 @@ class PersonalTable(val records: List<PersonalData>, private val nameTable: Byte
     fun with(index: Int, record: PersonalData): PersonalTable =
         PersonalTable(records.toMutableList().also { it[index] = record }, nameTable)
 
+    fun withAll(newRecords: List<PersonalData>): PersonalTable = PersonalTable(newRecords, nameTable)
+
     fun toNarc(): Narc = Narc(records.map { it.toBytes() }, nameTable)
 
     /** Stores the table as the project's personal NARC; unchanged tables leave the project clean. */
