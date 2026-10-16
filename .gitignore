@@ -44,3 +44,7 @@ Thumbs.db
 *.log
 /tmp/
 .claude/settings.local.json
+
+# Planning docs (local only)
+docs/spec.md
+docs/plan.md
