@@ -68,7 +68,7 @@ fun StaticEditor(model: StaticEditorModel, modifier: Modifier = Modifier) {
         model.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         val species = model.names?.species?.take(StaticEncounters.MAX_SPECIES + 1) ?: List(StaticEncounters.MAX_SPECIES + 1) { "#$it" }
         Text(
-            "Found by reading every script: a fixed battle, a gift or an egg. A Pokémon whose species comes from a script variable (the starters, most legendaries that are set up earlier in the story) is listed but not edited here: change its script in the Scripts editor. Roaming Pokémon (Raikou, Entei, Latias, Latios) and the fossils are not in scripts and are not listed.",
+            "Found by reading every script: a fixed battle, a gift or an egg. When a script puts the species in a variable first (Ho-Oh and Lugia, Latias and Latios, the Game Corner prizes, the starters), each number it can use is listed, and a change edits that number. A species that no script sets with a number, and a level that comes from a variable, are listed but not edited here: change the script in the Scripts editor. Roaming Pokémon are in the Roamers editor; the fossils are not in scripts and are not listed.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         for (kind in StaticKind.entries) {
@@ -86,6 +86,7 @@ fun StaticEditor(model: StaticEditorModel, modifier: Modifier = Modifier) {
                             if (e.levelIsVariable || e.level == null) Chip("level from a variable")
                             else NumberField("Level", e.level!!, 1..100, { v -> model.change(e, e.species, v) }, Modifier.width(90.dp), tag = "Level ${e.file}:${e.index}")
                         }
+                        if (e.viaVariable) Chip("set at item ${e.index}, used at ${e.commandIndex}")
                         Text(model.where(e), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
