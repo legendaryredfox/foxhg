@@ -1,0 +1,84 @@
+package io.github.legendaryredfox.foxhg.core.data.staticmon
+
+import io.github.legendaryredfox.foxhg.core.FoxResult
+import io.github.legendaryredfox.foxhg.core.project.RomProject
+import io.github.legendaryredfox.foxhg.core.script.ScriptCommand
+import io.github.legendaryredfox.foxhg.core.script.ScriptEntry
+import io.github.legendaryredfox.foxhg.core.script.ScriptFile
+import io.github.legendaryredfox.foxhg.core.script.ScriptItem
+
+/** The script commands that put a Pokémon in front of the player without a wild encounter table: a fixed battle, a gift, an egg, a roamer. */
+enum class StaticKind(val commandId: Int, val label: String, val hasLevel: Boolean) {
+    /** `WildBattle species, level, shiny`: Lugia, Ho-Oh, the Snorlax, the Red Gyarados and the other scripted battles. */
+    BATTLE(589, "Battle", true),
+
+    /** `GiveMon species, level, item, form, ability, var`: the starters' gift Pokémon, the Eevee from Bill, Kenya the Spearow, Shuckle. */
+    GIFT(137, "Gift", true),
+
+    /** `GiveEgg species, location`: the Mystery Egg and the other eggs; the hatching level is the game's own. */
+    EGG(138, "Egg", false),
+    ;
+
+    companion object { fun of(commandId: Int): StaticKind? = entries.firstOrNull { it.commandId == commandId } }
+}
+
+/**
+ * One scripted Pokémon: the command at [index] of the items of script file [file] (`a/0/1/2`). [species] and [level] are what the script says;
+ * when it is not a plain number but a script variable (0x4000 and up), [speciesIsVariable] or [levelIsVariable] is set and the editor leaves
+ * it alone.
+ */
+data class StaticEncounter(val file: Int, val index: Int, val kind: StaticKind, val species: Int, val level: Int?, val speciesIsVariable: Boolean, val levelIsVariable: Boolean) {
+    val editable: Boolean get() = !speciesIsVariable
+}
+
+/**
+ * The fixed Pokémon of the game: every `WildBattle`, `GiveMon` and `GiveEgg` in the scripts. Found by scanning the script files, so a ROM with more
+ * of them (added by the user) shows them too; a script that does not parse is skipped, as the Scripts editor shows it raw. Roamers
+ * (`CreateRoamer`) are not here: their species and level are in the game's code, not in the script.
+ */
+object StaticEncounters {
+    const val FIRST_VARIABLE = 0x4000L
+
+    fun find(project: RomProject): FoxResult<List<StaticEncounter>> {
+        val records = when (val r = ScriptEntry.load(project)) {
+            is FoxResult.Ok -> r.value
+            is FoxResult.Err -> return r
+        }
+        val out = ArrayList<StaticEncounter>()
+        records.records.forEachIndexed { file, entry ->
+            val script = (entry as? ScriptEntry.Script)?.file ?: return@forEachIndexed
+            script.items.forEachIndexed { index, item ->
+                val command = (item as? ScriptItem.Instruction)?.command ?: return@forEachIndexed
+                val kind = StaticKind.of(command.id) ?: return@forEachIndexed
+                val species = command.args.getOrNull(0) ?: return@forEachIndexed
+                val level = if (kind.hasLevel) command.args.getOrNull(1) else null
+                out += StaticEncounter(
+                    file, index, kind, species.toInt(), level?.toInt(),
+                    speciesIsVariable = species >= FIRST_VARIABLE, levelIsVariable = level != null && level >= FIRST_VARIABLE,
+                )
+            }
+        }
+        return FoxResult.Ok(out)
+    }
+
+    /** Sets the species (and the level, for kinds that have one and when it is not a variable) of [encounter] in its script. */
+    fun change(project: RomProject, encounter: StaticEncounter, species: Int, level: Int?): FoxResult<Unit> {
+        if (encounter.speciesIsVariable) return FoxResult.Err("This script takes the species from a variable; edit the script instead")
+        if (species !in 1..MAX_SPECIES) return FoxResult.Err("Species $species does not exist (1 to $MAX_SPECIES)")
+        if (level != null && level !in 1..100) return FoxResult.Err("A level is 1 to 100")
+        val records = when (val r = ScriptEntry.load(project)) {
+            is FoxResult.Ok -> r.value
+            is FoxResult.Err -> return r
+        }
+        val entry = records.records.getOrNull(encounter.file) as? ScriptEntry.Script ?: return FoxResult.Err("Script file ${encounter.file} is not a script")
+        val item = entry.file.items.getOrNull(encounter.index) as? ScriptItem.Instruction ?: return FoxResult.Err("The script changed: the command is gone")
+        if (item.command.id != encounter.kind.commandId) return FoxResult.Err("The script changed: the command is not a ${encounter.kind.label.lowercase()} any more")
+        val args = item.command.args.toMutableList()
+        args[0] = species.toLong()
+        if (encounter.kind.hasLevel && level != null && !encounter.levelIsVariable) args[1] = level.toLong()
+        val changed = entry.file.copy(items = entry.file.items.toMutableList().also { it[encounter.index] = ScriptItem.Instruction(ScriptCommand(item.command.id, args, item.command.target)) })
+        return records.with(encounter.file, ScriptEntry.Script(changed)).save(project)
+    }
+
+    const val MAX_SPECIES = 493
+}

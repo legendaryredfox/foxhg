@@ -34,6 +34,9 @@ data class NdsHeader(
 ) {
     val game: Game get() = Game.fromGameCode(gameCode)
 
+    /** The game and language this ROM is, from the game code; [GameProfile.editable] says whether foxhg has editors for it. */
+    val profile: GameProfile get() = GameProfile.fromGameCode(gameCode)
+
     companion object {
         const val SIZE = 0x200
 

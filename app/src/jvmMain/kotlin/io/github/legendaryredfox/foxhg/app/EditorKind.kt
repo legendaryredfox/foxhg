@@ -11,6 +11,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     PICKUP("Pokémon", "Pickup", implemented = true),
     BATTLE_DISPLAY("Pokémon", "Battle display", implemented = true),
     STARTERS("Pokémon", "Starters", implemented = true),
+    STATICS("Pokémon", "Static Pokémon", implemented = true),
     TRADES("Pokémon", "In-game trades", implemented = true),
     TMHM("Moves and items", "TMs and HMs", implemented = true),
     MARTS("Moves and items", "Poké Marts", implemented = true),
@@ -28,6 +29,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     FLY("World", "Fly", implemented = true),
     HEADBUTT("World", "Headbutt", implemented = true),
     BUG_CONTEST("World", "Bug Contest", implemented = true),
+    SAFARI("World", "Safari Zone", implemented = true),
     HEADERS("World", "Map headers", implemented = true),
     MATRICES("World", "Matrices", implemented = true),
     MAPS("World", "Maps", implemented = true),
@@ -37,6 +39,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     SOUNDS("Audio", "Sounds", implemented = true),
     TOOLBOX("Tools", "ROM toolbox", implemented = true),
     FILES("Tools", "Files", implemented = true),
+    OVERLAYS("Tools", "Overlays", implemented = true),
     SAVE_PLAYER(SAVE_GROUP, "Player", implemented = true),
     SAVE_PARTY(SAVE_GROUP, "Party", implemented = true),
     SAVE_PC(SAVE_GROUP, "PC boxes", implemented = true),
@@ -45,6 +48,10 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     SAVE_FLAGS(SAVE_GROUP, "Flags and variables", implemented = true),
     SAVE_POSITION(SAVE_GROUP, "Position", implemented = true),
     SAVE_FILE(SAVE_GROUP, "Save file", implemented = true),
+    ;
+
+    /** True for the screens that read only the file system and so work for any DS ROM; the rest assume the layout of English HeartGold and SoulSilver. */
+    val worksOnAnyGame: Boolean get() = this == FILES
 }
 
 /** The group of the editors of a save file: they need an open save, not a ROM. */

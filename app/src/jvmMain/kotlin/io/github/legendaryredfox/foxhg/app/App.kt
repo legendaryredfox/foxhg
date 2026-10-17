@@ -109,14 +109,15 @@ private fun TopBar(model: AppModel) {
         Image(remember(iconPixels) { AppIcon.painter(iconPixels) }, contentDescription = "foxhg", modifier = Modifier.size(30.dp))
         Text(model.projectName ?: "foxhg", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         model.header?.let { header ->
-            Chip(header.game.displayName.replace("Pokémon ", "").replace(" (English)", " · English"))
+            Chip(header.profile.displayName.replace("Pokémon ", "").replace(" (English)", " · English"), emphasis = model.readOnly)
+            if (model.readOnly) Chip("read-only", emphasis = true, modifier = Modifier.testTag("read-only"))
         }
         SaveIndicator(model)
         Spacer(Modifier.weight(1f))
         ProjectMenu(model)
-        OutlinedButton(onClick = { Actions.run(model) }, enabled = model.project != null, modifier = Modifier.testTag("run")) { Text("Run") }
-        if (model.isDirty) Button(onClick = { Actions.build(model) }, enabled = model.project != null) { Text("Build ROM…") }
-        else OutlinedButton(onClick = { Actions.build(model) }, enabled = model.project != null) { Text("Build ROM…") }
+        OutlinedButton(onClick = { Actions.run(model) }, enabled = model.project != null && !model.readOnly, modifier = Modifier.testTag("run")) { Text("Run") }
+        if (model.isDirty) Button(onClick = { Actions.build(model) }, enabled = model.project != null && !model.readOnly) { Text("Build ROM…") }
+        else OutlinedButton(onClick = { Actions.build(model) }, enabled = model.project != null && !model.readOnly) { Text("Build ROM…") }
     }
 }
 
@@ -141,13 +142,13 @@ private fun Sidebar(model: AppModel, modifier: Modifier) {
     Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))) {
     Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(start = 12.dp, top = 12.dp, bottom = 12.dp, end = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         // The ROM editors need a ROM or project, the save editors an open save file; each kind shows only when its file is open.
-        val ready = EditorKind.entries.filter { it.implemented && if (it.group == SAVE_GROUP) model.save != null else hasRom }.groupBy { it.group }
+        val ready = EditorKind.entries.filter { it.implemented && if (it.group == SAVE_GROUP) model.save != null else hasRom && (!model.readOnly || it.worksOnAnyGame) }.groupBy { it.group }
         ready.forEach { (group, editors) ->
             GroupLabel(group)
             editors.forEach { NavItem(it.title, model.selected == it, enabled = true, soon = false) { model.selected = it } }
         }
         val soon = EditorKind.entries.filter { !it.implemented }
-        if (hasRom && soon.isNotEmpty()) {
+        if (hasRom && !model.readOnly && soon.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
             GroupLabel("Coming soon")
             soon.forEach { NavItem(it.title, selected = false, enabled = false, soon = true) {} }
@@ -229,7 +230,7 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.SAVE_POSITION && model.save != null -> SavePositionScreen(model.save!!, model::mapName, modifier)
         selected == EditorKind.SAVE_FILE && model.save != null -> SaveFileScreen(model.save!!, modifier)
         project == null -> EmptyState(model, modifier)
-        selected == null -> Welcome(model, modifier)
+        selected == null || (model.readOnly && !selected.worksOnAnyGame) -> Welcome(model, modifier)
         selected == EditorKind.PERSONAL -> Loading(project, "Personal data", { PersonalEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.PERSONAL]?.let(m::select) } }) { editor ->
             KeepSelection(model, EditorKind.PERSONAL, editor.selectedIndex)
             PersonalEditor(editor, modifier.padding(16.dp))
@@ -278,6 +279,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.EGG_MOVES -> Loading(project, "egg moves", { model.recordEditor(EditorKind.EGG_MOVES, project, EggMoves.SPEC, { "%03d".format(it) }, 0) }) { editor ->
             EggMoveEditor(editor, modifier.padding(16.dp))
         }
+        selected == EditorKind.STATICS -> Loading(project, "static Pokémon", { StaticEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+            StaticEditor(editor, modifier.padding(16.dp))
+        }
         selected == EditorKind.STARTERS -> Loading(project, "starters", { StarterEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             StarterEditor(editor, modifier.padding(16.dp))
         }
@@ -325,8 +329,11 @@ private fun Content(model: AppModel, modifier: Modifier) {
         }
         selected == EditorKind.SOUNDS -> SoundEditor(modifier.padding(16.dp))
         selected == EditorKind.TOOLBOX -> PatchToolbox(remember(project) { PatchToolboxModel(project, onChanged = model::projectChanged) }, modifier.padding(16.dp))
-        selected == EditorKind.FILES -> Loading(project, "files", { FileTreeModel(project) }) { editor ->
+        selected == EditorKind.FILES -> Loading(project, "files", { FileTreeModel(project, model.romPath) }) { editor ->
             FileTreeEditor(editor, model, modifier.padding(16.dp))
+        }
+        selected == EditorKind.OVERLAYS -> Loading(project, "overlays", { OverlayEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+            OverlayEditor(editor, model, modifier.padding(16.dp))
         }
         selected == EditorKind.TEXT -> Loading(project, "text archives", {
             MessageEditorModel(project, onChanged = model::projectChanged).also { m ->
@@ -350,6 +357,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
         }
         selected == EditorKind.HEADBUTT -> Loading(project, "headbutt trees", { HeadbuttEditorModel(project, model::projectChanged, model.selectionMemory[EditorKind.HEADBUTT] ?: 0, { model.selectionMemory[EditorKind.HEADBUTT] = it }) }) { editor ->
             HeadbuttEditor(editor, modifier.padding(16.dp))
+        }
+        selected == EditorKind.SAFARI -> Loading(project, "safari zone", { SafariEditorModel(project, model::projectChanged, model.selectionMemory[EditorKind.SAFARI] ?: 0, { model.selectionMemory[EditorKind.SAFARI] = it }) }) { editor ->
+            SafariEditor(editor, modifier.padding(16.dp))
         }
         selected == EditorKind.BUG_CONTEST -> Loading(project, "bug contest", { BugContestEditorModel(project, model::projectChanged) }) { editor ->
             BugContestEditor(editor, modifier)
@@ -434,8 +444,9 @@ private fun EmptyState(model: AppModel, modifier: Modifier) {
 private fun Welcome(model: AppModel, modifier: Modifier) {
     Box(modifier, contentAlignment = Alignment.Center) {
         Column(Modifier.width(460.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(model.header?.game?.displayName ?: "", style = MaterialTheme.typography.headlineSmall)
-            Text(if (model.projectDir != null) "Pick an editor on the left. Changes are saved into the project automatically." else "Pick an editor on the left. Without a project, changes stay in memory until you save them as a project or choose Build ROM….", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(model.header?.profile?.displayName ?: "", style = MaterialTheme.typography.headlineSmall)
+            if (model.readOnly) Text(model.header?.profile?.readOnlyReason ?: "", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("read-only-reason"))
+            else Text(if (model.projectDir != null) "Pick an editor on the left. Changes are saved into the project automatically." else "Pick an editor on the left. Without a project, changes stay in memory until you save them as a project or choose Build ROM….", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

@@ -40,6 +40,9 @@ class HiddenItemEditorModel(private val project: RomProject, private val onChang
         private set
     var error: String? by mutableStateOf(null)
         private set
+    /** Why the last index typed was refused, or null. */
+    var indexNotice: String? by mutableStateOf(null)
+        private set
     var search: String by mutableStateOf("")
     var selectedIndex: Int by mutableIntStateOf(0)
         private set
@@ -67,7 +70,7 @@ class HiddenItemEditorModel(private val project: RomProject, private val onChang
     }
 
     fun select(position: Int) {
-        if (position in 0 until (table?.entries?.size ?: 0)) selectedIndex = position
+        if (position in 0 until (table?.entries?.size ?: 0)) { selectedIndex = position; indexNotice = null }
     }
 
     private fun apply(updated: HiddenItems) {
@@ -85,6 +88,17 @@ class HiddenItemEditorModel(private val project: RomProject, private val onChang
 
     /** Another spot with the same index would share its script and its "picked up" flag, so an index in use is refused. */
     fun isIndexFree(index: Int): Boolean = table?.entries?.withIndex()?.none { (i, e) -> i != selectedIndex && e.index == index } ?: true
+
+    /** Sets the index of the selected spot, or says which spot already has it. */
+    fun setIndex(index: Int) {
+        if (isIndexFree(index)) {
+            indexNotice = null
+            update { it.copy(index = index) }
+        } else {
+            val owner = table?.entries?.indexOfFirst { it.index == index } ?: -1
+            indexNotice = "Index $index is already used by spot $owner: two spots would share one script and one picked-up flag. Pick another index."
+        }
+    }
 
     val canAdd: Boolean get() = table?.let { it.entries.size < it.capacity } ?: false
 
@@ -136,8 +150,9 @@ fun HiddenItemEditor(model: HiddenItemEditorModel, modifier: Modifier = Modifier
                     FieldFlow {
                         ItemPicker("Item", spot.item, model.names?.items ?: emptyList(), { v -> model.update { it.copy(item = v) } }, Modifier.width(240.dp))
                         NumberField("Quantity", spot.quantity, 1..255, { v -> model.update { it.copy(quantity = v) } }, Modifier.width(100.dp))
-                        NumberField("Index", spot.index, 0..65535, { v -> if (model.isIndexFree(v)) model.update { it.copy(index = v) } }, Modifier.width(100.dp))
+                        NumberField("Index", spot.index, 0..65535, model::setIndex, Modifier.width(100.dp))
                     }
+                    model.indexNotice?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("hidden-index-notice")) }
                     Text(
                         "Script ${spot.script} and flag ${spot.flag} (picked up) follow from the index. Put script ${spot.script} on an overworld object of the map " +
                             "to place the spot; removing or renumbering a spot leaves objects that use its script pointing at nothing.",

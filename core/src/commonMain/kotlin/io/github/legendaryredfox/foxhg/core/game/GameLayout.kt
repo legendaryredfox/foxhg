@@ -121,6 +121,9 @@ object HgssLayout {
     /** One file per map header: the Headbutt encounters and tree coordinates of that map (4 bytes when the map has no trees). Same in HG and SS. */
     const val HEADBUTT = "a/2/5/2"
 
+    /** Twelve files, one per Safari Zone area type: the Pokémon each kind of ground and water draws, and the objects the player places to change them. */
+    const val SAFARI_ZONE = "a/2/3/0"
+
     /** One 4-byte file per map header: Rock Smash item drop odds and the item table it draws from. */
     const val ROCK_SMASH = "a/2/5/3"
 

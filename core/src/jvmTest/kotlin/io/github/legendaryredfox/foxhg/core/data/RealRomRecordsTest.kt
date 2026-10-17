@@ -52,6 +52,8 @@ import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttEncounter
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttFile
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttTree
 import io.github.legendaryredfox.foxhg.core.data.rocksmash.RockSmashItems
+import io.github.legendaryredfox.foxhg.core.data.safari.SafariEncounter
+import io.github.legendaryredfox.foxhg.core.data.safari.SafariZoneFile
 import io.github.legendaryredfox.foxhg.core.data.rocksmash.RockSmashSite
 import io.github.legendaryredfox.foxhg.core.data.starter.Starters
 import io.github.legendaryredfox.foxhg.core.game.HgssLayout
@@ -275,6 +277,28 @@ class RealRomRecordsTest {
         assertTrue(Starters.change(project, Starters(listOf(0, 4, 7), 0, 5)) is FoxResult.Err)
         assertTrue(Starters.change(project, Starters(listOf(1, 4, 7), 300, 5)) is FoxResult.Err)
         assertTrue(!project.isDirty, "a refused change writes nothing")
+    }
+
+    @Test
+    fun safariZoneRoundTripsAndEditsSaveBack() = withProject { project ->
+        val files = NarcRecords.load(project, SafariZoneFile.SPEC).ok()
+        println("SAFARI files ${files.records.size} " + files.records.map { f -> f.groups.map { it.objectSlots } + (if (f.stub) "stub" else "") })
+        assertEquals(SafariZoneFile.NAMES.size, files.records.size, "one file per kind of area")
+        files.assertNarcRoundTrips(project)
+        val speciesCount = project.names!!.species.size
+        for (f in files.records.filter { !it.stub }) {
+            for (g in f.groups) {
+                val all = g.morning + g.day + g.night + g.morningObject + g.dayObject + g.nightObject
+                assertTrue(all.all { it.species < speciesCount }, "real species")
+                assertTrue(g.required.all { it.type < SafariZoneFile.OBJECT_TYPES.size } && g.optional.all { it.type < SafariZoneFile.OBJECT_TYPES.size })
+            }
+        }
+        val edited = files.records[0].let { it.withGroup(0, it.groups[0].withBase(1, 2, SafariEncounter(16, 9))) }
+        files.with(0, edited).save(project).ok()
+        assertEquals(edited, NarcRecords.load(project, SafariZoneFile.SPEC).ok().records[0])
+        assertEquals(edited, SafariZoneFile.parse(edited.toBytes()).ok())
+        project.revertAll()
+        assertTrue(!project.isDirty)
     }
 
     @Test

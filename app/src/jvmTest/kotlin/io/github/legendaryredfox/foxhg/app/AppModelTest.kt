@@ -30,11 +30,29 @@ class AppModelTest {
     }
 
     @Test
-    fun rejectsUnsupportedGames() = withFile(headerWith("BPEE")) { file ->
+    fun aGameWithoutEditorsOpensReadOnlyWithTheFileBrowser() {
+        for (code in listOf("CPUE", "IPKS", "ADAE", "BPEE")) {
+            val rom = AppSyntheticRom.build(listOf("one.bin" to byteArrayOf(1, 2, 3)), gameCode = code)
+            withFile(rom) { file ->
+                val model = testModel()
+                model.openRom(file)
+                assertNotNull(model.project, "$code opens")
+                assertNull(model.error, code)
+                assertTrue(model.readOnly, code)
+                assertTrue(model.status!!.contains("read-only"), model.status)
+                assertTrue(model.header!!.profile.displayName.isNotEmpty())
+                model.close()
+            }
+        }
+    }
+
+    @Test
+    fun englishHeartGoldOpensForEditing() = withFile(AppSyntheticRom.build(listOf("one.bin" to byteArrayOf(1)), gameCode = "IPKE")) { file ->
         val model = testModel()
         model.openRom(file)
-        assertNull(model.project)
-        assertTrue(model.error!!.contains("not supported"), model.error)
+        assertNotNull(model.project)
+        assertTrue(!model.readOnly)
+        model.close()
     }
 
     @Test

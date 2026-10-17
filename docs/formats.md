@@ -597,3 +597,12 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
 - Nickname of trade `n` is entry `n` of message bank 200, the original trainer's name entry `n + 13` (Rocky, Rudy). The editor does not
   edit those; the text editor does. PID and OT id are u32 in the file; the editor edits them up to 2^31 - 1 (all vanilla values are far below).
 
+## Static Pokémon in scripts (HeartGold English)
+
+- Script commands that make a fixed Pokémon: `WildBattle` (589: u16 species, u16 level, u8 shiny), `GiveMon` (137: u16 species, u16 level, u16 item, u16 form, u16 ability, var result) and `GiveEgg` (138: u16 species, u16 location). A value of 0x4000 or more is a script variable, not a number. `CreateRoamer` (464, u8 id) only picks which roamer starts: ids 0 Raikou, 1 Entei, 2 Latias, 3 Latios, their species and levels (40, 40, 35, 35) are in the game's code (`Save_CreateRoamerByID`), not in data. The vanilla ROM has 21 `WildBattle` (3 with the species in variable 0x400A), 13 `GiveMon` and 3 `GiveEgg` (species 179, 194, 218) with the species as a plain number: for example Mewtwo level 70, Suicune level 40 twice, the Eevee from Bill level 5, Tyrogue level 10, Dratini level 15.
+- Overlays: the ARM9 overlay table (`y9.bin`) has 32 byte entries (id, RAM address, RAM size, BSS size, static initialiser start and end, file id, and the last word with the flags in the top byte and the packed size in the low 24 bits); foxhg keeps edited overlays decompressed and compresses them again (BLZ) at build time when the table says the overlay is packed.
+
+## Safari Zone encounters (HeartGold English)
+
+- `a/2/3/0` (`sz_enc_data.narc`) has 12 files, one per kind of area (Plains, Meadow, Savannah, Peak, Rocky Beach, Wetland, Forest, Swamp, Marshland, Wasteland, Mountain, Desert; names from DSPRE). Layout from DSPRE's `SafariZoneEncounterFile`, confirmed by an exact round trip over all 12 files: 5 bytes with the object arrangement count of each group (grass, surf, old rod, good rod, super rod), 3 bytes of padding, then the groups in that order. Each group: 3 x 10 encounters (morning, day, night; u16 species, u8 level, 1 byte of padding), then 3 x N encounters (the N arrangements, by time of day), then N pairs of requirements (u8 type, u8 quantity: required, then optional). Requirement types: 0 none, 1 Plains, 2 Forest, 3 Peak, 4 Waterside.
+- The vanilla files have 10 arrangements for grass, 3 for surf and 2 for each rod, in all 12 areas.

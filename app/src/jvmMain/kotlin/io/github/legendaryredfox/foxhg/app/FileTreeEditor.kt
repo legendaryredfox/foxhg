@@ -42,7 +42,7 @@ import java.nio.file.Files
 class TreeRow(val path: String, val name: String, val depth: Int, val directory: Boolean, val file: RomFile?, val children: Int)
 
 /** The files of the ROM as a tree, read only. The bytes shown are the project's, so edited files show their edits. */
-class FileTreeModel(private val project: RomProject) {
+class FileTreeModel(private val project: RomProject, private val romPath: java.nio.file.Path? = null) {
     private val expanded = mutableStateListOf<String>()
     var search by mutableStateOf("")
     var selected: String? by mutableStateOf(null)
@@ -90,6 +90,10 @@ class FileTreeModel(private val project: RomProject) {
     /** Writes the file's current bytes to [target]; null on success, else the problem. */
     fun export(path: String, target: java.nio.file.Path): String? {
         val data = bytes(path) ?: return "The ROM has no file $path"
+        val opened = romPath
+        if (opened != null && (target.toAbsolutePath() == opened.toAbsolutePath() || (Files.exists(target) && Files.exists(opened) && Files.isSameFile(target, opened)))) {
+            return "Choose a different file than the ROM you opened"
+        }
         return try { Files.write(target, data); null } catch (e: IOException) { "Cannot write $target: ${e.message}" }
     }
 }

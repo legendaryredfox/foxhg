@@ -116,6 +116,9 @@ class AppModel(
         private set
     var error: String? by mutableStateOf(null)
     var status: String? by mutableStateOf(null)
+    /** True when the open ROM is a game foxhg has no editors for: only the file browser is on offer and nothing can be edited or built. */
+    val readOnly: Boolean get() = header?.profile?.editable == false
+
     var selected: EditorKind? by mutableStateOf(null)
     var dialog: AppDialog? by mutableStateOf(null)
     var autosave: Boolean by mutableStateOf(settings.autosave)
@@ -221,10 +224,6 @@ class AppModel(
             return
         }
         val romHeader = (headerResult as FoxResult.Ok).value
-        if (!romHeader.game.supported) {
-            fail("${romHeader.game.displayName} is not supported yet (${romHeader.gameCode})")
-            return
-        }
         val newSource = try {
             FileRomSource(path)
         } catch (e: java.io.IOException) {
@@ -235,7 +234,7 @@ class AppModel(
             is FoxResult.Ok -> {
                 if (!attach(opened.value, newSource, path, projectDir = null)) { newSource.close(); return }
                 recent = recents.add(RecentKind.ROM, path)
-                status = "Opened ${path.fileName}"
+                status = romHeader.profile.readOnlyReason ?: "Opened ${path.fileName}"
             }
             is FoxResult.Err -> {
                 newSource.close()
@@ -268,14 +267,9 @@ class AppModel(
             }
             is FoxResult.Ok -> {
                 val l = loaded.value
-                if (!l.project.rom.header.game.supported) {
-                    l.source.close()
-                    fail("${l.project.rom.header.game.displayName} is not supported yet (${l.project.rom.header.gameCode})")
-                    return false
-                }
                 if (!attach(l.project, l.source, l.romPath, directory)) { l.source.close(); return false }
                 recent = recents.add(RecentKind.PROJECT, directory)
-                status = "Opened project ${directory.fileName}"
+                status = l.project.rom.header.profile.readOnlyReason ?: "Opened project ${directory.fileName}"
                 return true
             }
         }
@@ -296,11 +290,8 @@ class AppModel(
     private fun flushProject(): Boolean =
         if (projectDir != null && (hasUnsavedWork || project?.historyDirty == true)) saveProject() else true
 
-    /** Why [rom] cannot be edited (not a ROM, or a game foxhg has no layout for), or null when it can. */
-    private fun unsupported(rom: Path): String? = when (val h = readNdsHeader(rom)) {
-        is FoxResult.Err -> h.message
-        is FoxResult.Ok -> if (h.value.game.supported) null else "${h.value.game.displayName} is not supported yet (${h.value.gameCode})"
-    }
+    /** Why [rom] cannot be opened at all (not a ROM), or null. A game foxhg has no layout for opens read-only instead ([readOnly]). */
+    private fun unsupported(rom: Path): String? = (readNdsHeader(rom) as? FoxResult.Err)?.message
 
     /** Makes [newProject] the open one. False, with the reason in [error], when the work of the current project cannot be saved first. */
     private fun attach(newProject: RomProject, newSource: FileRomSource, rom: Path, projectDir: Path?): Boolean {

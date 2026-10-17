@@ -13,6 +13,7 @@ import io.github.legendaryredfox.foxhg.core.data.item.ItemData
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /** The read-only file tree: browse folders, search, see size and bytes, edited marks, export. Skips without the ROM. */
@@ -60,6 +61,22 @@ class FileTreeUiEndToEndTest {
     }
 
     @Test
+    fun exportingOntoTheOpenRomIsRefused() = withHeartGoldApp { model, _ ->
+        open("Files")
+        onNodeWithTag("search:Search paths…").performTextInput("a/0/1/7")
+        waitForIdle()
+        onNodeWithTag("tree:a/0/1/7").performClick()
+        waitForIdle()
+        val sizeBefore = Files.size(romPath)
+        withChoosers(file = { _, _, _ -> romPath }) {
+            onNodeWithTag("export-file").performClick()
+            waitForIdle()
+        }
+        assertEquals("Choose a different file than the ROM you opened", model.error)
+        assertEquals(sizeBefore, Files.size(romPath), "the opened ROM is not overwritten")
+    }
+
+    @Test
     fun theHexDumpFormatsSixteenBytesALine() {
         val dump = hexDump(ByteArray(20) { (it + 60).toByte() })
         val lines = dump.lines()
@@ -70,5 +87,5 @@ class FileTreeUiEndToEndTest {
     }
 }
 
-private fun androidx.compose.ui.test.SemanticsNodeInteraction.editableOrText(): String =
+internal fun androidx.compose.ui.test.SemanticsNodeInteraction.editableOrText(): String =
     fetchSemanticsNode().config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text)?.joinToString("") { it.text } ?: ""

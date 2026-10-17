@@ -34,6 +34,7 @@ import io.github.legendaryredfox.foxhg.core.data.pickup.PickupTable
 import io.github.legendaryredfox.foxhg.core.data.typechart.TypeChart
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerFlagBulk
 import io.github.legendaryredfox.foxhg.core.data.headbutt.HeadbuttFile
+import io.github.legendaryredfox.foxhg.core.data.safari.SafariZoneFile
 import io.github.legendaryredfox.foxhg.core.data.rocksmash.RockSmashItems
 import io.github.legendaryredfox.foxhg.core.data.rocksmash.RockSmashSite
 import io.github.legendaryredfox.foxhg.core.data.starter.Starters
@@ -163,6 +164,7 @@ class ListEditorsUiEndToEndTest {
         onNodeWithTag("number:Index").typeNumber(1)
         waitForIdle()
         assertEquals(0, table().entries[0].index, "index 1 belongs to the second spot, so it is refused")
+        onNodeWithTag("hidden-index-notice").assertIsDisplayed()
 
         onNodeWithTag("hidden-add").assertIsNotEnabled()
         tap(onNodeWithTag("hidden-remove"), inScrollPane = false)
@@ -542,6 +544,28 @@ class ListEditorsUiEndToEndTest {
 
         buildAndReopen(model) { rebuilt ->
             assertEquals(table(), (BugContestTable.load(rebuilt) as FoxResult.Ok).value)
+        }
+    }
+
+    @Test
+    fun editingTheSafariZoneAreasOnItsScreen() = withHeartGoldApp { model, project ->
+        val files = { (NarcRecords.load(project, SafariZoneFile.SPEC) as FoxResult.Ok).value.records }
+        val before = files()
+        val scyther = project.names!!.species.indexOf("SCYTHER")
+
+        open("Safari Zone")
+        tap(onNodeWithTag("chip:Surfing"))
+        waitForIdle()
+        pick("Day 3", "SCYTHER")
+        assertEquals(scyther, files()[0].groups[1].day[2].species)
+        onNodeWithTag("number:Day 3 level").typeNumber(44)
+        waitForIdle()
+        assertEquals(44, files()[0].groups[1].day[2].level)
+        assertEquals(before[0].groups[0], files()[0].groups[0], "other groups stay")
+        assertEquals(before.drop(1), files().drop(1), "other areas stay")
+
+        buildAndReopen(model) { rebuilt ->
+            assertEquals(files(), (NarcRecords.load(rebuilt, SafariZoneFile.SPEC) as FoxResult.Ok).value.records)
         }
     }
 
