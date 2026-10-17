@@ -7,6 +7,9 @@ import androidx.compose.ui.test.onNodeWithText
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.putU32
+import io.github.legendaryredfox.foxhg.core.save.BagData
+import io.github.legendaryredfox.foxhg.core.save.BagPocket
+import io.github.legendaryredfox.foxhg.core.save.BagSlot
 import io.github.legendaryredfox.foxhg.core.save.BlockFooter
 import io.github.legendaryredfox.foxhg.core.save.BlockKind
 import io.github.legendaryredfox.foxhg.core.save.PartyData
@@ -178,6 +181,33 @@ class SaveEditorUiEndToEndTest {
             waitForIdle()
             val written = (SaveFile.parse(Files.readAllBytes(path)) as FoxResult.Ok).value
             assertEquals(listOf(25), (PartyData.read(written) as FoxResult.Ok).value.members.map { it.species })
+        }
+    }
+    @Test
+    fun theBagScreenAddsChangesAndRemovesAnItem() = withSave { path, _ ->
+        val model = testModel()
+        model.openSave(path)
+        model.selected = EditorKind.SAVE_BAG
+        runApp(model) {
+            onNodeWithTag("number:New quantity").typeNumber(7)
+            tap(onNodeWithTag("bag-add"), inScrollPane = false)
+            waitForIdle()
+            assertEquals(listOf(BagSlot(1, 7)), model.save!!.bag!!.items(BagPocket.ITEMS))
+            onNodeWithTag("number:Quantity 0").typeNumber(50)
+            waitForIdle()
+            assertEquals(listOf(BagSlot(1, 50)), model.save!!.bag!!.items(BagPocket.ITEMS))
+            tap(onNodeWithTag("bag-pocket:6"), inScrollPane = false)
+            waitForIdle()
+            tap(onNodeWithTag("bag-add"), inScrollPane = false)
+            waitForIdle()
+            assertEquals(listOf(BagSlot(1, 1)), model.save!!.bag!!.items(BagPocket.BALLS))
+            tap(onNodeWithTag("bag-remove:0"), inScrollPane = false)
+            waitForIdle()
+            assertEquals(emptyList(), model.save!!.bag!!.items(BagPocket.BALLS))
+            tap(onNodeWithTag("save-write"), inScrollPane = false)
+            waitForIdle()
+            val written = (SaveFile.parse(Files.readAllBytes(path)) as FoxResult.Ok).value
+            assertEquals(listOf(BagSlot(1, 50)), (BagData.read(written) as FoxResult.Ok).value.items(BagPocket.ITEMS))
         }
     }
 }

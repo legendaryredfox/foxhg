@@ -164,4 +164,33 @@ class RealSaveTest {
         raw[8 + 20] = (raw[8 + 20] + 1).toByte()
         assertTrue(PartyData.parse(raw) is FoxResult.Err)
     }
+    @Test
+    fun theBagOfTheRealSaveReadsAndWritesBack() {
+        val dir = Path.of("build", "emulator-saves")
+        val files = names.map { dir.resolve("$it.dsv") }.filter { Files.exists(it) }
+        if (files.isEmpty()) { println("SKIPPED: no saves in ${dir.toAbsolutePath()}"); return }
+        for (path in files) {
+            val file = Files.readAllBytes(path)
+            val save = (SaveFile.parse(file) as FoxResult.Ok).value
+            val bag = (BagData.read(save) as? FoxResult.Ok)?.value ?: error("$path: no bag")
+            println("BAG ${path.fileName}: " + BagPocket.entries.joinToString { p -> "${p.label}=" + bag.items(p).joinToString("/") { "${it.id}x${it.quantity}" } } + " registered=${bag.registered}")
+            for (pocket in BagPocket.entries) {
+                // used slots come first, then only empty ones
+                val used = bag.items(pocket)
+                assertTrue(used.all { it.quantity in 1..pocket.maxQuantity && it.id in 1..BagData.MAX_ITEM }, "$path ${pocket.label} holds sane slots")
+                val raw = bag.slots.subList(pocket.start, pocket.start + pocket.capacity)
+                assertEquals(used + List(pocket.capacity - used.size) { BagSlot.EMPTY }, raw, "$path ${pocket.label}: used slots first")
+            }
+            val general = save.current(BlockKind.GENERAL)!!
+            assertContentEquals(save.chunk(general, SaveChunks.byId(SaveChunks.BAG)), bag.toBytes(), "$path: the bag chunk writes back as it was")
+            assertContentEquals(file, (save.withBag(bag) as FoxResult.Ok).value.toFileBytes(), "$path: writing the bag back changes no byte")
+
+            val edited = (bag.adding(BagPocket.BALLS, 1, 5) as FoxResult.Ok).value.let { (it.adding(BagPocket.MEDICINE, 17, 99) as FoxResult.Ok).value }
+            val again = (BagData.read((save.withBag(edited) as FoxResult.Ok).value) as FoxResult.Ok).value
+            assertEquals(edited, again)
+            assertEquals(bag.count(1) + 5, again.count(1))
+            assertEquals(bag.count(17) + 99, again.count(17))
+            assertTrue((save.withBag(edited) as FoxResult.Ok).value.let { it.block(1, BlockKind.GENERAL).valid })
+        }
+    }
 }

@@ -26,6 +26,7 @@ import io.github.legendaryredfox.foxhg.app.ui.PickerField
 import io.github.legendaryredfox.foxhg.app.ui.SectionCard
 import io.github.legendaryredfox.foxhg.app.ui.ToggleChip
 import io.github.legendaryredfox.foxhg.core.FoxResult
+import io.github.legendaryredfox.foxhg.core.save.BagData
 import io.github.legendaryredfox.foxhg.core.save.BlockKind
 import io.github.legendaryredfox.foxhg.core.save.LocalFieldData
 import io.github.legendaryredfox.foxhg.core.save.Location
@@ -34,6 +35,7 @@ import io.github.legendaryredfox.foxhg.core.save.PartyData
 import io.github.legendaryredfox.foxhg.core.save.PlayerData
 import io.github.legendaryredfox.foxhg.core.save.SaveChunks
 import io.github.legendaryredfox.foxhg.core.save.SaveFile
+import io.github.legendaryredfox.foxhg.core.save.withBag
 import io.github.legendaryredfox.foxhg.core.save.withParty
 import io.github.legendaryredfox.foxhg.core.save.withPlayer
 import java.nio.file.Files
@@ -61,6 +63,21 @@ class SaveEditorModel(val path: Path, file: SaveFile) {
     val position: LocalFieldData? get() = (LocalFieldData.read(file) as? FoxResult.Ok)?.value
 
     val party: PartyData? get() = (PartyData.read(file) as? FoxResult.Ok)?.value
+
+    val bag: BagData? get() = (BagData.read(file) as? FoxResult.Ok)?.value
+
+    /** Replaces the bag; the reason is shown when the save refuses the change. */
+    fun updateBag(change: (BagData) -> FoxResult<BagData>) {
+        val current = bag ?: return
+        val changed = when (val c = change(current)) {
+            is FoxResult.Ok -> file.withBag(c.value)
+            is FoxResult.Err -> c
+        }
+        when (changed) {
+            is FoxResult.Ok -> { file = changed.value; error = null }
+            is FoxResult.Err -> error = changed.message
+        }
+    }
 
     /** Replaces the party; the reason is shown when the save refuses it. */
     fun updateParty(change: (PartyData) -> PartyData) {
