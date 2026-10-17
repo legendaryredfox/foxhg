@@ -70,7 +70,7 @@ fun ShinyRatesEditor(model: ShinyRatesEditorModel, modifier: Modifier = Modifier
     DetailPane(modifier) {
         Text("Shiny rates", style = MaterialTheme.typography.headlineSmall)
         Text(
-            "The game makes a Pokémon shiny only by chance, 8 in 65536. This screen sets the chance for four kinds of Pokémon, each on its own. " +
+            "The game makes a Pokémon shiny only by chance, 8 in 65536. This screen sets the chance for four kinds of Pokémon, each on its own: wild encounters, static battles (the fixed battles of the Static Pokémon screen), gifts and eggs, and trainers. " +
                 "Fields are in hundredths of a percent: 1000 is 10 %, 10000 is 100 %, 0 leaves the game as it is.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -90,7 +90,7 @@ fun ShinyRatesEditor(model: ShinyRatesEditorModel, modifier: Modifier = Modifier
                 }
             }
             rateRow("Wild encounters (grass, water, rods, caves)", "Shiny wild", rates.wild) { r, v -> r.copy(wild = v) }
-            rateRow("Scripted wild battles (Lugia, Snorlax, ...)", "Shiny scripted", rates.scripted) { r, v -> r.copy(scripted = v) }
+            rateRow("Static battles (Lugia, Ho-Oh, Snorlax, legendaries, ...)", "Shiny scripted", rates.scripted) { r, v -> r.copy(scripted = v) }
             rateRow("Gift Pokémon and eggs", "Shiny gift", rates.gift) { r, v -> r.copy(gift = v) }
             rateRow("Trainers' Pokémon", "Shiny trainer", rates.trainer) { r, v -> r.copy(trainer = v) }
         }

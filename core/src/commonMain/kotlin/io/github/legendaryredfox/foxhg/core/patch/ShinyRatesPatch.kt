@@ -109,7 +109,7 @@ private object ShinyHooks {
 object ShinyRatesPatch : BytePatch(
     id = "shiny-rates",
     title = "Shiny rates",
-    description = "Adds an editable chance of a shiny Pokémon for wild encounters, scripted wild battles, gifts and eggs, and trainers' Pokémon. " +
+    description = "Adds an editable chance of a shiny Pokémon for wild encounters, static battles (scripted wild battles), gifts and eggs, and trainers' Pokémon. " +
         "Installs routines in the synthetic overlay and hooks the places that make these Pokémon. All rates start at 0, which changes nothing.",
     fixedEdits = ShinyHooks.edits(ShinyRates.NONE),
     requires = DsprePatches.arm9Expansion,
