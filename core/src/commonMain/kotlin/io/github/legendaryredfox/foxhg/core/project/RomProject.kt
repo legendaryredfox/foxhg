@@ -127,6 +127,31 @@ class RomProject(
         return step.changes.map { it.target }
     }
 
+    /**
+     * Runs [block], a save that writes more than one file. When it returns an error, every write it made is taken back (files,
+     * ARM9, overlays and the undo journal), so a save that fails half way leaves the project as it was.
+     */
+    @kotlin.jvm.Synchronized
+    fun <T> atomically(block: () -> FoxResult<T>): FoxResult<T> {
+        val savedEdits = LinkedHashMap(edits)
+        val savedArm9 = arm9Edit
+        val savedOverlays = LinkedHashMap(overlayEdits)
+        val savedUndo = undoSteps.toList()
+        val savedRedo = redoSteps.toList()
+        val savedVersion = historyVersion
+        val result = block()
+        if (result is FoxResult.Err) {
+            edits.clear(); edits.putAll(savedEdits)
+            arm9Edit = savedArm9
+            overlayEdits.clear(); overlayEdits.putAll(savedOverlays)
+            undoSteps.clear(); undoSteps.addAll(savedUndo)
+            redoSteps.clear(); redoSteps.addAll(savedRedo)
+            historyVersion = savedVersion
+            namesLoaded = false
+        }
+        return result
+    }
+
     private fun stateOf(target: EditTarget): ByteArray? = when (target) {
         is EditTarget.File -> edits[target.path.trim('/')]
         EditTarget.Arm9 -> arm9Edit
@@ -227,6 +252,13 @@ class RomProject(
         if (plain.contentEquals(original)) overlayEdits.remove(id) else overlayEdits[id] = plain.copyOf()
         record(EditTarget.Overlay(id), before)
         return FoxResult.Ok(Unit)
+    }
+
+    /** Drops the edits of overlay [id]: it is the ROM's again. */
+    @kotlin.jvm.Synchronized
+    fun revertOverlay(id: Int) {
+        val before = overlayEdits.remove(id) ?: return
+        record(EditTarget.Overlay(id), before)
     }
 
     @kotlin.jvm.Synchronized

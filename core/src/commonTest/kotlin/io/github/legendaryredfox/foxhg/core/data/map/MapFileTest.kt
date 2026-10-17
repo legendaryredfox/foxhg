@@ -3,6 +3,7 @@ package io.github.legendaryredfox.foxhg.core.data.map
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
 
 class MapFileTest {
@@ -18,6 +19,17 @@ class MapFileTest {
         assertEquals(m, back)
         assertEquals(2, back.type(3, 4))
         assertEquals(0x80, back.collision(3, 4))
+    }
+
+    @Test
+    fun aTileOutsideTheMapIsRefusedNotWrappedToAnotherRow() {
+        val m = blank()
+        for ((x, y) in listOf(-1 to 0, 32 to 0, 0 to -1, 0 to 32)) {
+            assertFailsWith<IllegalArgumentException> { m.type(x, y) }
+            assertFailsWith<IllegalArgumentException> { m.collision(x, y) }
+            assertFailsWith<IllegalArgumentException> { m.withTile(x, y, type = 1) }
+        }
+        assertEquals(0, m.type(31, 31))
     }
 
     @Test

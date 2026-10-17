@@ -67,10 +67,9 @@ class BattleDisplayTable private constructor(
         return BattleDisplayTable(offsets.with(0, data), newHeights)
     }
 
-    fun save(project: RomProject): FoxResult<Unit> {
+    fun save(project: RomProject): FoxResult<Unit> = project.atomically {
         val a = offsets.save(project)
-        if (a is FoxResult.Err) return a
-        return heights.save(project)
+        if (a is FoxResult.Err) a else heights.save(project)
     }
 
     companion object {

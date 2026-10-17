@@ -50,6 +50,8 @@ data class HeadbuttFile(
     val normalGroups: List<HeadbuttTreeGroup>,
     val specialGroups: List<HeadbuttTreeGroup>,
     val stub: Boolean = false,
+    /** Header bytes 1 and 3, unused by the game and zero in the vanilla files, kept so a file edited by another tool writes back as it was. */
+    val headerPadding: Pair<Int, Int> = 0 to 0,
 ) {
     init {
         require(normal.size == NORMAL_SLOTS && special.size == SPECIAL_SLOTS) { "$NORMAL_SLOTS normal and $SPECIAL_SLOTS special encounters" }
@@ -71,10 +73,12 @@ data class HeadbuttFile(
         copy(special = special.toMutableList().also { it[slot] = encounter }, stub = false)
 
     fun toBytes(): ByteArray {
-        if (stub && !hasTrees && (normal + special).all { it == HeadbuttEncounter.EMPTY }) return ByteArray(HEADER)
+        if (stub && !hasTrees && (normal + special).all { it == HeadbuttEncounter.EMPTY }) return ByteArray(HEADER).also { it[1] = headerPadding.first.toByte(); it[3] = headerPadding.second.toByte() }
         val out = ByteArray(HEADER + 4 * (NORMAL_SLOTS + SPECIAL_SLOTS) + GROUP_BYTES * (normalGroups.size + specialGroups.size))
         out[0] = normalGroups.size.toByte()
+        out[1] = headerPadding.first.toByte()
         out[2] = specialGroups.size.toByte()
+        out[3] = headerPadding.second.toByte()
         var at = HEADER
         for (e in normal + special) {
             out.putU16(at, e.species)
@@ -108,7 +112,8 @@ data class HeadbuttFile(
             if (bytes.size < HEADER) return FoxResult.Err("A Headbutt file is at least $HEADER bytes, got ${bytes.size}")
             val normalCount = bytes[0].toInt() and 0xFF
             val specialCount = bytes[2].toInt() and 0xFF
-            if (normalCount == 0 && specialCount == 0 && bytes.size == HEADER) return FoxResult.Ok(EMPTY)
+            val padding = (bytes[1].toInt() and 0xFF) to (bytes[3].toInt() and 0xFF)
+            if (normalCount == 0 && specialCount == 0 && bytes.size == HEADER) return FoxResult.Ok(EMPTY.copy(headerPadding = padding))
             val expected = HEADER + 4 * (NORMAL_SLOTS + SPECIAL_SLOTS) + GROUP_BYTES * (normalCount + specialCount)
             if (bytes.size != expected) return FoxResult.Err("A Headbutt file with $normalCount normal and $specialCount special groups is $expected bytes, got ${bytes.size}")
             var at = HEADER
@@ -120,7 +125,7 @@ data class HeadbuttFile(
             }
             val normalGroups = groups(normalCount)
             val specialGroups = groups(specialCount)
-            return FoxResult.Ok(HeadbuttFile(encounters.subList(0, NORMAL_SLOTS), encounters.subList(NORMAL_SLOTS, encounters.size), normalGroups, specialGroups))
+            return FoxResult.Ok(HeadbuttFile(encounters.subList(0, NORMAL_SLOTS), encounters.subList(NORMAL_SLOTS, encounters.size), normalGroups, specialGroups, headerPadding = padding))
         }
 
         val SPEC = RecordSpec(HgssLayout.HEADBUTT, ::parse, HeadbuttFile::toBytes)

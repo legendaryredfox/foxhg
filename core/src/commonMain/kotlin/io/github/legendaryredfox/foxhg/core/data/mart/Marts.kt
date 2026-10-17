@@ -104,10 +104,12 @@ data class Marts(val specials: List<List<Int>>, val badge: List<BadgeMartEntry>,
         val synth = (PatchTarget.SyntheticOverlay.read(project) as? FoxResult.Ok)?.value?.takeIf { it.size >= HgssLayout.SYNTHETIC_OVERLAY_SIZE }
         if (synth == null && specials.indices.any { isMoved(it) }) return FoxResult.Err("A mart is longer than its place in the ARM9: apply the ARM9 expansion patch in the ROM toolbox first")
         val (newArm9, newSynth) = applyTo(arm9, synth)
-        val wroteArm9 = project.writeArm9(newArm9)
-        if (wroteArm9 is FoxResult.Err) return wroteArm9
-        // Only touch the synthetic overlay when the mart area changes, so a ROM without moved lists stays clean.
-        return if (synth != null && newSynth != null && !newSynth.contentEquals(synth)) PatchTarget.SyntheticOverlay.write(project, newSynth) else FoxResult.Ok(Unit)
+        return project.atomically {
+            val wroteArm9 = project.writeArm9(newArm9)
+            if (wroteArm9 is FoxResult.Err) return@atomically wroteArm9
+            // Only touch the synthetic overlay when the mart area changes, so a ROM without moved lists stays clean.
+            if (synth != null && newSynth != null && !newSynth.contentEquals(synth)) PatchTarget.SyntheticOverlay.write(project, newSynth) else FoxResult.Ok(Unit)
+        }
     }
 
     companion object {

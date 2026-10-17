@@ -16,8 +16,10 @@ class TrainerTable(val trainers: List<Trainer>, private val headerNames: ByteArr
     fun save(project: RomProject): FoxResult<Unit> {
         val headers = Narc(trainers.map { it.header.toBytes() }, headerNames).toBytes()
         val parties = Narc(trainers.map { it.partyBytes() }, partyNames).toBytes()
-        (project.write(HgssLayout.TRAINER_DATA, headers) as? FoxResult.Err)?.let { return it }
-        return project.write(HgssLayout.TRAINER_PARTIES, parties)
+        return project.atomically {
+            (project.write(HgssLayout.TRAINER_DATA, headers) as? FoxResult.Err)?.let { return@atomically it }
+            project.write(HgssLayout.TRAINER_PARTIES, parties)
+        }
     }
 
     companion object {

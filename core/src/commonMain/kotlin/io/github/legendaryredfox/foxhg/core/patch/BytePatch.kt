@@ -130,10 +130,12 @@ open class BytePatch(
         val edits = (editsFor(project) as FoxResult.Ok).value
         val loaded = (images(project, edits) as FoxResult.Ok).value.mapValues { it.value.copyOf() }
         edits.forEach { it.write(loaded.getValue(it.target)) }
-        for ((target, bytes) in loaded) {
-            val written = target.write(project, bytes)
-            if (written is FoxResult.Err) return written
+        return project.atomically {
+            for ((target, bytes) in loaded) {
+                val written = target.write(project, bytes)
+                if (written is FoxResult.Err) return@atomically written
+            }
+            FoxResult.Ok(Unit)
         }
-        return FoxResult.Ok(Unit)
     }
 }

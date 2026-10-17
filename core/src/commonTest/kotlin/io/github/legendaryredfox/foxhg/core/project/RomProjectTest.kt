@@ -199,4 +199,27 @@ class RomProjectTest {
         assertEquals(2, back.undo.size)
         assertIs<FoxResult.Err>(UndoSnapshot.parse(bytes.copyOf(bytes.size - 5)))
     }
+
+    @Test
+    fun aSaveThatFailsHalfWayTakesBackWhatItWrote() {
+        val p = project()
+        p.write("a/one", ByteArray(100) { 5 })
+        val stepsBefore = p.undoTargets
+        val failed = p.atomically {
+            p.write("a/one", ByteArray(100) { 9 })
+            p.write("a/two", ByteArray(300) { 8 })
+            p.write("a/missing", ByteArray(1))
+        }
+        assertIs<FoxResult.Err>(failed)
+        assertContentEquals(ByteArray(100) { 5 }, p.read("a/one"), "the earlier edit stays, the failed save's writes are gone")
+        assertFalse(p.isEdited("a/two"))
+        assertEquals(stepsBefore, p.undoTargets, "the journal is as it was")
+    }
+
+    @Test
+    fun aSaveThatSucceedsKeepsItsWrites() {
+        val p = project()
+        assertIs<FoxResult.Ok<Unit>>(p.atomically { p.write("a/one", ByteArray(100) { 9 }); p.write("a/two", ByteArray(300) { 8 }) })
+        assertTrue(p.isEdited("a/one") && p.isEdited("a/two"))
+    }
 }

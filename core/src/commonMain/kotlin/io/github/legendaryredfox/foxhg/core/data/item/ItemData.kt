@@ -36,6 +36,8 @@ data class ItemData(
     val battleUseFunc: Int,
     val partyUse: Int,
     val partyParams: List<Int>,
+    /** Byte 13, unused by the game and zero in the vanilla table, kept so an item edited by another tool writes back as it was. */
+    val padding: Int = 0,
 ) {
     fun toBytes(): ByteArray {
         val b = ByteArray(SIZE)
@@ -47,6 +49,7 @@ data class ItemData(
             ((fieldPocket and 0xF) shl 7) or ((battlePocket and 0x1F) shl 11)
         b.putU16(8, bits)
         b[10] = fieldUseFunc.toByte(); b[11] = battleUseFunc.toByte(); b[12] = partyUse.toByte()
+        b[13] = padding.toByte()
         partyParams.forEachIndexed { i, v -> b[PARTY_OFFSET + i] = v.toByte() }
         return b
     }
@@ -72,6 +75,7 @@ data class ItemData(
                     fieldPocket = bits shr 7 and 0xF, battlePocket = bits shr 11 and 0x1F,
                     fieldUseFunc = bytes.u8(10), battleUseFunc = bytes.u8(11), partyUse = bytes.u8(12),
                     partyParams = List(PARTY_PARAM_SIZE) { bytes.u8(PARTY_OFFSET + it) },
+                    padding = bytes.u8(13),
                 ),
             )
         }

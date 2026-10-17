@@ -81,15 +81,21 @@ class MapFile(
     val model: ByteArray,
     val bdhc: ByteArray,
 ) {
-    fun type(x: Int, y: Int): Int = permissions[(y * SIZE + x) * 2].toInt() and 0xFF
-    fun collision(x: Int, y: Int): Int = permissions[(y * SIZE + x) * 2 + 1].toInt() and 0xFF
+    /** The offset of tile (x, y) in [permissions]; a tile outside the map would read another row's tile, so it is refused. */
+    private fun tileOffset(x: Int, y: Int): Int {
+        require(x in 0 until SIZE && y in 0 until SIZE) { "Tile $x, $y is outside the $SIZE x $SIZE map" }
+        return (y * SIZE + x) * 2
+    }
+
+    fun type(x: Int, y: Int): Int = permissions[tileOffset(x, y)].toInt() and 0xFF
+    fun collision(x: Int, y: Int): Int = permissions[tileOffset(x, y) + 1].toInt() and 0xFF
 
     /** The walking surface in [bdhc], decoded; the section itself is kept as bytes. */
     fun walkingSurface(): FoxResult<Bdhc> = Bdhc.parse(bdhc)
 
     fun withTile(x: Int, y: Int, type: Int? = null, collision: Int? = null): MapFile {
         val p = permissions.copyOf()
-        val i = (y * SIZE + x) * 2
+        val i = tileOffset(x, y)
         type?.let { p[i] = it.toByte() }
         collision?.let { p[i + 1] = it.toByte() }
         return MapFile(sound, p, buildings, model, bdhc)

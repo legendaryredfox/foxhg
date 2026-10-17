@@ -25,10 +25,12 @@ data class FlyEntry(
     val unlockHeader: Int,
     val unlockX: Int,
     val unlockY: Int,
+    /** Bits 2 to 7 of the flag byte, unused by the vanilla table and kept so a table edited by another tool writes back as it was. */
+    val otherFlagBits: Int = 0,
 ) {
     internal fun write(out: ByteArray, at: Int) {
         out[at] = flagIndex.toByte()
-        out[at + 1] = ((if (isBlackoutSpawn) 1 else 0) or (if (isFlyPoint) 2 else 0)).toByte()
+        out[at + 1] = ((if (isBlackoutSpawn) 1 else 0) or (if (isFlyPoint) 2 else 0) or (otherFlagBits and 0xFC)).toByte()
         out.putU16(at + 2, blackoutHeader)
         out[at + 4] = localX.toByte()
         out[at + 5] = localY.toByte()
@@ -50,6 +52,7 @@ data class FlyEntry(
                 blackoutHeader = b.u16(at + 2), localX = b.u8(at + 4), localY = b.u8(at + 5),
                 flyHeader = b.u16(at + 6), flyX = b.u16(at + 8), flyY = b.u16(at + 10),
                 unlockHeader = b.u16(at + 12), unlockX = b.u16(at + 14), unlockY = b.u16(at + 16),
+                otherFlagBits = flags and 0xFC,
             )
         }
     }
@@ -57,7 +60,7 @@ data class FlyEntry(
 
 /**
  * The fly table of the ARM9: a fixed number of towns, so entries can be changed but not added or removed. Flag bits
- * other than the two known ones are not kept: [applyTo] writes only those two, the vanilla table uses no others.
+ * other than the two known ones are kept in [FlyEntry.otherFlagBits].
  */
 data class FlyTable(val entries: List<FlyEntry>) {
     fun with(index: Int, entry: FlyEntry): FlyTable = copy(entries = entries.toMutableList().also { it[index] = entry })
