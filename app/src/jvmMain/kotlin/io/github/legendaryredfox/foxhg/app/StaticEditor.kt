@@ -68,7 +68,7 @@ fun StaticEditor(model: StaticEditorModel, modifier: Modifier = Modifier) {
         model.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         val species = model.names?.species?.take(StaticEncounters.MAX_SPECIES + 1) ?: List(StaticEncounters.MAX_SPECIES + 1) { "#$it" }
         Text(
-            "Found by reading every script: a fixed battle, a gift or an egg. When a script puts the species in a variable first (Ho-Oh and Lugia, Latias and Latios, the Game Corner prizes, the starters), each number it can use is listed, and a change edits that number. A species that no script sets with a number, and a level that comes from a variable, are listed but not edited here: change the script in the Scripts editor. Roaming Pokémon are in the Roamers editor; the fossils are not in scripts and are not listed.",
+            "Found by reading every script: a fixed battle, a gift or an egg. When a script puts the species in a variable first (Ho-Oh and Lugia, Latias and Latios, the Game Corner prizes, the starters), each number it can use is listed, and a change edits that number. A species that no script sets with a number, and a level that comes from a variable, are listed but not edited here: change the script in the Scripts editor. Roaming Pokémon are in the Roamers editor and the revived fossils in the Fossils editor; neither is a script command with a species, so they are not listed here.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         for (kind in StaticKind.entries) {

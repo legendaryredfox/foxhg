@@ -282,6 +282,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.ROAMERS -> Loading(project, "roamers", { RoamerEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             RoamerEditor(editor, modifier)
         }
+        selected == EditorKind.FOSSILS -> Loading(project, "fossils", { FossilEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+            FossilEditor(editor, modifier)
+        }
         selected == EditorKind.STATICS -> Loading(project, "static Pokémon", { StaticEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             StaticEditor(editor, modifier.padding(16.dp))
         }
