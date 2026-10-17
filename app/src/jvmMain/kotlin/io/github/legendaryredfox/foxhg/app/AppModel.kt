@@ -19,6 +19,9 @@ import java.nio.file.Path
 sealed interface AppDialog {
     object NewProject : AppDialog
 
+    /** Name the player and pick the place of a save file written from scratch. */
+    object NewSave : AppDialog
+
     /** The open save file has edits that are not written; [then] runs once they are written or thrown away. */
     class UnsavedSave(val then: () -> Unit) : AppDialog
 
@@ -166,6 +169,26 @@ class AppModel(
             }
             is FoxResult.Err -> { fail(opened.message); false }
         }
+    }
+
+    /**
+     * Writes a new save file at [path] ([NewSave]: [name], [gender] 0 boy or 1 girl, standing at [place]) and opens it. A file that is already there is kept
+     * as `<name>.bak` first.
+     */
+    fun createSave(path: Path, name: String, gender: Int, place: io.github.legendaryredfox.foxhg.core.save.Location): Boolean {
+        val made = when (val r = io.github.legendaryredfox.foxhg.core.save.NewSave.create(name, gender, place)) {
+            is FoxResult.Ok -> r.value
+            is FoxResult.Err -> { fail(r.message); return false }
+        }
+        try {
+            val backup = path.resolveSibling(path.fileName.toString() + ".bak")
+            if (Files.exists(path) && !Files.exists(backup)) Files.copy(path, backup)
+            Files.write(path, made.toFileBytes())
+        } catch (e: java.io.IOException) {
+            fail("Cannot write $path: ${e.message}")
+            return false
+        }
+        return openSave(path)
     }
 
     private var mapNames: Pair<RomProject, List<String>>? = null

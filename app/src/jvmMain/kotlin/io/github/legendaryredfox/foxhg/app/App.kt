@@ -405,6 +405,7 @@ private fun EmptyState(model: AppModel, modifier: Modifier) {
                 OutlinedButton(onClick = { Actions.openProject(model) }) { Text("Open project…") }
                 OutlinedButton(onClick = { Actions.openRom(model) }) { Text("Open ROM only…") }
                 OutlinedButton(onClick = { Actions.openSave(model) }, modifier = Modifier.testTag("open-save")) { Text("Open save file…") }
+                OutlinedButton(onClick = { Actions.newSave(model) }, modifier = Modifier.testTag("new-save")) { Text("New save file…") }
             }
             if (model.recent.isNotEmpty()) {
                 SectionCard("Recent") {

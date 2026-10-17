@@ -45,6 +45,9 @@ object Actions {
 
     fun openRom(model: AppModel) = model.guard { chooseRomToOpen()?.let(model::openRom) }
 
+    /** Asks for a player name and a place, then for where to write a new save file; asks first when the save that is open has edits that are not written. */
+    fun newSave(model: AppModel) = model.guardSave { model.dialog = AppDialog.NewSave }
+
     /** Opens a save file in the save editor; asks first when the save that is open has edits that are not written. */
     fun openSave(model: AppModel) = model.guardSave { pickFile("Open save file (.sav or .dsv)", java.awt.FileDialog.LOAD, "")?.let(model::openSave) }
 

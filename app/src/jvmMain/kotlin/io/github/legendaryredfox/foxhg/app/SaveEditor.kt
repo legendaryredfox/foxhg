@@ -276,9 +276,9 @@ fun SavePlayerScreen(model: SaveEditorModel, modifier: Modifier = Modifier) {
 }
 
 /** A place the save was moved to and the game followed (in the emulator): the standing tile next to a Poke Mart clerk. */
-private class Preset(val label: String, val place: Location)
+internal class Preset(val label: String, val place: Location)
 
-private val PRESETS = listOf(
+internal val PRESETS = listOf(
     Preset("Cherrygrove Poké Mart, badge clerk", Location(68, -1, 3, 6, 2)),
     Preset("Viridian Poké Mart, special clerk (mart 26)", Location(500, -1, 3, 4, 2)),
 )

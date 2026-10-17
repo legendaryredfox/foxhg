@@ -32,7 +32,12 @@ import androidx.compose.ui.platform.testTag
 import io.github.legendaryredfox.foxhg.app.ui.ToggleChip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.legendaryredfox.foxhg.app.ui.FieldFlow
 import io.github.legendaryredfox.foxhg.app.ui.Fox
+import io.github.legendaryredfox.foxhg.app.ui.NumberField
+import io.github.legendaryredfox.foxhg.app.ui.PickerField
+import io.github.legendaryredfox.foxhg.core.save.Location
+import io.github.legendaryredfox.foxhg.core.save.PlayerData
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -81,6 +86,7 @@ fun AppDialogs(model: AppModel) {
     when (val d = model.dialog) {
         null -> {}
         AppDialog.NewProject -> ProjectDialog(model, askRom = true, then = null)
+        AppDialog.NewSave -> NewSaveDialog(model)
         is AppDialog.SaveProjectAs -> ProjectDialog(model, askRom = false, then = d.then)
         is AppDialog.UnsavedWork -> UnsavedWorkDialog(model, d)
         is AppDialog.UnsavedSave -> UnsavedSaveDialog(model, d)
@@ -282,3 +288,54 @@ private fun PathRow(label: String, value: String, onBrowse: () -> Unit) {
 }
 
 private fun Modifier.height34(): Modifier = this.then(Modifier.height(Fox.fieldHeight))
+
+/** A save file written from scratch: the player's name and gender and where the game continues; the file is asked for after Create. */
+@Composable
+private fun NewSaveDialog(model: AppModel) {
+    var name by remember { mutableStateOf("FOX") }
+    var gender by remember { mutableStateOf(0) }
+    var map by remember { mutableStateOf(PRESETS[0].place.map) }
+    var x by remember { mutableStateOf(PRESETS[0].place.x) }
+    var y by remember { mutableStateOf(PRESETS[0].place.y) }
+    var direction by remember { mutableStateOf(PRESETS[0].place.direction) }
+    val problem = when {
+        name.isBlank() -> "Give the player a name"
+        name.length > PlayerData.MAX_NAME -> "A name has at most ${PlayerData.MAX_NAME} characters"
+        else -> null
+    }
+    AlertDialog(
+        onDismissRequest = { model.dialog = null },
+        title = { Text("New save file") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "Writes a save that continues at the place you pick, with an empty party, bag and PC, to start the game anywhere (for example in a Poké Mart you edited). The map and tile must exist and be walkable. To play from the beginning, start a new game in the game itself.",
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                LabeledText("Name (up to ${PlayerData.MAX_NAME} characters)", name) { name = it }
+                PickerField("Gender", gender, PlayerData.GENDERS, { gender = it }, Modifier.width(140.dp))
+                FieldFlow {
+                    NumberField("Map", map, 0..65535, { map = it }, Modifier.width(100.dp), tag = "Map")
+                    NumberField("Tile X", x, 0..1023, { x = it }, Modifier.width(100.dp), tag = "Tile X")
+                    NumberField("Tile Y", y, 0..1023, { y = it }, Modifier.width(100.dp), tag = "Tile Y")
+                    PickerField("Facing", direction, Location.DIRECTIONS, { direction = it }, Modifier.width(140.dp))
+                }
+                PRESETS.forEach { p ->
+                    OutlinedButton(onClick = { map = p.place.map; x = p.place.x; y = p.place.y; direction = p.place.direction }) { Text(p.label) }
+                }
+                problem?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            }
+        },
+        confirmButton = {
+            Button(
+                enabled = problem == null,
+                onClick = {
+                    val target = pickFile("Write the new save file", java.awt.FileDialog.SAVE, ".sav")
+                    if (target != null) { model.dialog = null; model.createSave(target, name, gender, Location(map, -1, x, y, direction)) }
+                },
+                modifier = Modifier.testTag("new-save-create"),
+            ) { Text("Create…") }
+        },
+        dismissButton = { TextButton(onClick = { model.dialog = null }) { Text("Cancel") } },
+    )
+}

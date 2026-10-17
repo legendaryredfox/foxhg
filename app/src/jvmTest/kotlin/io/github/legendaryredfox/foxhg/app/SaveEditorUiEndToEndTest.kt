@@ -248,4 +248,27 @@ class SaveEditorUiEndToEndTest {
             assertEquals(0, (PcStorageData.read(written) as FoxResult.Ok).value.total)
         }
     }
+    @Test
+    fun newSaveWritesAFileFromTheDialogAndOpensIt() {
+        val dir = tempDir("foxhg-new-save-ui")
+        try {
+            val target = dir.resolve("fresh.sav")
+            val model = testModel()
+            runApp(model) {
+                tap(onNodeWithTag("new-save"), inScrollPane = false)
+                waitForIdle()
+                withChoosers(file = { _, _, _ -> target }) { tap(onNodeWithTag("new-save-create"), inScrollPane = false) }
+                waitForIdle()
+            }
+            assertTrue(Files.exists(target))
+            assertEquals(SaveFormat.FILE_SIZE, Files.size(target).toInt())
+            assertEquals(target, model.save!!.path)
+            assertEquals("FOX", model.save!!.player!!.name)
+            assertEquals(68, model.save!!.position!!.current.map)
+            assertFalse(model.save!!.dirty)
+            assertNull(model.dialog)
+        } finally {
+            dir.deleteRecursively()
+        }
+    }
 }
