@@ -39,6 +39,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     FILES("Tools", "Files", implemented = true),
     SAVE_PLAYER(SAVE_GROUP, "Player", implemented = true),
     SAVE_PARTY(SAVE_GROUP, "Party", implemented = true),
+    SAVE_PC(SAVE_GROUP, "PC boxes", implemented = true),
     SAVE_BAG(SAVE_GROUP, "Bag", implemented = true),
     SAVE_POSITION(SAVE_GROUP, "Position", implemented = true),
     SAVE_FILE(SAVE_GROUP, "Save file", implemented = true),

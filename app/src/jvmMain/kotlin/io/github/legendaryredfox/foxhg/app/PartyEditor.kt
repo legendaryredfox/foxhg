@@ -33,6 +33,7 @@ import io.github.legendaryredfox.foxhg.core.game.GameNames
 import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.project.RomProject
+import io.github.legendaryredfox.foxhg.core.save.PcStorageData
 import io.github.legendaryredfox.foxhg.core.save.Pokemon
 
 /** What the open ROM says about species, for the party editor: base stats for the stat formula and growth curves for experience at a level. */
@@ -43,6 +44,12 @@ class SaveRules(private val personal: List<PersonalData>, private val curves: Li
     /** The experience a Pokemon of [species] has at [level], from the growth curve of its growth rate. */
     fun experience(species: Int, level: Int): Long? =
         personal.getOrNull(species)?.let { curves.getOrNull(it.growthRate)?.exp?.getOrNull(level)?.toLong() }
+
+    /** The level a Pokemon of [species] with [experience] has: the highest level whose curve value it reaches, 1 to 100. */
+    fun level(species: Int, experience: Long): Int? {
+        val exp = personal.getOrNull(species)?.let { curves.getOrNull(it.growthRate)?.exp } ?: return null
+        return (100 downTo 1).firstOrNull { l -> exp.getOrNull(l)?.let { it <= experience } == true } ?: 1
+    }
 
     companion object {
         fun load(project: RomProject): SaveRules? {
@@ -58,7 +65,7 @@ class SaveRules(private val personal: List<PersonalData>, private val curves: Li
 private val STAT_NAMES = BattleTowerSet.EV_STATS
 
 /** A Pokemon with its level, experience and stats made to agree under [rules] (when a ROM gives them). */
-private fun Pokemon.settled(rules: SaveRules?): Pokemon {
+internal fun Pokemon.settled(rules: SaveRules?): Pokemon {
     val base = rules?.baseStats(species) ?: return this
     return recalculated(base)
 }
@@ -149,6 +156,7 @@ fun SavePartyScreen(model: SaveEditorModel, names: GameNames?, loadRules: () -> 
                     modifier = Modifier.testTag("party-recalculate"),
                 ) { Text("Recalculate from the ROM's base stats") }
                 OutlinedButton(onClick = { model.updateParty { it.without(slot) } }, modifier = Modifier.testTag("party-remove")) { Text("Remove from the party") }
+                OutlinedButton(onClick = { model.depositToPc(slot) }, enabled = model.pc?.let { pc -> (0 until PcStorageData.BOXES).any { pc.firstEmpty(it) != null } } == true, modifier = Modifier.testTag("party-deposit")) { Text("Move to the PC") }
             }
         }
     }

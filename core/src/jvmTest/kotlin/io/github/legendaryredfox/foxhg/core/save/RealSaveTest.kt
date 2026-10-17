@@ -193,4 +193,30 @@ class RealSaveTest {
             assertTrue((save.withBag(edited) as FoxResult.Ok).value.let { it.block(1, BlockKind.GENERAL).valid })
         }
     }
+    @Test
+    fun thePcOfTheRealSaveReadsAndWritesBack() {
+        val dir = Path.of("build", "emulator-saves")
+        val files = names.map { dir.resolve("$it.dsv") }.filter { Files.exists(it) }
+        if (files.isEmpty()) { println("SKIPPED: no saves in ${dir.toAbsolutePath()}"); return }
+        for (path in files) {
+            val file = Files.readAllBytes(path)
+            val save = (SaveFile.parse(file) as FoxResult.Ok).value
+            val pc = (PcStorageData.read(save) as? FoxResult.Ok)?.value ?: error("$path: no PC")
+            assertEquals(0, pc.total, "a new game has an empty PC")
+            assertEquals((1..PcStorageData.BOXES).map { "BOX $it" }, (0 until PcStorageData.BOXES).map { pc.boxName(it) }, "the default box names")
+            assertEquals(List(PcStorageData.BOXES) { it % 16 }, pc.wallpapers)
+            assertEquals(0, pc.currentBox)
+            val storage = save.current(BlockKind.STORAGE)!!
+            assertContentEquals(save.chunk(storage, SaveChunks.byId(SaveChunks.PCSTORAGE)), pc.toBytes(), "$path: the PC chunk writes back as it was")
+            assertContentEquals(file, (save.withPcStorage(pc) as FoxResult.Ok).value.toFileBytes(), "$path: writing the PC back changes no byte")
+
+            val mon = Pokemon.EMPTY.withSpecies(25).withExperience(125_000).withMove(0, 85, 15).withIv(0, 31)
+            val edited = (pc.placing(1, 4, mon).withBoxName(0, "FOX") as FoxResult.Ok).value
+            val changed = (save.withPcStorage(edited) as FoxResult.Ok).value
+            val again = (PcStorageData.read(changed) as FoxResult.Ok).value
+            assertEquals(edited, again)
+            assertEquals(25, again.boxes[1][4].species)
+            assertTrue(changed.block(1, BlockKind.STORAGE).valid && changed.block(1, BlockKind.GENERAL).valid)
+        }
+    }
 }

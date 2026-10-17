@@ -131,14 +131,20 @@ class Pokemon private constructor(val personality: Long, val flags: Int, val blo
 
     /** The 0xEC bytes the save holds: the blocks shuffled and encrypted with the new checksum, the party data encrypted with the personality value. */
     fun toBytes(): ByteArray {
-        val out = ByteArray(SIZE)
+        val out = toBoxBytes().copyOf(SIZE)
+        crypt(party, personality).copyInto(out, 8 + BLOCKS_SIZE)
+        return out
+    }
+
+    /** The 0x88 bytes a PC box holds: the same header and encrypted blocks as [toBytes], without the party data. */
+    fun toBoxBytes(): ByteArray {
+        val out = ByteArray(BOX_SIZE)
         val checksum = checksumOf(blocks)
         out.putU32(0, personality); out.putU16(4, flags); out.putU16(6, checksum)
         val order = SHUFFLE[shuffleIndex(personality)]
         val shuffled = ByteArray(BLOCKS_SIZE)
         for (position in 0 until 4) blocks.copyInto(shuffled, position * BLOCK, order[position] * BLOCK, order[position] * BLOCK + BLOCK)
         crypt(shuffled, checksum.toLong()).copyInto(out, 8)
-        crypt(party, personality).copyInto(out, 8 + BLOCKS_SIZE)
         return out
     }
 
@@ -150,6 +156,9 @@ class Pokemon private constructor(val personality: Long, val flags: Int, val blo
         const val BLOCK = 32
         const val BLOCKS_SIZE = 128
         const val PARTY_SIZE = 100
+
+        /** A Pokemon in a PC box: header and blocks only (0x88 bytes). */
+        const val BOX_SIZE = 8 + BLOCKS_SIZE
 
         /** A slot with nothing in it, as the game clears it (all zeros, encrypted the same way). */
         val EMPTY: Pokemon = Pokemon(0, 0, ByteArray(BLOCKS_SIZE), ByteArray(PARTY_SIZE))
@@ -183,6 +192,16 @@ class Pokemon private constructor(val personality: Long, val flags: Int, val blo
         /** Reads the 0xEC bytes of a party slot; an error when the checksum does not fit (a damaged or hand-edited slot). */
         fun parse(bytes: ByteArray): FoxResult<Pokemon> {
             if (bytes.size != SIZE) return FoxResult.Err("A Pokémon is $SIZE bytes, got ${bytes.size}")
+            return parseBlocks(bytes) { personality -> crypt(bytes.copyOfRange(8 + BLOCKS_SIZE, SIZE), personality) }
+        }
+
+        /** Reads the 0x88 bytes of a PC box slot. The party data (level, HP, stats) is not stored in a box: it is zeros here, and the game works it out when the Pokemon joins the party. */
+        fun parseBox(bytes: ByteArray): FoxResult<Pokemon> {
+            if (bytes.size != BOX_SIZE) return FoxResult.Err("A boxed Pokémon is $BOX_SIZE bytes, got ${bytes.size}")
+            return parseBlocks(bytes) { ByteArray(PARTY_SIZE) }
+        }
+
+        private fun parseBlocks(bytes: ByteArray, partyOf: (Long) -> ByteArray): FoxResult<Pokemon> {
             val personality = bytes.u32(0)
             val flags = bytes.u16(4)
             val checksum = bytes.u16(6)
@@ -191,7 +210,7 @@ class Pokemon private constructor(val personality: Long, val flags: Int, val blo
             val blocks = ByteArray(BLOCKS_SIZE)
             for (position in 0 until 4) stored.copyInto(blocks, order[position] * BLOCK, position * BLOCK, position * BLOCK + BLOCK)
             if (checksumOf(blocks) != checksum) return FoxResult.Err("The checksum of this Pokémon does not fit its data")
-            return FoxResult.Ok(Pokemon(personality, flags, blocks, crypt(bytes.copyOfRange(8 + BLOCKS_SIZE, SIZE), personality)))
+            return FoxResult.Ok(Pokemon(personality, flags, blocks, partyOf(personality)))
         }
     }
 }

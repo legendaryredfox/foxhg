@@ -32,11 +32,13 @@ import io.github.legendaryredfox.foxhg.core.save.LocalFieldData
 import io.github.legendaryredfox.foxhg.core.save.Location
 import io.github.legendaryredfox.foxhg.core.save.movedTo
 import io.github.legendaryredfox.foxhg.core.save.PartyData
+import io.github.legendaryredfox.foxhg.core.save.PcStorageData
 import io.github.legendaryredfox.foxhg.core.save.PlayerData
 import io.github.legendaryredfox.foxhg.core.save.SaveChunks
 import io.github.legendaryredfox.foxhg.core.save.SaveFile
 import io.github.legendaryredfox.foxhg.core.save.withBag
 import io.github.legendaryredfox.foxhg.core.save.withParty
+import io.github.legendaryredfox.foxhg.core.save.withPcStorage
 import io.github.legendaryredfox.foxhg.core.save.withPlayer
 import java.nio.file.Files
 import java.nio.file.Path
@@ -76,6 +78,50 @@ class SaveEditorModel(val path: Path, file: SaveFile) {
         when (changed) {
             is FoxResult.Ok -> { file = changed.value; error = null }
             is FoxResult.Err -> error = changed.message
+        }
+    }
+
+    val pc: PcStorageData? get() = (PcStorageData.read(file) as? FoxResult.Ok)?.value
+
+    /** Replaces the PC storage; the reason is shown when the save refuses the change. */
+    fun updatePc(change: (PcStorageData) -> FoxResult<PcStorageData>) {
+        val current = pc ?: return
+        val changed = when (val c = change(current)) {
+            is FoxResult.Ok -> file.withPcStorage(c.value)
+            is FoxResult.Err -> c
+        }
+        when (changed) {
+            is FoxResult.Ok -> { file = changed.value; error = null }
+            is FoxResult.Err -> error = changed.message
+        }
+    }
+
+    /** Moves the party Pokemon in [slot] to the first free box slot (the open box first); one change to the file, both chunks together. */
+    fun depositToPc(slot: Int) {
+        val party = party ?: return
+        val pc = pc ?: return
+        val mon = party.members.getOrNull(slot) ?: return
+        val box = (listOf(pc.currentBox.coerceIn(0, PcStorageData.BOXES - 1)) + (0 until PcStorageData.BOXES)).firstOrNull { pc.firstEmpty(it) != null }
+        if (box == null) { error = "The PC is full"; return }
+        val placed = pc.placing(box, pc.firstEmpty(box)!!, mon)
+        when (val r = file.withParty(party.without(slot)).let { f -> (f as? FoxResult.Ok)?.value?.withPcStorage(placed) ?: f }) {
+            is FoxResult.Ok -> { file = r.value; error = null }
+            is FoxResult.Err -> error = r.message
+        }
+    }
+
+    /** Moves the box Pokemon in [box] and [slot] to the end of the party, with the level and stats [rules] work out; false when the party is full or there is no ROM. */
+    fun withdrawFromPc(box: Int, slot: Int, rules: SaveRules?) {
+        val party = party ?: return
+        val pc = pc ?: return
+        val mon = pc.boxes[box][slot]
+        if (mon.isEmpty) return
+        if (party.count >= PartyData.SLOTS) { error = "The party is full"; return }
+        val level = rules?.level(mon.species, mon.experience) ?: run { error = "Open the ROM first: the party needs the level and stats, which come from its growth curves and base stats"; return }
+        val ready = mon.withLevel(level).settled(rules)
+        when (val r = file.withParty(party.with(party.count, ready)).let { f -> (f as? FoxResult.Ok)?.value?.withPcStorage(pc.clearing(box, slot)) ?: f }) {
+            is FoxResult.Ok -> { file = r.value; error = null }
+            is FoxResult.Err -> error = r.message
         }
     }
 

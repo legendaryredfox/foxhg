@@ -13,11 +13,13 @@ import io.github.legendaryredfox.foxhg.core.save.BagSlot
 import io.github.legendaryredfox.foxhg.core.save.BlockFooter
 import io.github.legendaryredfox.foxhg.core.save.BlockKind
 import io.github.legendaryredfox.foxhg.core.save.PartyData
+import io.github.legendaryredfox.foxhg.core.save.PcStorageData
 import io.github.legendaryredfox.foxhg.core.save.PlayerData
 import io.github.legendaryredfox.foxhg.core.save.Pokemon
 import io.github.legendaryredfox.foxhg.core.save.SaveChunks
 import io.github.legendaryredfox.foxhg.core.save.SaveFile
 import io.github.legendaryredfox.foxhg.core.save.SaveFormat
+import io.github.legendaryredfox.foxhg.core.text.Charmap
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.deleteRecursively
@@ -43,6 +45,12 @@ object SyntheticSave {
                 named.toBytes().copyInto(file, offset + SaveChunks.byId(SaveChunks.PLAYERDATA).offset)
                 // the game writes its empty party slots encrypted, never as zeros
                 PartyData(6, 0, List(PartyData.SLOTS) { Pokemon.EMPTY }, ByteArray(PartyData.EXTRA)).toBytes().copyInto(file, offset + SaveChunks.byId(SaveChunks.PARTY).offset)
+            }
+            if (kind == BlockKind.STORAGE) {
+                val empty = List(PcStorageData.BOXES) { List(PcStorageData.PER_BOX) { Pokemon.EMPTY } }
+                val names = List(PcStorageData.BOXES) { box -> (Charmap.HGSS.encode("BOX ${box + 1}") as FoxResult.Ok).value.let { c -> List(PcStorageData.NAME_SLOTS) { if (it < c.size) c[it] else if (it == c.size) 0xFFFF else 0 } } }
+                PcStorageData(empty, List(PcStorageData.BOXES) { ByteArray(PcStorageData.TAIL) }, 0, 0, names, List(PcStorageData.BOXES) { it % 16 }, 0, ByteArray(PcStorageData.FILLER))
+                    .toBytes().copyInto(file, offset + SaveChunks.byId(SaveChunks.PCSTORAGE).offset)
             }
             val footer = offset + kind.size - BlockFooter.SIZE
             file.putU32(footer, 1); file.putU32(footer + 4, kind.size.toLong()); file.putU32(footer + 8, BlockFooter.MAGIC)
@@ -208,6 +216,36 @@ class SaveEditorUiEndToEndTest {
             waitForIdle()
             val written = (SaveFile.parse(Files.readAllBytes(path)) as FoxResult.Ok).value
             assertEquals(listOf(BagSlot(1, 50)), (BagData.read(written) as FoxResult.Ok).value.items(BagPocket.ITEMS))
+        }
+    }
+    @Test
+    fun thePcScreenMovesAPokemonInRenamesTheBoxAndReleases() = withSave { path, _ ->
+        val model = testModel()
+        model.openSave(path)
+        val pikachu = Pokemon.EMPTY.withSpecies(25).withLevel(20).withHp(50, 50).withMove(0, 85, 15).withExperience(8000)
+        model.save!!.updateParty { it.with(it.count, pikachu) }
+        model.save!!.depositToPc(0)
+        assertEquals(0, model.save!!.party!!.count)
+        assertEquals(listOf(25), model.save!!.pc!!.occupied(0).map { it.species })
+        model.save!!.withdrawFromPc(0, 0, null)
+        assertEquals(1, model.save!!.pc!!.total, "without a ROM the Pokémon stays in the box")
+        assertNotNull(model.save!!.error)
+        model.selected = EditorKind.SAVE_PC
+        runApp(model) {
+            onNodeWithTag("number:Friendship").typeNumber(200)
+            waitForIdle()
+            assertEquals(200, model.save!!.pc!!.boxes[0][0].friendship)
+            tap(onNodeWithTag("pc-box:2"), inScrollPane = false)
+            waitForIdle()
+            tap(onNodeWithTag("pc-box:0"), inScrollPane = false)
+            waitForIdle()
+            tap(onNodeWithTag("pc-release"), inScrollPane = false)
+            waitForIdle()
+            assertEquals(0, model.save!!.pc!!.total)
+            tap(onNodeWithTag("save-write"), inScrollPane = false)
+            waitForIdle()
+            val written = (SaveFile.parse(Files.readAllBytes(path)) as FoxResult.Ok).value
+            assertEquals(0, (PcStorageData.read(written) as FoxResult.Ok).value.total)
         }
     }
 }
