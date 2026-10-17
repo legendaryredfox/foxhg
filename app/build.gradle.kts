@@ -1,6 +1,6 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
-val appVersion = "0.5.0"
+val appVersion = "0.7.0"
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)

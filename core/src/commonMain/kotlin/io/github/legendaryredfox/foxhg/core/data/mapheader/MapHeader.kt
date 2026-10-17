@@ -80,6 +80,18 @@ data class MapHeader(
         RADIO(6, "Radio signal"),
     }
 
+    /** The fields too wide for their place in the 24 bytes ([toBytes] would cut them), as "name value"; empty when the header fits. */
+    fun tooWide(): List<String> = buildList {
+        fun check(name: String, value: Long, max: Long) { if (value < 0 || value > max) add("$name $value (largest is $max)") }
+        check("wild encounter file", wildEncounterFile.toLong(), 0xFF); check("area data", areaData.toLong(), 0xFF)
+        check("coordinates", coordinates.toLong(), 0xFFFF); check("matrix", matrix.toLong(), 0xFFFF)
+        check("script", script.toLong(), 0xFFFF); check("level script", levelScript.toLong(), 0xFFFF)
+        check("text archive", textArchive.toLong(), 0xFFFF); check("day music", musicDay.toLong(), 0xFFFF)
+        check("night music", musicNight.toLong(), 0xFFFF); check("event file", eventFile.toLong(), 0xFFFF)
+        check("location name", locationName.toLong(), 0xFF); check("area properties", areaProperties.toLong(), 0xFF)
+        check("flags", flags32, 0xFFFFFFFFL)
+    }
+
     fun toBytes(): ByteArray {
         val b = ByteArray(SIZE)
         b[0] = wildEncounterFile.toByte(); b[1] = areaData.toByte()
@@ -142,6 +154,7 @@ object MapHeaderTable {
             is FoxResult.Err -> return arm9
         }
         if (offset + headers.size * MapHeader.SIZE > plain.size) return FoxResult.Err("Map header table does not fit in the ARM9")
+        headers.forEachIndexed { i, h -> h.tooWide().firstOrNull()?.let { return FoxResult.Err("Map header $i does not fit its place in the ARM9: $it") } }
         headers.forEachIndexed { i, h -> h.toBytes().copyInto(plain, offset + i * MapHeader.SIZE) }
         return project.writeArm9(plain)
     }
