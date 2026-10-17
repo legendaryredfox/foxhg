@@ -34,4 +34,39 @@ class NewSaveTest {
         assertTrue(NewSave.create("", 0, place) is FoxResult.Err)
         assertTrue(NewSave.create("EIGHTCHAR", 0, place) is FoxResult.Err)
     }
+
+    @Test
+    fun flagsAndVariablesEditAndRead() {
+        val chunk = ByteArray(SaveChunks.byId(SaveChunks.FLAGS).size)
+        val flagged = SaveVarsFlags.with(SaveVarsFlags.with(chunk, 0x6A, true), 2911, true)
+        assertEquals(listOf(0x6A, 2911), SaveVarsFlags.setFlags(flagged))
+        val varred = SaveVarsFlags.withVariable(SaveVarsFlags.withVariable(flagged, 5, 0xABCD), 367, 1)
+        assertEquals(listOf(5, 367), SaveVarsFlags.usedVariables(varred))
+        assertEquals(0xABCD, SaveVarsFlags.variable(varred, 5))
+        assertEquals(listOf(0x6A, 2911), SaveVarsFlags.setFlags(varred), "writing a variable leaves the flags alone")
+        assertTrue(runCatching { SaveVarsFlags.withVariable(chunk, 368, 1) }.isFailure)
+        assertTrue(runCatching { SaveVarsFlags.withVariable(chunk, 0, 65536) }.isFailure)
+        val save = made()
+        val written = (save.withFlagsChunk(varred) as FoxResult.Ok).value
+        assertEquals(varred.toList(), (written.flagsChunk() as FoxResult.Ok).value.toList())
+        assertTrue(written.block(1, BlockKind.GENERAL).valid)
+    }
+
+    @Test
+    fun thePokedexIsFreshAndCaughtNeedsSeen() {
+        val dex = (PokedexData.read(made()) as FoxResult.Ok).value
+        assertEquals(PokedexData.fresh(), dex)
+        assertEquals(0L, dex.seenCount.toLong())
+        val caught = dex.withCaught(1, true).withCaught(493, true)
+        assertTrue(caught.isSeen(1) && caught.isCaught(493))
+        assertEquals(2, caught.caughtCount)
+        val unseen = caught.withSeen(1, false)
+        assertTrue(!unseen.isSeen(1) && !unseen.isCaught(1) && unseen.isCaught(493))
+        assertEquals(PokedexData.SPECIES, dex.withAll(true).caughtCount)
+        assertEquals(0, dex.withAll(true).cleared().seenCount)
+        assertEquals(dex, dex.withAll(true).cleared(), "clearing a full Pokédex gives the fresh one")
+        assertTrue(runCatching { dex.isSeen(0) }.isFailure)
+        assertTrue(runCatching { dex.isSeen(494) }.isFailure)
+        assertTrue(PokedexData.parse(ByteArray(PokedexData.SIZE)) is FoxResult.Err, "no magic")
+    }
 }

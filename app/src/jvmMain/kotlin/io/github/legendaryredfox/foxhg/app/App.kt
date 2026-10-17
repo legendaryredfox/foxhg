@@ -224,6 +224,8 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.SAVE_PARTY && model.save != null -> SavePartyScreen(model.save!!, model.project?.names, model::saveRules, modifier)
         selected == EditorKind.SAVE_PC && model.save != null -> SavePcScreen(model.save!!, model.project?.names, model::saveRules, modifier)
         selected == EditorKind.SAVE_BAG && model.save != null -> SaveBagScreen(model.save!!, model.project?.names, modifier)
+        selected == EditorKind.SAVE_POKEDEX && model.save != null -> SavePokedexScreen(model.save!!, model.project?.names, modifier)
+        selected == EditorKind.SAVE_FLAGS && model.save != null -> SaveFlagsScreen(model.save!!, modifier)
         selected == EditorKind.SAVE_POSITION && model.save != null -> SavePositionScreen(model.save!!, model::mapName, modifier)
         selected == EditorKind.SAVE_FILE && model.save != null -> SaveFileScreen(model.save!!, modifier)
         project == null -> EmptyState(model, modifier)

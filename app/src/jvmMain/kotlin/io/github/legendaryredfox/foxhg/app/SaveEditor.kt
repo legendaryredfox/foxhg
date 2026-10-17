@@ -34,11 +34,15 @@ import io.github.legendaryredfox.foxhg.core.save.movedTo
 import io.github.legendaryredfox.foxhg.core.save.PartyData
 import io.github.legendaryredfox.foxhg.core.save.PcStorageData
 import io.github.legendaryredfox.foxhg.core.save.PlayerData
+import io.github.legendaryredfox.foxhg.core.save.PokedexData
 import io.github.legendaryredfox.foxhg.core.save.SaveChunks
 import io.github.legendaryredfox.foxhg.core.save.SaveFile
+import io.github.legendaryredfox.foxhg.core.save.flagsChunk
 import io.github.legendaryredfox.foxhg.core.save.withBag
+import io.github.legendaryredfox.foxhg.core.save.withFlagsChunk
 import io.github.legendaryredfox.foxhg.core.save.withParty
 import io.github.legendaryredfox.foxhg.core.save.withPcStorage
+import io.github.legendaryredfox.foxhg.core.save.withPokedex
 import io.github.legendaryredfox.foxhg.core.save.withPlayer
 import java.nio.file.Files
 import java.nio.file.Path
@@ -65,6 +69,28 @@ class SaveEditorModel(val path: Path, file: SaveFile) {
     val position: LocalFieldData? get() = (LocalFieldData.read(file) as? FoxResult.Ok)?.value
 
     val party: PartyData? get() = (PartyData.read(file) as? FoxResult.Ok)?.value
+
+    val flags: ByteArray? get() = (file.flagsChunk() as? FoxResult.Ok)?.value
+
+    /** Replaces the flags and variables chunk; the reason is shown when the save refuses it. */
+    fun updateFlags(change: (ByteArray) -> ByteArray) {
+        val current = flags ?: return
+        when (val r = file.withFlagsChunk(change(current))) {
+            is FoxResult.Ok -> { file = r.value; error = null }
+            is FoxResult.Err -> error = r.message
+        }
+    }
+
+    val pokedex: PokedexData? get() = (PokedexData.read(file) as? FoxResult.Ok)?.value
+
+    /** Replaces the Pokédex; the reason is shown when the save refuses it. */
+    fun updatePokedex(change: (PokedexData) -> PokedexData) {
+        val current = pokedex ?: return
+        when (val r = file.withPokedex(change(current))) {
+            is FoxResult.Ok -> { file = r.value; error = null }
+            is FoxResult.Err -> error = r.message
+        }
+    }
 
     val bag: BagData? get() = (BagData.read(file) as? FoxResult.Ok)?.value
 

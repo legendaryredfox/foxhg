@@ -15,10 +15,14 @@ import io.github.legendaryredfox.foxhg.core.save.BlockKind
 import io.github.legendaryredfox.foxhg.core.save.PartyData
 import io.github.legendaryredfox.foxhg.core.save.PcStorageData
 import io.github.legendaryredfox.foxhg.core.save.PlayerData
+import io.github.legendaryredfox.foxhg.core.save.PokedexData
 import io.github.legendaryredfox.foxhg.core.save.Pokemon
 import io.github.legendaryredfox.foxhg.core.save.SaveChunks
 import io.github.legendaryredfox.foxhg.core.save.SaveFile
 import io.github.legendaryredfox.foxhg.core.save.SaveFormat
+import io.github.legendaryredfox.foxhg.core.save.SaveVarsFlags
+import io.github.legendaryredfox.foxhg.core.save.flagsChunk
+import io.github.legendaryredfox.foxhg.core.script.ScriptSymbols
 import io.github.legendaryredfox.foxhg.core.text.Charmap
 import java.nio.file.Files
 import java.nio.file.Path
@@ -43,6 +47,7 @@ object SyntheticSave {
                 val player = (PlayerData.parse(ByteArray(PlayerData.SIZE)) as FoxResult.Ok).value.copy(money = 1500, version = 7, language = 2)
                 val named = (player.withName("TEST") as FoxResult.Ok).value
                 named.toBytes().copyInto(file, offset + SaveChunks.byId(SaveChunks.PLAYERDATA).offset)
+                PokedexData.fresh().toBytes().copyInto(file, offset + SaveChunks.byId(SaveChunks.POKEDEX).offset)
                 // the game writes its empty party slots encrypted, never as zeros
                 PartyData(6, 0, List(PartyData.SLOTS) { Pokemon.EMPTY }, ByteArray(PartyData.EXTRA)).toBytes().copyInto(file, offset + SaveChunks.byId(SaveChunks.PARTY).offset)
             }
@@ -269,6 +274,54 @@ class SaveEditorUiEndToEndTest {
             assertNull(model.dialog)
         } finally {
             dir.deleteRecursively()
+        }
+    }
+    @Test
+    fun theFlagsScreenSwitchesAFlagAndSetsAVariable() = withSave { path, _ ->
+        val model = testModel()
+        model.openSave(path)
+        model.selected = EditorKind.SAVE_FLAGS
+        val name = ScriptSymbols.flagName(1)!!.removePrefix("FLAG_")
+        runApp(model) {
+            tap(onNodeWithTag("chip:0x1 $name"), inScrollPane = false)
+            waitForIdle()
+            assertEquals(listOf(1), SaveVarsFlags.setFlags(model.save!!.flags!!))
+            onNodeWithTag("number:Variable 0").typeNumber(1234)
+            waitForIdle()
+            assertEquals(1234, SaveVarsFlags.variable(model.save!!.flags!!, 0))
+            tap(onNodeWithTag("chip:0x1 $name"), inScrollPane = false)
+            waitForIdle()
+            assertEquals(emptyList(), SaveVarsFlags.setFlags(model.save!!.flags!!))
+            tap(onNodeWithTag("save-write"), inScrollPane = false)
+            waitForIdle()
+            val written = (SaveFile.parse(Files.readAllBytes(path)) as FoxResult.Ok).value
+            assertEquals(1234, SaveVarsFlags.variable((written.flagsChunk() as FoxResult.Ok).value, 0))
+        }
+    }
+    @Test
+    fun thePokedexScreenMarksSpeciesSeenAndCaught() = withSave { path, _ ->
+        val model = testModel()
+        model.openSave(path)
+        model.selected = EditorKind.SAVE_POKEDEX
+        runApp(model) {
+            tap(onNodeWithTag("dex-caught:1"), inScrollPane = false)
+            waitForIdle()
+            assertEquals(listOf(true, true), listOf(model.save!!.pokedex!!.isCaught(1), model.save!!.pokedex!!.isSeen(1)))
+            tap(onNodeWithTag("dex-seen:1"), inScrollPane = false)
+            waitForIdle()
+            assertEquals(listOf(false, false), listOf(model.save!!.pokedex!!.isCaught(1), model.save!!.pokedex!!.isSeen(1)), "unseen is not caught")
+            tap(onNodeWithTag("dex-all-caught"), inScrollPane = false)
+            waitForIdle()
+            assertEquals(493, model.save!!.pokedex!!.caughtCount)
+            tap(onNodeWithTag("dex-clear"), inScrollPane = false)
+            waitForIdle()
+            assertEquals(PokedexData.fresh(), model.save!!.pokedex)
+            tap(onNodeWithTag("dex-seen:2"), inScrollPane = false)
+            waitForIdle()
+            tap(onNodeWithTag("save-write"), inScrollPane = false)
+            waitForIdle()
+            val written = (SaveFile.parse(Files.readAllBytes(path)) as FoxResult.Ok).value
+            assertTrue((PokedexData.read(written) as FoxResult.Ok).value.isSeen(2))
         }
     }
 }

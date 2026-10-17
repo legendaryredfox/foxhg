@@ -219,4 +219,44 @@ class RealSaveTest {
             assertTrue(changed.block(1, BlockKind.STORAGE).valid && changed.block(1, BlockKind.GENERAL).valid)
         }
     }
+
+    @Test
+    fun theFlagsOfTheRealSaveShowWhatTheInitScriptSet() {
+        val dir = Path.of("build", "emulator-saves")
+        val files = names.map { dir.resolve("$it.dsv") }.filter { Files.exists(it) }
+        if (files.isEmpty()) { println("SKIPPED: no saves in ${dir.toAbsolutePath()}"); return }
+        for (path in files) {
+            val file = Files.readAllBytes(path)
+            val save = (SaveFile.parse(file) as FoxResult.Ok).value
+            val flags = (save.flagsChunk() as? FoxResult.Ok)?.value ?: error("$path: no flags")
+            println("FLAGS ${path.fileName}: set=${SaveVarsFlags.setFlags(flags).map { it.toString(16) }} vars=${SaveVarsFlags.usedVariables(flags).associateWith { SaveVarsFlags.variable(flags, it) }}")
+            // the init script of the Poke Mart start ROM set these four: bag, trainer card, save and options buttons
+            assertTrue(NewSave.START_MENU_FLAGS.all { SaveVarsFlags.isSet(flags, it) }, "$path: the start menu flags")
+            assertContentEquals(file, (save.withFlagsChunk(flags) as FoxResult.Ok).value.toFileBytes(), "$path: writing the flags back changes no byte")
+            val edited = SaveVarsFlags.withVariable(SaveVarsFlags.with(flags, 0x6A, true), 3, 77)
+            val again = ((save.withFlagsChunk(edited) as FoxResult.Ok).value.flagsChunk() as FoxResult.Ok).value
+            assertTrue(SaveVarsFlags.isSet(again, 0x6A) && SaveVarsFlags.variable(again, 3) == 77)
+        }
+    }
+
+    @Test
+    fun thePokedexOfTheRealSaveIsTheNewGameOneAndEditsStick() {
+        val dir = Path.of("build", "emulator-saves")
+        val files = names.map { dir.resolve("$it.dsv") }.filter { Files.exists(it) }
+        if (files.isEmpty()) { println("SKIPPED: no saves in ${dir.toAbsolutePath()}"); return }
+        for (path in files) {
+            val file = Files.readAllBytes(path)
+            val save = (SaveFile.parse(file) as FoxResult.Ok).value
+            val dex = (PokedexData.read(save) as? FoxResult.Ok)?.value ?: error("$path: no Pokédex")
+            assertEquals(0, dex.seenCount)
+            assertContentEquals(PokedexData.fresh().toBytes(), dex.toBytes(), "$path: a new game's Pokédex is what the game's init writes")
+            assertContentEquals(file, (save.withPokedex(dex) as FoxResult.Ok).value.toFileBytes(), "$path: writing it back changes no byte")
+            val edited = dex.withCaught(155, true).withSeen(25, true).withNationalDex(true).withDexEnabled(true)
+            val again = (PokedexData.read((save.withPokedex(edited) as FoxResult.Ok).value) as FoxResult.Ok).value
+            assertEquals(listOf(true, true, true, false), listOf(again.isCaught(155), again.isSeen(155), again.isSeen(25), again.isCaught(25)))
+            assertEquals(2, again.seenCount)
+            assertEquals(1, again.caughtCount)
+            assertTrue(again.nationalDex && again.dexEnabled)
+        }
+    }
 }

@@ -7,7 +7,7 @@ import io.github.legendaryredfox.foxhg.core.text.Charmap
 
 /**
  * A save written from scratch ([create]): one sound slot (slot 1, counter 1, as the game's first save), the other slot blank, every chunk zero except
- * the ones the game cannot start without: the player, an empty party, empty PC boxes with their default names and wallpapers, the place the player stands
+ * the ones the game cannot start without: the player, an empty party, a new game's Pokédex, empty PC boxes with their default names and wallpapers, the place the player stands
  * at and the event flags that make the start menu show the Bag, Trainer Card, Save and Options entries. The chunks left at zero are those the game's
  * own init also leaves empty or fills with values it recomputes (see formats.md "New save" for what was checked).
  */
@@ -56,6 +56,7 @@ object NewSave {
                 .withChunk(general, SaveChunks.byId(SaveChunks.PARTY), party.toBytes())
                 .withChunk(general, SaveChunks.byId(SaveChunks.LOCAL_FIELD_DATA), field.toBytes())
                 .withChunk(general, SaveChunks.byId(SaveChunks.FLAGS), flags)
+                .withChunk(general, SaveChunks.byId(SaveChunks.POKEDEX), PokedexData.fresh().toBytes())
                 .withChunk(storage, SaveChunks.byId(SaveChunks.PCSTORAGE), pc.toBytes()),
         )
     }

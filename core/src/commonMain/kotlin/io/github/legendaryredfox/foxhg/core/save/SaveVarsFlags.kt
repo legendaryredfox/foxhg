@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.save
 
+import io.github.legendaryredfox.foxhg.core.FoxResult
+
 /**
  * The `FLAGS` chunk (0x44C bytes): [VARS] 16-bit script variables (variable 0x4000 + n is entry n) followed by the event flag bitmap (flag n is bit
  * n % 8 of byte n / 8 of the bitmap; flag 0 is never set). From the decomp's `SaveVarsFlags` (`save_vars_flags.h`); the bitmap offset was checked by
@@ -31,4 +33,30 @@ object SaveVarsFlags {
         require(variable in 0 until VARS) { "variable $variable is outside 0..${VARS - 1}" }
         return (chunk[variable * 2].toInt() and 0xFF) or ((chunk[variable * 2 + 1].toInt() and 0xFF) shl 8)
     }
+
+    /** A copy of [chunk] with script variable [variable] (0 to [VARS] - 1) set to [value] (0 to 65535). */
+    fun withVariable(chunk: ByteArray, variable: Int, value: Int): ByteArray {
+        require(variable in 0 until VARS) { "variable $variable is outside 0..${VARS - 1}" }
+        require(value in 0..0xFFFF) { "a script variable holds 0 to 65535" }
+        return chunk.copyOf().also { it[variable * 2] = value.toByte(); it[variable * 2 + 1] = (value shr 8).toByte() }
+    }
+
+    /** The numbers of the flags that are set (1 to [FLAG_COUNT] - 1). */
+    fun setFlags(chunk: ByteArray): List<Int> = (1 until FLAG_COUNT).filter { isSet(chunk, it) }
+
+    /** The numbers of the variables that are not zero (0 to [VARS] - 1). */
+    fun usedVariables(chunk: ByteArray): List<Int> = (0 until VARS).filter { variable(chunk, it) != 0 }
+}
+
+
+/** The flags and variables chunk of the current general block. */
+fun SaveFile.flagsChunk(): FoxResult<ByteArray> {
+    val block = current(BlockKind.GENERAL) ?: return FoxResult.Err("The save has no sound general block")
+    return FoxResult.Ok(chunk(block, SaveChunks.byId(SaveChunks.FLAGS)))
+}
+
+/** A copy of the save with [flags] written as the flags and variables chunk (checksums recomputed). */
+fun SaveFile.withFlagsChunk(flags: ByteArray): FoxResult<SaveFile> {
+    val block = current(BlockKind.GENERAL) ?: return FoxResult.Err("The save has no sound general block")
+    return FoxResult.Ok(withChunk(block, SaveChunks.byId(SaveChunks.FLAGS), flags))
 }
