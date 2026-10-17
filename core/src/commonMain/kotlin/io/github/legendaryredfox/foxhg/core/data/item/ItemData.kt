@@ -92,7 +92,7 @@ data class ItemData(
                 CsvColumn("natural_gift_type", 0..31, { it.naturalGiftType }, { r, v -> r.copy(naturalGiftType = v) }),
                 CsvColumn("prevent_toss", 0..1, { if (it.preventToss) 1 else 0 }, { r, v -> r.copy(preventToss = v == 1) }),
                 CsvColumn("selectable", 0..1, { if (it.selectable) 1 else 0 }, { r, v -> r.copy(selectable = v == 1) }),
-                CsvColumn("field_pocket", 0..15, { it.fieldPocket }, { r, v -> r.copy(fieldPocket = v) }),
+                CsvColumn("field_pocket", 0 until FIELD_POCKETS.size, { it.fieldPocket }, { r, v -> r.copy(fieldPocket = v) }),
                 CsvColumn("battle_pocket", 0..31, { it.battlePocket }, { r, v -> r.copy(battlePocket = v) }),
                 CsvColumn("field_use", 0..255, { it.fieldUseFunc }, { r, v -> r.copy(fieldUseFunc = v) }),
                 CsvColumn("battle_use", 0..255, { it.battleUseFunc }, { r, v -> r.copy(battleUseFunc = v) }),

@@ -47,6 +47,9 @@ data class MoveData(
         const val SIZE = 16
         val CATEGORIES = listOf("Physical", "Special", "Status")
 
+        /** Types a move can have: the 17 of the game and "???" (index 9). */
+        const val TYPE_COUNT = 18
+
         fun parse(bytes: ByteArray): FoxResult<MoveData> {
             if (bytes.size != SIZE) return FoxResult.Err("Move record must be $SIZE bytes, got ${bytes.size}")
             return FoxResult.Ok(
@@ -62,9 +65,9 @@ data class MoveData(
         val CSV = RecordCsv(
             listOf(
                 CsvColumn<MoveData>("effect", 0..65535, { it.effect }, { r, v -> r.copy(effect = v) }),
-                CsvColumn("category", 0..255, { it.category }, { r, v -> r.copy(category = v) }),
+                CsvColumn("category", 0 until CATEGORIES.size, { it.category }, { r, v -> r.copy(category = v) }),
                 CsvColumn("power", 0..255, { it.power }, { r, v -> r.copy(power = v) }),
-                CsvColumn("type", 0..255, { it.type }, { r, v -> r.copy(type = v) }),
+                CsvColumn("type", 0 until TYPE_COUNT, { it.type }, { r, v -> r.copy(type = v) }),
                 CsvColumn("accuracy", 0..255, { it.accuracy }, { r, v -> r.copy(accuracy = v) }),
                 CsvColumn("pp", 0..255, { it.pp }, { r, v -> r.copy(pp = v) }),
                 CsvColumn("effect_chance", 0..255, { it.effectChance }, { r, v -> r.copy(effectChance = v) }),

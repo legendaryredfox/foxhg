@@ -48,4 +48,18 @@ class CsvTest {
             assertTrue(csv.import(bad, base) is FoxResult.Err, bad)
         }
     }
+
+    @Test
+    fun moveAndItemCsvRefuseValuesTheGameHasNoNameFor() {
+        val move = io.github.legendaryredfox.foxhg.core.data.move.MoveData.CSV
+        val item = io.github.legendaryredfox.foxhg.core.data.item.ItemData.CSV
+        val moves = listOf((io.github.legendaryredfox.foxhg.core.data.move.MoveData.parse(ByteArray(16)) as FoxResult.Ok).value)
+        val items = listOf((io.github.legendaryredfox.foxhg.core.data.item.ItemData.parse(ByteArray(34)) as FoxResult.Ok).value)
+        assertTrue(move.import("id,category\n0,2\n", moves) is FoxResult.Ok)
+        assertTrue(move.import("id,category\n0,3\n", moves) is FoxResult.Err)
+        assertTrue(move.import("id,type\n0,17\n", moves) is FoxResult.Ok)
+        assertTrue(move.import("id,type\n0,18\n", moves) is FoxResult.Err)
+        assertTrue(item.import("id,field_pocket\n0,7\n", items) is FoxResult.Ok)
+        assertTrue(item.import("id,field_pocket\n0,8\n", items) is FoxResult.Err)
+    }
 }
