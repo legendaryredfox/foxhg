@@ -606,3 +606,9 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
 
 - `a/2/3/0` (`sz_enc_data.narc`) has 12 files, one per kind of area (Plains, Meadow, Savannah, Peak, Rocky Beach, Wetland, Forest, Swamp, Marshland, Wasteland, Mountain, Desert; names from DSPRE). Layout from DSPRE's `SafariZoneEncounterFile`, confirmed by an exact round trip over all 12 files: 5 bytes with the object arrangement count of each group (grass, surf, old rod, good rod, super rod), 3 bytes of padding, then the groups in that order. Each group: 3 x 10 encounters (morning, day, night; u16 species, u8 level, 1 byte of padding), then 3 x N encounters (the N arrangements, by time of day), then N pairs of requirements (u8 type, u8 quantity: required, then optional). Requirement types: 0 none, 1 Plains, 2 Forest, 3 Peak, 4 Waterside.
 - The vanilla files have 10 arrangements for grass, 3 for surf and 2 for each rod, in all 12 areas.
+
+## Roamers (HeartGold English)
+
+- `Save_CreateRoamerByID` (decomp `field_roamer.c`) is in the ARM9, THUMB, at 0x6771C-0x67733 for the four `switch` cases (found by the bytes, not by the address): `movs r6, #species` then `movs r5, #level`, then `b` to the shared tail. Raikou: species imm8 at +0 (243), level at +2 (40). Entei: +6 (244), +8 (40). Latias: `movs r6, #95` at +12, `lsls r6, r6, #2` at +14 (95 << 2 = 380), level at +16 (35). Latios: `ldr r6, [pc, #188]` at +20 reads the u32 species word at 0x677F0 (381), level at +22 (35). So Raikou and Entei hold species 1 to 255, Latias a byte shifted left (shift in the `lsls` word, bits 6 to 10), Latios any. Confirmed by disassembling the real ARM9 and by `RoamersRealRomTest`. Not checked in game.
+- The tail stores the species and level with `SetRoamerData` and builds the Pokémon with `CreateMon` (decomp), taking both from those registers.
+

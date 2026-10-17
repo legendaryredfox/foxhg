@@ -279,6 +279,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.EGG_MOVES -> Loading(project, "egg moves", { model.recordEditor(EditorKind.EGG_MOVES, project, EggMoves.SPEC, { "%03d".format(it) }, 0) }) { editor ->
             EggMoveEditor(editor, modifier.padding(16.dp))
         }
+        selected == EditorKind.ROAMERS -> Loading(project, "roamers", { RoamerEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+            RoamerEditor(editor, modifier)
+        }
         selected == EditorKind.STATICS -> Loading(project, "static Pokémon", { StaticEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             StaticEditor(editor, modifier.padding(16.dp))
         }
