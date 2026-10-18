@@ -17,6 +17,7 @@ kotlin {
             implementation(project(":core"))
             implementation(compose.desktop.currentOs)
             implementation(compose.material3)
+            implementation(compose.components.resources)
             implementation(libs.kotlinx.coroutines.swing)
         }
         jvmTest.dependencies {
@@ -25,6 +26,11 @@ kotlin {
             implementation(compose.uiTest)
         }
     }
+}
+
+compose.resources {
+    packageOfResClass = "io.github.legendaryredfox.foxhg.app.resources"
+    generateResClass = always
 }
 
 compose.desktop {
@@ -66,4 +72,6 @@ tasks.named<ProcessResources>("jvmProcessResources") {
 // the version test compares what the window shows with the version declared here
 tasks.withType<Test>().configureEach {
     systemProperty("foxhg.expectedVersion", appVersion)
+    // tests read English texts whatever the language of the machine is (an app set to "system" follows FOXHG_LANG before the OS)
+    environment("FOXHG_LANG", "en")
 }

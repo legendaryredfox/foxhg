@@ -48,8 +48,9 @@ fun testModel(manual: ManualScheduler = ManualScheduler()): AppModel {
     return AppModel(recents, manual.scheduler, settingsStore = testSettings())
 }
 
-/** A settings file in a temp dir, with no emulator detected, so tests never touch the real settings. */
-fun testSettings(): SettingsStore = SettingsStore(tempDir("foxhg-settings").resolve("settings.properties"), detectEmulator = { "" })
+/** A settings file in a temp dir, with no emulator detected and the app in English whatever the machine's language is, so tests never touch the real settings. */
+fun testSettings(): SettingsStore =
+    SettingsStore(tempDir("foxhg-settings").resolve("settings.properties"), detectEmulator = { "" }).also { it.save(AppSettings(language = AppLanguage.ENGLISH)) }
 
 val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
 

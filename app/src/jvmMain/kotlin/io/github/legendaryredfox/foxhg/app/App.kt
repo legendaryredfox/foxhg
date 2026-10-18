@@ -1,5 +1,9 @@
 package io.github.legendaryredfox.foxhg.app
 
+import io.github.legendaryredfox.foxhg.app.resources.Res
+import io.github.legendaryredfox.foxhg.app.resources.group_coming_soon
+import org.jetbrains.compose.resources.stringResource
+
 import androidx.compose.foundation.Image
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.background
@@ -66,7 +70,7 @@ import io.github.legendaryredfox.foxhg.core.data.move.MoveData
 import io.github.legendaryredfox.foxhg.core.data.trade.NpcTrade
 
 @Composable
-fun App(model: AppModel) {
+fun App(model: AppModel) = ProvideAppLanguage(model.settings.language) {
     FoxTheme(dark = when (model.settings.theme) { ThemeChoice.SYSTEM -> null; ThemeChoice.LIGHT -> false; ThemeChoice.DARK -> true }) {
         Surface(Modifier.fillMaxSize().dropTarget(model), color = MaterialTheme.colorScheme.background) {
             Column(Modifier.fillMaxSize()) {
@@ -144,14 +148,14 @@ private fun Sidebar(model: AppModel, modifier: Modifier) {
         // The ROM editors need a ROM or project, the save editors an open save file; each kind shows only when its file is open.
         val ready = EditorKind.entries.filter { it.implemented && if (it.group == SAVE_GROUP) model.save != null else hasRom && (!model.readOnly || it.worksOnAnyGame) }.groupBy { it.group }
         ready.forEach { (group, editors) ->
-            GroupLabel(group)
-            editors.forEach { NavItem(it.title, model.selected == it, enabled = true, soon = false) { model.selected = it } }
+            GroupLabel(displayGroup(group))
+            editors.forEach { NavItem(it.title, it.displayTitle(), model.selected == it, enabled = true, soon = false) { model.selected = it } }
         }
         val soon = EditorKind.entries.filter { !it.implemented }
         if (hasRom && !model.readOnly && soon.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
-            GroupLabel("Coming soon")
-            soon.forEach { NavItem(it.title, selected = false, enabled = false, soon = true) {} }
+            GroupLabel(stringResource(Res.string.group_coming_soon))
+            soon.forEach { NavItem(it.title, it.displayTitle(), selected = false, enabled = false, soon = true) {} }
         }
     }
     ScrollHint(scroll)
@@ -167,12 +171,12 @@ private fun GroupLabel(text: String) {
 }
 
 @Composable
-private fun NavItem(title: String, selected: Boolean, enabled: Boolean, soon: Boolean, onClick: () -> Unit) {
+private fun NavItem(tag: String, title: String, selected: Boolean, enabled: Boolean, soon: Boolean, onClick: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
     val bringIntoView = remember { BringIntoViewRequester() }
     LaunchedEffect(selected) { if (selected) bringIntoView.bringIntoView() }
     Row(
-        Modifier.testTag("nav:$title").padding(start = 12.dp).fillMaxWidth().height(34.dp).bringIntoViewRequester(bringIntoView)
+        Modifier.testTag("nav:$tag").padding(start = 12.dp).fillMaxWidth().height(34.dp).bringIntoViewRequester(bringIntoView)
             .background(if (selected) scheme.primaryContainer else androidx.compose.ui.graphics.Color.Transparent, MaterialTheme.shapes.medium)
             .clickable(enabled = enabled, role = Role.Tab, onClick = onClick).padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically,

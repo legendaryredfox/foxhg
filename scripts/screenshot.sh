@@ -4,7 +4,7 @@
 # Example: scripts/screenshot.sh /tmp/trainers.png roms/heartgold.nds TRAINERS
 # The window is polled for up to 3 minutes (the first run compiles), then the UI gets `settle` seconds to load the ROM.
 # Extra arguments are run as one `xdotool` command line once settled (clicks, keys), followed by a 2 s pause.
-# FOXHG_THEME=dark|light forces a theme.
+# FOXHG_THEME=dark|light forces a theme. FOXHG_LANG=en|pt-BR|es|zh-CN sets the app language (the setting "system" follows it).
 set -euo pipefail
 
 out="$(realpath -m "$1")"; rom="${2:-}"; editor="${3:-}"; settle="${4:-6}"; shift $(($# < 4 ? $# : 4))

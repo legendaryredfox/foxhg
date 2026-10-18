@@ -6,7 +6,7 @@ import java.nio.file.Path
 import java.util.Properties
 import kotlin.io.path.exists
 
-enum class ThemeChoice(val label: String) { SYSTEM("System"), LIGHT("Light"), DARK("Dark") }
+enum class ThemeChoice { SYSTEM, LIGHT, DARK }
 
 /**
  * What the user can set. [emulatorCommand] is the command Run starts: `{rom}` stands for the built ROM, and the ROM is
@@ -17,6 +17,8 @@ data class AppSettings(
     val emulatorCommand: String = "",
     /** Whether a newly opened project saves automatically. */
     val autosave: Boolean = true,
+    /** The language of foxhg's own windows; the default follows the operating system. */
+    val language: AppLanguage = AppLanguage.SYSTEM,
 )
 
 /** The settings in a `key=value` text file. A missing or unreadable file gives the defaults, with an emulator found on this machine. */
@@ -29,6 +31,7 @@ class SettingsStore(private val file: Path, private val detectEmulator: () -> St
                 theme = ThemeChoice.entries.firstOrNull { it.name.equals(p.getProperty("theme"), ignoreCase = true) } ?: ThemeChoice.SYSTEM,
                 emulatorCommand = p.getProperty("emulator", ""),
                 autosave = p.getProperty("autosave")?.toBooleanStrictOrNull() ?: true,
+                language = AppLanguage.fromTag(p.getProperty("language")),
             )
         }
     } catch (e: IOException) {
@@ -45,6 +48,7 @@ class SettingsStore(private val file: Path, private val detectEmulator: () -> St
             setProperty("theme", settings.theme.name.lowercase())
             setProperty("emulator", settings.emulatorCommand)
             setProperty("autosave", settings.autosave.toString())
+            setProperty("language", settings.language.tag)
         }
         Files.newBufferedWriter(file).use { p.store(it, "foxhg settings") }
         true

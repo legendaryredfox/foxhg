@@ -1,5 +1,8 @@
 package io.github.legendaryredfox.foxhg.app
 
+import io.github.legendaryredfox.foxhg.app.resources.*
+import org.jetbrains.compose.resources.stringResource
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -218,17 +221,27 @@ private fun SettingsDialog(model: AppModel, d: AppDialog.Settings) {
     var theme by remember { mutableStateOf(model.settings.theme) }
     var emulator by remember { mutableStateOf(model.settings.emulatorCommand) }
     var autosave by remember { mutableStateOf(model.settings.autosave) }
+    var language by remember { mutableStateOf(model.settings.language) }
     AlertDialog(
         onDismissRequest = { model.dialog = null },
-        title = { Text("Settings") },
+        title = { Text(stringResource(Res.string.settings_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 d.notice?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error) }
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Theme", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(Res.string.settings_theme), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        ThemeChoice.entries.forEach { ToggleChip(it.label, theme == it, { _ -> theme = it }) }
+                        ThemeChoice.entries.forEach { ToggleChip(stringResource(it.labelResource()), theme == it, { _ -> theme = it }) }
                     }
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(stringResource(Res.string.settings_language), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    FieldFlow {
+                        AppLanguage.entries.forEach { l ->
+                            ToggleChip(if (l == AppLanguage.SYSTEM) stringResource(Res.string.theme_system) else l.nativeName, language == l, { _ -> language = l }, Modifier.testTag("language:${l.tag}"))
+                        }
+                    }
+                    if (!language.resolved().reviewed) Text(stringResource(Res.string.settings_language_unreviewed), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 LabeledText("Emulator command (Run)", emulator) { emulator = it }
                 Text(
@@ -245,13 +258,19 @@ private fun SettingsDialog(model: AppModel, d: AppDialog.Settings) {
             Button(onClick = {
                 // The Project menu's switch is for this session: it only follows the setting when the setting was changed here.
                 val changedHere = autosave != model.settings.autosave
-                model.updateSettings(AppSettings(theme, emulator.trim(), autosave))
+                model.updateSettings(AppSettings(theme, emulator.trim(), autosave, language))
                 if (changedHere) model.autosave = autosave
                 model.dialog = null
-            }, modifier = Modifier.testTag("settings-save")) { Text("Save") }
+            }, modifier = Modifier.testTag("settings-save")) { Text(stringResource(Res.string.settings_save)) }
         },
-        dismissButton = { TextButton(onClick = { model.dialog = null }) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = { model.dialog = null }) { Text(stringResource(Res.string.settings_cancel)) } },
     )
+}
+
+private fun ThemeChoice.labelResource() = when (this) {
+    ThemeChoice.SYSTEM -> Res.string.theme_system
+    ThemeChoice.LIGHT -> Res.string.theme_light
+    ThemeChoice.DARK -> Res.string.theme_dark
 }
 
 @Composable
