@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
-import io.github.legendaryredfox.foxhg.app.resources.Res
-import io.github.legendaryredfox.foxhg.app.resources.group_coming_soon
+import io.github.legendaryredfox.foxhg.app.resources.*
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 import androidx.compose.foundation.Image
@@ -114,14 +114,14 @@ private fun TopBar(model: AppModel) {
         Text(model.projectName ?: "foxhg", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         model.header?.let { header ->
             Chip(header.profile.displayName.replace("Pokémon ", "").replace(" (English)", " · English"), emphasis = model.readOnly)
-            if (model.readOnly) Chip("read-only", emphasis = true, modifier = Modifier.testTag("read-only"))
+            if (model.readOnly) Chip(stringResource(Res.string.chip_read_only), emphasis = true, modifier = Modifier.testTag("read-only"))
         }
         SaveIndicator(model)
         Spacer(Modifier.weight(1f))
         ProjectMenu(model)
-        OutlinedButton(onClick = { Actions.run(model) }, enabled = model.project != null && !model.readOnly, modifier = Modifier.testTag("run")) { Text("Run") }
-        if (model.isDirty) Button(onClick = { Actions.build(model) }, enabled = model.project != null && !model.readOnly) { Text("Build ROM…") }
-        else OutlinedButton(onClick = { Actions.build(model) }, enabled = model.project != null && !model.readOnly) { Text("Build ROM…") }
+        OutlinedButton(onClick = { Actions.run(model) }, enabled = model.project != null && !model.readOnly, modifier = Modifier.testTag("run")) { Text(stringResource(Res.string.action_run)) }
+        if (model.isDirty) Button(onClick = { Actions.build(model) }, enabled = model.project != null && !model.readOnly) { Text(stringResource(Res.string.action_build_rom)) }
+        else OutlinedButton(onClick = { Actions.build(model) }, enabled = model.project != null && !model.readOnly) { Text(stringResource(Res.string.action_build_rom)) }
     }
 }
 
@@ -132,10 +132,10 @@ private fun SaveIndicator(model: AppModel) {
     if (model.project == null) return
     when {
         model.projectDir == null && model.needsProjectToKeepWork ->
-            Chip("● Not saved. Save as project…", emphasis = true, modifier = Modifier.clickable { Actions.saveAs(model) })
+            Chip(stringResource(Res.string.state_not_saved), emphasis = true, modifier = Modifier.clickable { Actions.saveAs(model) })
         model.projectDir == null -> Unit
-        model.hasUnsavedWork -> Text(if (model.autosave) "Saving…" else "● Unsaved changes", style = MaterialTheme.typography.bodySmall, color = scheme.primary)
-        else -> Text("✓ Saved", style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
+        model.hasUnsavedWork -> Text(stringResource(if (model.autosave) Res.string.state_saving else Res.string.state_unsaved), style = MaterialTheme.typography.bodySmall, color = scheme.primary)
+        else -> Text(stringResource(Res.string.state_saved), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
     }
 }
 
@@ -203,11 +203,11 @@ private fun StatusBar(model: AppModel) {
         val error = model.error
         when {
             error != null -> Text(error, color = scheme.error, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-            else -> Text(model.status ?: "Ready", color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            else -> Text(model.status ?: stringResource(Res.string.status_ready), color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         }
         model.project?.let { p ->
             val edited = p.editedPaths.size + p.editedOverlays.size + if (p.editedArm9 != null) 1 else 0
-            if (model.revision >= 0) Text(if (edited == 0) "No changes" else "${plural(edited, "file")} changed", color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            if (model.revision >= 0) Text(if (edited == 0) stringResource(Res.string.status_no_changes) else pluralStringResource(Res.plurals.files_changed, edited, edited), color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
         model.romPath?.let { Text(it.fileName.toString(), color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall) }
         Text("v${AppVersion.current}", color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("app-version"))
@@ -434,9 +434,9 @@ private fun EmptyState(model: AppModel, modifier: Modifier) {
     Box(modifier, contentAlignment = Alignment.Center) {
         Column(Modifier.width(500.dp), verticalArrangement = Arrangement.spacedBy(20.dp), horizontalAlignment = Alignment.Start) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Start a project", style = MaterialTheme.typography.headlineSmall)
+                Text(stringResource(Res.string.start_title), style = MaterialTheme.typography.headlineSmall)
                 Text(
-                    "foxhg edits Pokémon HeartGold and SoulSilver (English, .nds). A project keeps your changes in a folder and saves them as you work. Your ROM is never modified: Build ROM writes a new file.",
+                    stringResource(Res.string.start_intro),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -444,21 +444,21 @@ private fun EmptyState(model: AppModel, modifier: Modifier) {
             // FlowRow: four buttons are wider than the column, so the last one goes to a second line instead of squeezing its text
             @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
             androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(onClick = { Actions.newProject(model) }) { Text("New project…") }
-                OutlinedButton(onClick = { Actions.openProject(model) }) { Text("Open project…") }
-                OutlinedButton(onClick = { Actions.openRom(model) }) { Text("Open ROM only…") }
-                OutlinedButton(onClick = { Actions.openSave(model) }, modifier = Modifier.testTag("open-save")) { Text("Open save file…") }
-                OutlinedButton(onClick = { Actions.newSave(model) }, modifier = Modifier.testTag("new-save")) { Text("New save file…") }
+                Button(onClick = { Actions.newProject(model) }) { Text(stringResource(Res.string.start_new_project)) }
+                OutlinedButton(onClick = { Actions.openProject(model) }) { Text(stringResource(Res.string.start_open_project)) }
+                OutlinedButton(onClick = { Actions.openRom(model) }) { Text(stringResource(Res.string.start_open_rom_only)) }
+                OutlinedButton(onClick = { Actions.openSave(model) }, modifier = Modifier.testTag("open-save")) { Text(stringResource(Res.string.start_open_save)) }
+                OutlinedButton(onClick = { Actions.newSave(model) }, modifier = Modifier.testTag("new-save")) { Text(stringResource(Res.string.start_new_save)) }
             }
             if (model.recent.isNotEmpty()) {
-                SectionCard("Recent") {
+                SectionCard(stringResource(Res.string.start_recent)) {
                     model.recent.forEach { entry ->
                         Row(
                             Modifier.fillMaxWidth().clickable { Actions.openRecent(model, entry) }.padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Chip(if (entry.kind == RecentKind.PROJECT) "Project" else "ROM", emphasis = entry.kind == RecentKind.PROJECT)
+                            Chip(stringResource(if (entry.kind == RecentKind.PROJECT) Res.string.kind_project else Res.string.kind_rom), emphasis = entry.kind == RecentKind.PROJECT)
                             Column(Modifier.weight(1f)) {
                                 Text(entry.displayName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                                 Text(entry.path.parent?.toString() ?: "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -477,7 +477,7 @@ private fun Welcome(model: AppModel, modifier: Modifier) {
         Column(Modifier.width(460.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(model.header?.profile?.displayName ?: "", style = MaterialTheme.typography.headlineSmall)
             if (model.readOnly) Text(model.header?.profile?.readOnlyReason ?: "", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("read-only-reason"))
-            else Text(if (model.projectDir != null) "Pick an editor on the left. Changes are saved into the project automatically." else "Pick an editor on the left. Without a project, changes stay in memory until you save them as a project or choose Build ROM….", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            else Text(stringResource(if (model.projectDir != null) Res.string.welcome_with_project else Res.string.welcome_without_project), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

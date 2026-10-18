@@ -14,10 +14,13 @@ class AppLanguageTest {
 
     private fun strings(dir: String): Map<String, String> {
         val text = Files.readString(resources.resolve(dir).resolve("strings.xml"))
-        return Regex("""<string name="([^"]+)">(.*?)</string>""", RegexOption.DOT_MATCHES_ALL).findAll(text).associate { it.groupValues[1] to it.groupValues[2] }
+        val plain = Regex("""<string name="([^"]+)">(.*?)</string>""", RegexOption.DOT_MATCHES_ALL).findAll(text).associate { it.groupValues[1] to it.groupValues[2] }
+        // a plural is one entry whose text is all its forms, so the placeholders of every form count
+        val plurals = Regex("""<plurals name="([^"]+)">(.*?)</plurals>""", RegexOption.DOT_MATCHES_ALL).findAll(text).associate { it.groupValues[1] to it.groupValues[2] }
+        return plain + plurals
     }
 
-    private fun placeholders(text: String) = Regex("""%\d+\$[sd]""").findAll(text).map { it.value }.sorted().toList()
+    private fun placeholders(text: String) = Regex("""%\d+\$[sd]""").findAll(text).map { it.value }.toSortedSet().toList()
 
     @Test
     fun everyLanguageHasTheKeysOfEnglishAndNoOthers() {

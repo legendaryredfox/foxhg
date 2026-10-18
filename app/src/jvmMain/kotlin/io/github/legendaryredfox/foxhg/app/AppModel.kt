@@ -316,15 +316,14 @@ class AppModel(
     val canUndo: Boolean get() = revision >= 0 && project?.canUndo == true
     val canRedo: Boolean get() = revision >= 0 && project?.canRedo == true
 
-    /** Name of the next undo step for the menu, e.g. "Undo a/0/1/7". */
-    val undoLabel: String get() = if (revision >= 0) project?.undoTargets?.let(::describe)?.let { "Undo $it" } ?: "Undo" else "Undo"
-    val redoLabel: String get() = if (revision >= 0) project?.redoTargets?.let(::describe)?.let { "Redo $it" } ?: "Redo" else "Redo"
+    /** What the next undo and redo touch, for the menu, e.g. the file a/0/1/7. */
+    val undoStep: StepTarget? get() = if (revision >= 0) project?.undoTargets?.let(::describe) else null
+    val redoStep: StepTarget? get() = if (revision >= 0) project?.redoTargets?.let(::describe) else null
 
-    private fun describe(targets: List<EditTarget>): String? = when {
-        targets.isEmpty() -> null
-        targets.size == 1 -> targets[0].label
-        else -> "${targets.size} files"
-    }
+    /** What the next undo or redo touches: [label] is the file when it is [files] = 1, else only the count matters. */
+    class StepTarget(val files: Int, val label: String)
+
+    private fun describe(targets: List<EditTarget>): StepTarget? = if (targets.isEmpty()) null else StepTarget(targets.size, targets[0].label)
 
     fun undo() { if (task == null) step("Undid", project?.undo()) }
 

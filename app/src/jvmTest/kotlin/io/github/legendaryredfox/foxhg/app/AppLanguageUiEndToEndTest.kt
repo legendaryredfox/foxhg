@@ -40,6 +40,13 @@ class AppLanguageUiEndToEndTest {
             waitForIdle()
             onNodeWithText("设置").assertIsDisplayed()
             onNodeWithText("此翻译尚未经母语人士审阅。").assertIsDisplayed()
+            onNodeWithTag("settings-save").performClick()
+            waitForIdle()
+            onNodeWithText("开始一个项目").assertIsDisplayed()
+            onNodeWithText("新建项目…").assertIsDisplayed()
+            model.dialog = AppDialog.NewSave
+            waitForIdle()
+            onNodeWithText("新建存档文件").assertIsDisplayed()
         }
     }
 

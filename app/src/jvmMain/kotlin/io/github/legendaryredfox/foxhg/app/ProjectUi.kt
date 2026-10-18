@@ -1,6 +1,8 @@
 package io.github.legendaryredfox.foxhg.app
 
 import io.github.legendaryredfox.foxhg.app.resources.*
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 import androidx.compose.foundation.background
@@ -49,33 +51,43 @@ import java.nio.file.Path
 fun ProjectMenu(model: AppModel) {
     var open by remember { mutableStateOf(false) }
     Column {
-        OutlinedButton(onClick = { open = true }) { Text("Project  ▾") }
+        OutlinedButton(onClick = { open = true }) { Text(stringResource(Res.string.menu_project) + "  ▾") }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            @Composable fun item(text: String, enabled: Boolean = true, action: () -> Unit) =
-                DropdownMenuItem(text = { Text(text) }, enabled = enabled, onClick = { open = false; action() })
-            item("New project…          Ctrl+N") { Actions.newProject(model) }
-            item("Open project…         Ctrl+O") { Actions.openProject(model) }
-            item("Open ROM without a project…") { Actions.openRom(model) }
-            item("Open save file…") { Actions.openSave(model) }
-            item("Close save file", enabled = model.save != null) { model.guardSave { model.closeSave() } }
+            @Composable fun item(text: String, shortcut: String = "", enabled: Boolean = true, action: () -> Unit) =
+                DropdownMenuItem(
+                    text = { Text(text) },
+                    trailingIcon = if (shortcut.isEmpty()) null else ({ Text(shortcut, Modifier.padding(start = 24.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }),
+                    enabled = enabled,
+                    onClick = { open = false; action() },
+                )
+            @Composable fun step(base: StringResource, withTarget: StringResource, step: AppModel.StepTarget?): String = when {
+                step == null -> stringResource(base)
+                step.files == 1 -> stringResource(withTarget, step.label)
+                else -> stringResource(withTarget, pluralStringResource(Res.plurals.step_files, step.files, step.files))
+            }
+            item(stringResource(Res.string.menu_new_project), "Ctrl+N") { Actions.newProject(model) }
+            item(stringResource(Res.string.menu_open_project), "Ctrl+O") { Actions.openProject(model) }
+            item(stringResource(Res.string.menu_open_rom), "Ctrl+Shift+O") { Actions.openRom(model) }
+            item(stringResource(Res.string.menu_open_save)) { Actions.openSave(model) }
+            item(stringResource(Res.string.menu_close_save), enabled = model.save != null) { model.guardSave { model.closeSave() } }
             HorizontalDivider()
-            item("${model.undoLabel}     Ctrl+Z", enabled = model.canUndo) { model.undo() }
-            item("${model.redoLabel}     Ctrl+Shift+Z", enabled = model.canRedo) { model.redo() }
+            item(step(Res.string.menu_undo, Res.string.menu_undo_what, model.undoStep), "Ctrl+Z", enabled = model.canUndo) { model.undo() }
+            item(step(Res.string.menu_redo, Res.string.menu_redo_what, model.redoStep), "Ctrl+Shift+Z", enabled = model.canRedo) { model.redo() }
             HorizontalDivider()
-            item("Save                         Ctrl+S", enabled = model.project != null && (model.projectDir == null || model.hasUnsavedWork)) { Actions.save(model) }
-            item("Save as project…", enabled = model.project != null) { Actions.saveAs(model) }
+            item(stringResource(Res.string.menu_save), "Ctrl+S", enabled = model.project != null && (model.projectDir == null || model.hasUnsavedWork)) { Actions.save(model) }
+            item(stringResource(Res.string.menu_save_as_project), enabled = model.project != null) { Actions.saveAs(model) }
             DropdownMenuItem(
-                text = { Text(if (model.autosave) "✓ Autosave" else "   Autosave") },
+                text = { Text((if (model.autosave) "✓ " else "   ") + stringResource(Res.string.menu_autosave)) },
                 enabled = model.projectDir != null,
                 onClick = { model.autosave = !model.autosave },
             )
             HorizontalDivider()
-            item("Settings…") { model.dialog = AppDialog.Settings() }
+            item(stringResource(Res.string.menu_settings)) { model.dialog = AppDialog.Settings() }
             if (model.recent.isNotEmpty()) {
                 HorizontalDivider()
-                Text("Recent", Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(Res.string.menu_recent), Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 model.recent.take(6).forEach { entry ->
-                    item("${if (entry.kind == RecentKind.PROJECT) "Project" else "ROM"}   ${entry.displayName}") { Actions.openRecent(model, entry) }
+                    item("${stringResource(if (entry.kind == RecentKind.PROJECT) Res.string.kind_project else Res.string.kind_rom)}   ${entry.displayName}") { Actions.openRecent(model, entry) }
                 }
             }
         }
@@ -106,26 +118,27 @@ private fun ProjectDialog(model: AppModel, askRom: Boolean, then: (() -> Unit)?)
     var rom by remember { mutableStateOf<Path?>(model.recent.firstOrNull { it.kind == RecentKind.ROM }?.path ?: model.romPath) }
     val folder = AppModel.projectFolder(location, name)
     val problem = when {
-        folder == null -> "Use a name without slashes"
-        askRom && (rom == null || !Files.exists(rom!!)) -> "Choose the ROM this project edits"
-        !AppModel.isUsableProjectFolder(folder) -> "Choose a folder that does not exist yet or is empty"
+        folder == null -> stringResource(Res.string.dialog_problem_name)
+        askRom && (rom == null || !Files.exists(rom!!)) -> stringResource(Res.string.dialog_problem_rom)
+        !AppModel.isUsableProjectFolder(folder) -> stringResource(Res.string.dialog_problem_folder)
         else -> null
     }
+    val chooseLocationTitle = stringResource(Res.string.dialog_choose_location)
     AlertDialog(
         onDismissRequest = { model.dialog = null },
-        title = { Text(if (askRom) "New project" else "Save as project") },
+        title = { Text(stringResource(if (askRom) Res.string.dialog_new_project else Res.string.dialog_save_as_project)) },
         text = {
             Column(Modifier.width(520.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Text(
-                    "A project keeps your changes in a folder and saves them automatically. The ROM is never modified or copied.",
+                    stringResource(Res.string.dialog_project_hint),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                LabeledText("Name", name) { name = it }
-                PathRow("Location", location.toString()) { chooseDirectory("Choose where to create the project", location) { location = it } }
-                if (askRom) PathRow("ROM", rom?.toString() ?: "No ROM chosen") { chooseRomToOpen()?.let { rom = it } }
+                LabeledText(stringResource(Res.string.dialog_field_name), name, tag = "Name") { name = it }
+                PathRow(stringResource(Res.string.dialog_field_location), location.toString()) { chooseDirectory(chooseLocationTitle, location) { location = it } }
+                if (askRom) PathRow(stringResource(Res.string.dialog_field_rom), rom?.toString() ?: stringResource(Res.string.dialog_no_rom_chosen)) { chooseRomToOpen()?.let { rom = it } }
                 Text(
-                    problem ?: "Creates ${folder}",
+                    problem ?: stringResource(Res.string.dialog_creates, folder.toString()),
                     style = MaterialTheme.typography.bodySmall,
                     color = if (problem != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
@@ -137,9 +150,9 @@ private fun ProjectDialog(model: AppModel, askRom: Boolean, then: (() -> Unit)?)
             Button(enabled = problem == null, onClick = {
                 val ok = if (askRom) model.newProject(rom!!, folder!!) else model.saveProjectAs(folder!!)
                 if (ok) { model.dialog = null; then?.invoke() }
-            }) { Text(if (askRom) "Create project" else "Save project") }
+            }) { Text(stringResource(if (askRom) Res.string.dialog_create_project else Res.string.dialog_save_project)) }
         },
-        dismissButton = { TextButton(onClick = { model.dialog = null }) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = { model.dialog = null }) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }
 
@@ -147,18 +160,18 @@ private fun ProjectDialog(model: AppModel, askRom: Boolean, then: (() -> Unit)?)
 private fun UnsavedWorkDialog(model: AppModel, d: AppDialog.UnsavedWork) {
     AlertDialog(
         onDismissRequest = { model.dialog = null },
-        title = { Text("Your changes are not saved") },
+        title = { Text(stringResource(Res.string.unsaved_title)) },
         text = {
             Text(
-                "You edited a ROM without a project, so these changes exist only in memory. Save them as a project to keep them, or discard them. You can also cancel and use Build ROM… to write a patched ROM.",
+                stringResource(Res.string.unsaved_body),
                 style = MaterialTheme.typography.bodyMedium,
             )
         },
-        confirmButton = { Button(onClick = { model.dialog = AppDialog.SaveProjectAs(then = d.then) }) { Text("Save as project…") } },
+        confirmButton = { Button(onClick = { model.dialog = AppDialog.SaveProjectAs(then = d.then) }) { Text(stringResource(Res.string.menu_save_as_project)) } },
         dismissButton = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = { model.dialog = null }) { Text("Cancel") }
-                TextButton(onClick = { model.dialog = null; d.then() }) { Text("Discard changes", color = MaterialTheme.colorScheme.error) }
+                TextButton(onClick = { model.dialog = null }) { Text(stringResource(Res.string.action_cancel)) }
+                TextButton(onClick = { model.dialog = null; d.then() }) { Text(stringResource(Res.string.unsaved_discard), color = MaterialTheme.colorScheme.error) }
             }
         },
     )
@@ -169,15 +182,15 @@ private fun UnsavedSaveDialog(model: AppModel, d: AppDialog.UnsavedSave) {
     val name = model.save?.path?.fileName ?: ""
     AlertDialog(
         onDismissRequest = { model.dialog = null },
-        title = { Text("The save file is not written") },
-        text = { Text("You edited $name but did not write it. Write it (the file that is there is kept as .bak), or discard the changes.", style = MaterialTheme.typography.bodyMedium) },
+        title = { Text(stringResource(Res.string.unsaved_save_title)) },
+        text = { Text(stringResource(Res.string.unsaved_save_body, name.toString()), style = MaterialTheme.typography.bodyMedium) },
         confirmButton = {
-            Button(onClick = { if (model.save?.write() == true) { model.dialog = null; model.guard(d.then) } }, modifier = Modifier.testTag("unsaved-save-write")) { Text("Write the save") }
+            Button(onClick = { if (model.save?.write() == true) { model.dialog = null; model.guard(d.then) } }, modifier = Modifier.testTag("unsaved-save-write")) { Text(stringResource(Res.string.unsaved_save_write)) }
         },
         dismissButton = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = { model.dialog = null }) { Text("Cancel") }
-                TextButton(onClick = { model.save?.discard(); model.dialog = null; model.guard(d.then) }) { Text("Discard changes", color = MaterialTheme.colorScheme.error) }
+                TextButton(onClick = { model.dialog = null }) { Text(stringResource(Res.string.action_cancel)) }
+                TextButton(onClick = { model.save?.discard(); model.dialog = null; model.guard(d.then) }) { Text(stringResource(Res.string.unsaved_discard), color = MaterialTheme.colorScheme.error) }
             }
         },
     )
@@ -187,15 +200,15 @@ private fun UnsavedSaveDialog(model: AppModel, d: AppDialog.UnsavedSave) {
 private fun RelinkDialog(model: AppModel, d: AppDialog.RelinkRom) {
     AlertDialog(
         onDismissRequest = { model.dialog = null },
-        title = { Text("Can't find the ROM") },
+        title = { Text(stringResource(Res.string.relink_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(d.message, style = MaterialTheme.typography.bodyMedium)
-                Text("If you moved or renamed it, point the project at it again. Your saved changes are kept.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(Res.string.relink_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
-        confirmButton = { Button(onClick = { chooseRomToOpen()?.let { model.relinkRom(d.projectDir, it) } }) { Text("Locate ROM…") } },
-        dismissButton = { TextButton(onClick = { model.dialog = null }) { Text("Cancel") } },
+        confirmButton = { Button(onClick = { chooseRomToOpen()?.let { model.relinkRom(d.projectDir, it) } }) { Text(stringResource(Res.string.relink_locate)) } },
+        dismissButton = { TextButton(onClick = { model.dialog = null }) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }
 
@@ -209,7 +222,7 @@ private fun ProgressDialog(task: AppModel.Task) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.testTag("progress")) {
                 val fraction = task.fraction
                 if (fraction == null) LinearProgressIndicator(Modifier.fillMaxWidth()) else LinearProgressIndicator(progress = { fraction.toFloat() }, modifier = Modifier.fillMaxWidth())
-                Text(if (fraction == null) "Working…" else "${(fraction * 100).toInt()} %", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(if (fraction == null) stringResource(Res.string.progress_working) else "${(fraction * 100).toInt()} %", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
         confirmButton = {},
@@ -243,14 +256,14 @@ private fun SettingsDialog(model: AppModel, d: AppDialog.Settings) {
                     }
                     if (!language.resolved().reviewed) Text(stringResource(Res.string.settings_language_unreviewed), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                LabeledText("Emulator command (Run)", emulator) { emulator = it }
+                LabeledText(stringResource(Res.string.settings_emulator), emulator, tag = "Emulator command (Run)") { emulator = it }
                 Text(
-                    "Where the ROM goes is {rom}; without it the ROM is added at the end. For example: desmume {rom}  or  retroarch -L /path/to/desmume_libretro.so {rom}",
+                    stringResource(Res.string.settings_emulator_help),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ToggleChip("Autosave projects", autosave, { autosave = it })
-                    Text("for projects you open next", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    ToggleChip(stringResource(Res.string.settings_autosave), autosave, { autosave = it }, tag = "Autosave projects")
+                    Text(stringResource(Res.string.settings_autosave_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         },
@@ -261,9 +274,9 @@ private fun SettingsDialog(model: AppModel, d: AppDialog.Settings) {
                 model.updateSettings(AppSettings(theme, emulator.trim(), autosave, language))
                 if (changedHere) model.autosave = autosave
                 model.dialog = null
-            }, modifier = Modifier.testTag("settings-save")) { Text(stringResource(Res.string.settings_save)) }
+            }, modifier = Modifier.testTag("settings-save")) { Text(stringResource(Res.string.action_save)) }
         },
-        dismissButton = { TextButton(onClick = { model.dialog = null }) { Text(stringResource(Res.string.settings_cancel)) } },
+        dismissButton = { TextButton(onClick = { model.dialog = null }) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }
 
@@ -274,7 +287,7 @@ private fun ThemeChoice.labelResource() = when (this) {
 }
 
 @Composable
-internal fun LabeledText(label: String, value: String, onChange: (String) -> Unit) {
+internal fun LabeledText(label: String, value: String, tag: String = label, onChange: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         BasicTextField(
@@ -290,7 +303,7 @@ internal fun LabeledText(label: String, value: String, onChange: (String) -> Uni
                     verticalAlignment = Alignment.CenterVertically,
                 ) { inner() }
             },
-            modifier = Modifier.fillMaxWidth().testTag("field:$label"),
+            modifier = Modifier.fillMaxWidth().testTag("field:$tag"),
         )
     }
 }
@@ -301,7 +314,7 @@ private fun PathRow(label: String, value: String, onBrowse: () -> Unit) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(value, Modifier.weight(1f), style = Fox.mono, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            OutlinedButton(onClick = onBrowse) { Text("Browse…") }
+            OutlinedButton(onClick = onBrowse) { Text(stringResource(Res.string.action_browse)) }
         }
     }
 }
@@ -318,26 +331,27 @@ private fun NewSaveDialog(model: AppModel) {
     var y by remember { mutableStateOf(PRESETS[0].place.y) }
     var direction by remember { mutableStateOf(PRESETS[0].place.direction) }
     val problem = when {
-        name.isBlank() -> "Give the player a name"
-        name.length > PlayerData.MAX_NAME -> "A name has at most ${PlayerData.MAX_NAME} characters"
+        name.isBlank() -> stringResource(Res.string.new_save_problem_empty)
+        name.length > PlayerData.MAX_NAME -> stringResource(Res.string.new_save_problem_long, PlayerData.MAX_NAME)
         else -> null
     }
+    val writeTitle = stringResource(Res.string.new_save_write_title)
     AlertDialog(
         onDismissRequest = { model.dialog = null },
-        title = { Text("New save file") },
+        title = { Text(stringResource(Res.string.new_save_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    "Writes a save that continues at the place you pick, with an empty party, bag and PC, to start the game anywhere (for example in a Poké Mart you edited). The map and tile must exist and be walkable. To play from the beginning, start a new game in the game itself.",
+                    stringResource(Res.string.new_save_body),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                LabeledText("Name (up to ${PlayerData.MAX_NAME} characters)", name) { name = it }
-                PickerField("Gender", gender, PlayerData.GENDERS, { gender = it }, Modifier.width(140.dp))
+                LabeledText(stringResource(Res.string.new_save_name, PlayerData.MAX_NAME), name, tag = "Name (up to ${PlayerData.MAX_NAME} characters)") { name = it }
+                PickerField(stringResource(Res.string.new_save_gender), gender, PlayerData.GENDERS, { gender = it }, Modifier.width(140.dp), tag = "Gender")
                 FieldFlow {
-                    NumberField("Map", map, 0..65535, { map = it }, Modifier.width(100.dp), tag = "Map")
-                    NumberField("Tile X", x, 0..1023, { x = it }, Modifier.width(100.dp), tag = "Tile X")
-                    NumberField("Tile Y", y, 0..1023, { y = it }, Modifier.width(100.dp), tag = "Tile Y")
-                    PickerField("Facing", direction, Location.DIRECTIONS, { direction = it }, Modifier.width(140.dp))
+                    NumberField(stringResource(Res.string.new_save_map), map, 0..65535, { map = it }, Modifier.width(100.dp), tag = "Map")
+                    NumberField(stringResource(Res.string.new_save_tile_x), x, 0..1023, { x = it }, Modifier.width(100.dp), tag = "Tile X")
+                    NumberField(stringResource(Res.string.new_save_tile_y), y, 0..1023, { y = it }, Modifier.width(100.dp), tag = "Tile Y")
+                    PickerField(stringResource(Res.string.new_save_facing), direction, Location.DIRECTIONS, { direction = it }, Modifier.width(140.dp), tag = "Facing")
                 }
                 PRESETS.forEach { p ->
                     OutlinedButton(onClick = { map = p.place.map; x = p.place.x; y = p.place.y; direction = p.place.direction }) { Text(p.label) }
@@ -349,12 +363,12 @@ private fun NewSaveDialog(model: AppModel) {
             Button(
                 enabled = problem == null,
                 onClick = {
-                    val target = pickFile("Write the new save file", java.awt.FileDialog.SAVE, ".sav")
+                    val target = pickFile(writeTitle, java.awt.FileDialog.SAVE, ".sav")
                     if (target != null) { model.dialog = null; model.createSave(target, name, gender, Location(map, -1, x, y, direction)) }
                 },
                 modifier = Modifier.testTag("new-save-create"),
-            ) { Text("Create…") }
+            ) { Text(stringResource(Res.string.new_save_create)) }
         },
-        dismissButton = { TextButton(onClick = { model.dialog = null }) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = { model.dialog = null }) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }

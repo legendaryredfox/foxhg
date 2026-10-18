@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
 import io.github.legendaryredfox.foxhg.core.FoxResult
@@ -43,7 +44,7 @@ class ProjectUiEndToEndTest {
     private fun DesktopComposeUiTest.menu(item: String) {
         onNodeWithText("Project  ▾").performClick()
         waitForIdle()
-        onNodeWithText(item).performClick()
+        onAllNodesWithText(item).onLast().performClick() // the menu is the last thing drawn, after a button of the same name on the page
         waitForIdle()
     }
 
@@ -93,7 +94,7 @@ class ProjectUiEndToEndTest {
                 onNodeWithText("Opened project hack-one").assertIsDisplayed()
 
                 // the same name again is refused
-                menu("New project…          Ctrl+N")
+                menu("New project…")
                 onNodeWithTag("field:Name").performTextReplacement("hack-one")
                 waitForIdle()
                 onNodeWithText("Choose a folder that does not exist yet or is empty").assertIsDisplayed()
@@ -163,7 +164,7 @@ class ProjectUiEndToEndTest {
                 editItemPrice(777)
                 onNodeWithText("● Unsaved changes").assertIsDisplayed()
                 assertFalse(manual.hasPending)
-                menu("Save                         Ctrl+S")
+                menu("Save")
                 onNodeWithText("✓ Saved").assertIsDisplayed()
             }
             model.close()

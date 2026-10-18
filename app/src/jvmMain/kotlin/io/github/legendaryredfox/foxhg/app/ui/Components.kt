@@ -179,6 +179,8 @@ fun PickerField(
     modifier: Modifier = Modifier.width(200.dp),
     /** A picture or swatch drawn in front of an option (and of the selected one in the field). */
     leading: (@Composable (Int) -> Unit)? = null,
+    /** Name for tests to find the field by (`picker:<tag>`); the label by default, so a translated label needs the English name here. */
+    tag: String = label,
 ) {
     var open by remember { mutableStateOf(false) }
     // Closing the popup inside the pointer event that picked a row disposes its scene while that event is still being
@@ -190,7 +192,7 @@ fun PickerField(
         FieldLabel(label)
         Box {
             Row(
-                fieldModifier(false, hovered || open).hoverable(source).testTag("picker:$label").clickable(role = Role.DropdownList) { open = true }.semantics { contentDescription = "$label: ${options.getOrNull(selected) ?: "#$selected"}" }.padding(horizontal = 10.dp),
+                fieldModifier(false, hovered || open).hoverable(source).testTag("picker:$tag").clickable(role = Role.DropdownList) { open = true }.semantics { contentDescription = "$label: ${options.getOrNull(selected) ?: "#$selected"}" }.padding(horizontal = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 leading?.let { it(selected); Spacer(Modifier.width(6.dp)) }
@@ -388,7 +390,8 @@ fun Chip(text: String, modifier: Modifier = Modifier, emphasis: Boolean = false)
 
 /** A pill that can be switched on and off (flags, TM/HM compatibility). */
 @Composable
-fun ToggleChip(text: String, checked: Boolean, onToggle: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+/** [tag] is what tests find the chip by (`chip:<tag>`); the text by default, so a translated text needs the English name here. */
+fun ToggleChip(text: String, checked: Boolean, onToggle: (Boolean) -> Unit, modifier: Modifier = Modifier, tag: String = text) {
     val scheme = MaterialTheme.colorScheme
     val source = remember { MutableInteractionSource() }
     val hovered by source.collectIsHoveredAsState()
@@ -397,7 +400,7 @@ fun ToggleChip(text: String, checked: Boolean, onToggle: (Boolean) -> Unit, modi
             .background(if (checked) scheme.primaryContainer else if (hovered) scheme.surfaceVariant else scheme.surface, MaterialTheme.shapes.large)
             .border(1.dp, if (checked) scheme.primary.copy(alpha = 0.6f) else scheme.outline, MaterialTheme.shapes.large)
             .hoverable(source)
-            .testTag("chip:$text")
+            .testTag("chip:$tag")
             .toggleable(value = checked, role = Role.Checkbox, onValueChange = onToggle)
             .padding(horizontal = 10.dp, vertical = 4.dp),
     ) {
