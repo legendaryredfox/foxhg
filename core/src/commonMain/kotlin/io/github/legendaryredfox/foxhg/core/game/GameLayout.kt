@@ -20,6 +20,8 @@ object HgssLayout {
     /** One file per in-game NPC trade (13 in HeartGold); the nickname and trainer name are in [TextBanks.TRADE_NAMES]. */
     const val NPC_TRADES = "a/1/1/2"
     const val MAPS = "a/0/6/5"
+    /** One 16 byte file per photo location the `TakePhoto` script command can use; the album icons are in `a/1/7/1`. */
+    const val PHOTO_LOCATIONS = "a/2/5/4"
     /** The sound archive (SDAT): sequences, banks and waves of music, sound effects and cries. Not a NARC. */
     const val SOUND_ARCHIVE = "data/sound/gs_sound_data.sdat"
     /** File 0 is the palette (16 palettes of 16 colours), file `species + 7` the 32x64 icon (two frames). */

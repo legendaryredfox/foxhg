@@ -221,6 +221,19 @@ class ListEditorsUiEndToEndTest {
     }
 
     @Test
+    fun editingAPhotoLocationOnItsScreenWritesTheNarc() = withHeartGoldApp { _, project ->
+        val photos = { (io.github.legendaryredfox.foxhg.core.data.photo.PhotoLocation.load(project) as FoxResult.Ok).value.records }
+        val before = photos()
+        open("Photo locations")
+        onNodeWithTag("number:Player X").typeNumber(123)
+        waitForIdle()
+        assertEquals(123, photos()[0].x, "the position went into a/2/5/4")
+        assertEquals(before[0].copy(x = 123), photos()[0])
+        assertEquals(before.drop(1), photos().drop(1))
+        assertTrue(project.isDirty)
+    }
+
+    @Test
     fun applyingToolboxPatchesOnTheirScreen() = withHeartGoldApp { model, project ->
         open("ROM toolbox")
         onNodeWithTag("apply:dynamic-camera").assertIsNotEnabled()

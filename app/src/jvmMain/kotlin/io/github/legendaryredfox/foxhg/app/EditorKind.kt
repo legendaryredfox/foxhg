@@ -36,6 +36,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     BUG_CONTEST("World", "Bug Contest", implemented = true),
     SAFARI("World", "Safari Zone", implemented = true),
     TOWN_MAP("World", "Town Map", implemented = true),
+    PHOTOS("World", "Photo locations", implemented = true),
     HEADERS("World", "Map headers", implemented = true),
     MATRICES("World", "Matrices", implemented = true),
     MAPS("World", "Maps", implemented = true),
