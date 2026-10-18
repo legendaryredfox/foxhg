@@ -25,10 +25,14 @@ import io.github.legendaryredfox.foxhg.app.ui.StatBar
 import io.github.legendaryredfox.foxhg.app.ui.ToggleChip
 import io.github.legendaryredfox.foxhg.core.data.personal.PersonalData
 
-private val GROWTH_RATES = listOf("Medium Fast", "Erratic", "Fluctuating", "Medium Slow", "Fast", "Slow")
-private val EGG_GROUPS = listOf(
-    "-", "Monster", "Water 1", "Bug", "Flying", "Field", "Fairy", "Grass", "Human-Like",
-    "Water 3", "Mineral", "Amorphous", "Water 2", "Ditto", "Dragon", "Undiscovered",
+private fun growthRates() = listOf(
+    tr(Res.string.personal_medium_fast), tr(Res.string.personal_erratic), tr(Res.string.personal_fluctuating), tr(Res.string.personal_medium_slow), tr(Res.string.personal_fast), tr(Res.string.personal_slow),
+)
+
+private fun eggGroups() = listOf(
+    "-", tr(Res.string.personal_monster), tr(Res.string.personal_water_1), tr(Res.string.personal_bug), tr(Res.string.personal_flying), tr(Res.string.personal_field), tr(Res.string.personal_fairy), tr(Res.string.personal_grass),
+    tr(Res.string.personal_human_like), tr(Res.string.personal_water_3), tr(Res.string.personal_mineral), tr(Res.string.personal_amorphous), tr(Res.string.personal_water_2), tr(Res.string.personal_ditto), tr(Res.string.personal_dragon),
+    tr(Res.string.personal_undiscovered),
 )
 
 @Composable
@@ -60,7 +64,7 @@ private fun Form(model: PersonalEditorModel, p: PersonalData) {
     val abilities = names?.abilities ?: emptyList()
     val items = names?.items ?: emptyList()
     EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = {
-        CsvButtons(PersonalData.CSV, "personal data", { model.records }, { nameOf(model.label(it)) }) { change -> model.updateAll(change(model.records)) }
+        CsvButtons(PersonalData.CSV, tr(Res.string.personal_personal_data), { model.records }, { nameOf(model.label(it)) }) { change -> model.updateAll(change(model.records)) }
         CryButton(model.selectedIndex)
         PokemonPortraits(model.selectedIndex)
     })
@@ -93,9 +97,9 @@ private fun Form(model: PersonalEditorModel, p: PersonalData) {
             NumberField(stringResource(Res.string.personal_gender_255_none), p.genderRatio, 0..255, { v -> model.update { it.copy(genderRatio = v) } }, Modifier.width(140.dp))
         }
         FieldFlow {
-            PickerField(stringResource(Res.string.personal_growth_rate), p.growthRate, GROWTH_RATES, { v -> model.update { it.copy(growthRate = v) } })
-            PickerField(stringResource(Res.string.personal_egg_group_1), p.eggGroup1, EGG_GROUPS, { v -> model.update { it.copy(eggGroup1 = v) } })
-            PickerField(stringResource(Res.string.personal_egg_group_2), p.eggGroup2, EGG_GROUPS, { v -> model.update { it.copy(eggGroup2 = v) } })
+            PickerField(stringResource(Res.string.personal_growth_rate), p.growthRate, growthRates(), { v -> model.update { it.copy(growthRate = v) } })
+            PickerField(stringResource(Res.string.personal_egg_group_1), p.eggGroup1, eggGroups(), { v -> model.update { it.copy(eggGroup1 = v) } })
+            PickerField(stringResource(Res.string.personal_egg_group_2), p.eggGroup2, eggGroups(), { v -> model.update { it.copy(eggGroup2 = v) } })
         }
     }
 
@@ -131,7 +135,7 @@ private fun Form(model: PersonalEditorModel, p: PersonalData) {
 @Composable
 private fun StatRow(label: String, value: Int, onChange: (Int) -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text(label, Modifier.width(64.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(label, Modifier.width(92.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         NumberField("", value, 0..255, onChange, Modifier.width(72.dp), tag = "stat:$label")
         StatBar(value, modifier = Modifier.weight(1f))
     }

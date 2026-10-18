@@ -75,7 +75,7 @@ class ScriptLabels(project: RomProject) {
         val name = when {
             s.isNotEmpty() -> mapName(s.first()) + if (s.size > 1) " +${s.size - 1}" else ""
             l.isNotEmpty() -> mapName(l.first()) + " (level script)"
-            else -> "(not used by a map)"
+            else -> tr(Res.string.script_not_used_by_a_map)
         }
         return "%03d  %s".format(file, name)
     }
@@ -194,7 +194,7 @@ internal class ScriptHighlight(dark: Boolean) : VisualTransformation {
 
 @Composable
 private fun LevelScriptForm(file: LevelScript, scriptFiles: List<Int>, set: (LevelScript) -> Unit) {
-    val targets = if (scriptFiles.isEmpty()) "No map uses this level script." else "The script numbers are scripts of script file " + scriptFiles.joinToString(", ")
+    val targets = if (scriptFiles.isEmpty()) tr(Res.string.script_no_map_uses_this_level_script) else "The script numbers are scripts of script file " + scriptFiles.joinToString(", ")
     SectionCard(stringResource(Res.string.map_header_level_script), subtitle = targets) {
         Text(stringResource(Res.string.script_runs_when_the_map_is_entered_map_c), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
@@ -241,7 +241,7 @@ private fun ScriptSounds(text: String) {
         found.forEach { (command, id) ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("$command $id", style = io.github.legendaryredfox.foxhg.app.ui.Fox.mono, modifier = Modifier.width(160.dp))
-                if (command == "PlayCry") io.github.legendaryredfox.foxhg.app.ui.CryButton(id) else io.github.legendaryredfox.foxhg.app.ui.SoundButton(id)
+                if (command == tr(Res.string.script_playcry)) io.github.legendaryredfox.foxhg.app.ui.CryButton(id) else io.github.legendaryredfox.foxhg.app.ui.SoundButton(id)
             }
         }
         io.github.legendaryredfox.foxhg.app.ui.AudioStatus()

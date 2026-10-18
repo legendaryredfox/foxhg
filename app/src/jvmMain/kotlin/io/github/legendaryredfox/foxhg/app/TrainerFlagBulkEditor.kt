@@ -50,7 +50,7 @@ class TrainerFlagBulkEditorModel(private val project: RomProject, private val on
         }
     }
 
-    fun name(index: Int): String = names?.trainerNames?.getOrNull(index)?.takeIf { it.isNotBlank() } ?: "Trainer $index"
+    fun name(index: Int): String = names?.trainerNames?.getOrNull(index)?.takeIf { it.isNotBlank() } ?: tr(Res.string.battle_tower_trainer_x, index)
 
     fun className(index: Int): String =
         table?.trainers?.getOrNull(index)?.header?.trainerClass?.let { names?.trainerClasses?.getOrNull(it) } ?: ""

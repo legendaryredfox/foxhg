@@ -52,7 +52,7 @@ class StaticEditorModel(private val project: RomProject, private val onChanged: 
     fun where(e: StaticEncounter): String {
         val maps = mapsOfScript[e.file].orEmpty()
         val places = maps.mapNotNull { names?.locations?.getOrNull(headers.getOrNull(it)?.locationName ?: -1)?.takeIf { n -> n.isNotBlank() } }.distinct()
-        return "Script file ${e.file}" + if (places.isNotEmpty()) " (${places.take(3).joinToString(", ")})" else ""
+        return tr(Res.string.static_script_file_x, e.file) + if (places.isNotEmpty()) " (${places.take(3).joinToString(", ")})" else ""
     }
 
     fun change(e: StaticEncounter, species: Int, level: Int?) {
@@ -76,7 +76,7 @@ fun StaticEditor(model: StaticEditorModel, modifier: Modifier = Modifier) {
         for (kind in StaticKind.entries) {
             val rows = model.encounters.filter { it.kind == kind }
             SectionCard(
-                when (kind) { StaticKind.BATTLE -> "Scripted battles"; StaticKind.GIFT -> "Gift Pokémon"; StaticKind.EGG -> "Eggs" },
+                when (kind) { StaticKind.BATTLE -> tr(Res.string.static_scripted_battles); StaticKind.GIFT -> tr(Res.string.static_gift_pok_mon); StaticKind.EGG -> "Eggs" },
                 subtitle = stringResource(Res.string.static_x_in_the_scripts, rows.size),
             ) {
                 rows.forEach { e ->

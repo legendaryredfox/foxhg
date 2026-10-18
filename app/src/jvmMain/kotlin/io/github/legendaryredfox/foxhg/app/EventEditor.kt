@@ -46,7 +46,7 @@ class EventLabels(project: RomProject) {
     private val names = project.names
 
     fun mapName(header: Int): String {
-        val h = headers.getOrNull(header) ?: return "Header $header (not a map)"
+        val h = headers.getOrNull(header) ?: return tr(Res.string.event_header_x_not_a_map, header)
         return names?.locations?.getOrNull(h.locationName)?.takeIf { it.isNotBlank() } ?: "Map"
     }
 
@@ -75,20 +75,20 @@ fun EventEditor(model: RecordEditorModel<EventFile>, labels: EventLabels, modifi
             )
         }
         key(model.selectedIndex) {
-            EventSection("Overworld objects", "NPCs, trainers and item balls", file.overworlds, { model.update { f -> f.copy(overworlds = it) } },
+            EventSection(tr(Res.string.event_overworld_objects), tr(Res.string.event_npcs_trainers_and_item_balls), file.overworlds, { model.update { f -> f.copy(overworlds = it) } },
                 summary = { "${if (it.isAlias) "Alias of" else "Object"} ${it.id}, sprite ${it.spriteEntry}, script ${it.script}" },
                 create = { file.overworlds.lastOrNull()?.copy(id = (file.overworlds.maxOfOrNull { o -> o.id } ?: 0) + 1) ?: OverworldEvent(1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0) },
                 leading = { OverworldIcon(it.spriteEntry, it.orientation, 32.dp) },
             ) { o, set -> OverworldForm(o, set) }
-            EventSection("Warps", "Doors and exits to another map header", file.warps, { model.update { f -> f.copy(warps = it) } },
-                summary = { "To header ${it.header} (${labels.mapName(it.header)}), anchor ${it.anchor}" },
+            EventSection("Warps", tr(Res.string.event_doors_and_exits_to_another_map_hea), file.warps, { model.update { f -> f.copy(warps = it) } },
+                summary = { tr(Res.string.event_to_header_x_x_anchor_x, it.header, labels.mapName(it.header), it.anchor) },
                 create = { file.warps.lastOrNull() ?: Warp(0, 0, 0, 0, 0) },
             ) { w, set -> WarpForm(w, labels, set) }
-            EventSection("Triggers", "Scripts that run when the player steps on an area", file.triggers, { model.update { f -> f.copy(triggers = it) } },
-                summary = { "Script ${it.script}" + if (it.variable != 0) " when var ${it.variable} is ${it.expectedValue}" else "" },
+            EventSection(tr(Res.string.script_triggers), tr(Res.string.event_scripts_that_run_when_the_player_s), file.triggers, { model.update { f -> f.copy(triggers = it) } },
+                summary = { tr(Res.string.event_script_x, it.script) + if (it.variable != 0) " when var ${it.variable} is ${it.expectedValue}" else "" },
                 create = { file.triggers.lastOrNull() ?: Trigger(0, 0, 0, 1, 1, 0, 0, 0) },
             ) { t, set -> TriggerForm(t, set) }
-            EventSection("Signs, boards and hidden items", null, file.spawnables, { model.update { f -> f.copy(spawnables = it) } },
+            EventSection(tr(Res.string.event_signs_boards_and_hidden_items), null, file.spawnables, { model.update { f -> f.copy(spawnables = it) } },
                 summary = { sp -> "${Spawnable.TYPES.getOrElse(sp.type) { n -> "Type $n" }}, script ${sp.script}" },
                 create = { file.spawnables.lastOrNull() ?: Spawnable(0, 0, 0, 0, 0, 0, 0, 0, 0) },
             ) { s, set -> SpawnableForm(s, set) }

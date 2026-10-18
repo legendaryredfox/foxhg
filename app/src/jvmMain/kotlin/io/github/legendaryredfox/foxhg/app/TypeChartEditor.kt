@@ -58,7 +58,7 @@ class TypeChartEditorModel(private val project: RomProject, private val onChange
         val next = when (current.multiplier(attacker, defender)) { 10 -> 20; 20 -> 5; 5 -> 0; else -> 10 }
         val updated = current.with(attacker, defender, next)
         if (updated == current) {
-            message = "No free slot for ${typeName(attacker)} against ${typeName(defender)}: the table is full. Set another pair back to 1x first."
+            message = tr(Res.string.type_chart_no_free_slot_for_x_against_x_the_t, typeName(attacker), typeName(defender))
             return
         }
         message = null

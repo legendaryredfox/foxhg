@@ -93,13 +93,13 @@ private fun ReplaceSpeciesCard(model: TrainerEditorModel) {
     if (asking) {
         val n = model.countSpecies(from)
         ConfirmDialog(
-            "Replace $fromName with $toName?",
-            if (n == 0) "No trainer uses $fromName, so nothing would change." else "${plural(n, "Pokémon")} in trainer parties will become $toName. Levels and moves stay. Ctrl+Z undoes it.",
-            "Replace",
+            tr(Res.string.trainer_replace_x_with_x, fromName, toName),
+            if (n == 0) tr(Res.string.trainer_no_trainer_uses_x_so_nothing_would, fromName) else "${plural(n, "Pokémon")} in trainer parties will become $toName. Levels and moves stay. Ctrl+Z undoes it.",
+            tr(Res.string.trainer_replace),
             onConfirm = {
                 asking = false
                 val changed = model.replaceSpeciesEverywhere(from, to)
-                message = if (changed == 0) "No trainer uses $fromName" else "Replaced $changed Pokémon"
+                message = if (changed == 0) tr(Res.string.trainer_no_trainer_uses_x, fromName) else tr(Res.string.trainer_replaced_x_pok_mon, changed)
             },
             onDismiss = { asking = false },
         )

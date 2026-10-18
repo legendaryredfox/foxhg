@@ -235,40 +235,40 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.SAVE_FILE && model.save != null -> SaveFileScreen(model.save!!, modifier)
         project == null -> EmptyState(model, modifier)
         selected == null || (model.readOnly && !selected.worksOnAnyGame) -> Welcome(model, modifier)
-        selected == EditorKind.PERSONAL -> Loading(project, "Personal data", { PersonalEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.PERSONAL]?.let(m::select) } }) { editor ->
+        selected == EditorKind.PERSONAL -> Loading(project, tr(Res.string.editor_personal), { PersonalEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.PERSONAL]?.let(m::select) } }) { editor ->
             KeepSelection(model, EditorKind.PERSONAL, editor.selectedIndex)
             PersonalEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.BATTLE_DISPLAY -> Loading(project, "battle display", { BattleDisplayEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.BATTLE_DISPLAY]?.let(m::select) } }) { editor ->
+        selected == EditorKind.BATTLE_DISPLAY -> Loading(project, tr(Res.string.app_battle_display), { BattleDisplayEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.BATTLE_DISPLAY]?.let(m::select) } }) { editor ->
             KeepSelection(model, EditorKind.BATTLE_DISPLAY, editor.selectedIndex)
             BattleDisplayEditor(editor, modifier.padding(16.dp))
         }
         selected == EditorKind.PICKUP -> Loading(project, "pickup", { PickupEditorModel(project, model::projectChanged) }) { editor ->
             PickupEditor(editor, modifier)
         }
-        selected == EditorKind.GROWTH -> Loading(project, "growth rates", { GrowthEditorModel(project, model::projectChanged) }) { editor ->
+        selected == EditorKind.GROWTH -> Loading(project, tr(Res.string.app_growth_rates), { GrowthEditorModel(project, model::projectChanged) }) { editor ->
             GrowthEditor(editor, modifier)
         }
-        selected == EditorKind.TMHM_BULK -> Loading(project, "TM/HM compatibility", { TmHmBulkEditorModel(project, model::projectChanged) }) { editor ->
+        selected == EditorKind.TMHM_BULK -> Loading(project, tr(Res.string.editor_tmhm_bulk), { TmHmBulkEditorModel(project, model::projectChanged) }) { editor ->
             TmHmBulkEditor(editor, modifier)
         }
-        selected == EditorKind.TRAINER_FLAGS -> Loading(project, "trainer flags", { TrainerFlagBulkEditorModel(project, model::projectChanged) }) { editor ->
+        selected == EditorKind.TRAINER_FLAGS -> Loading(project, tr(Res.string.app_trainer_flags), { TrainerFlagBulkEditorModel(project, model::projectChanged) }) { editor ->
             TrainerFlagBulkEditor(editor, modifier)
         }
-        selected == EditorKind.BATTLE_TOWER_TRAINERS -> Loading(project, "Battle Tower", {
+        selected == EditorKind.BATTLE_TOWER_TRAINERS -> Loading(project, tr(Res.string.app_battle_tower), {
             val sets = (NarcRecords.load(project, BattleTowerSet.SPEC) as? FoxResult.Ok)?.value?.records ?: emptyList()
             val classes = (NarcRecords.load(project, BattleTowerTrainer.SPEC) as? FoxResult.Ok)?.value?.records?.map { it.trainerClass } ?: emptyList()
             model.recordEditor(EditorKind.BATTLE_TOWER_TRAINERS, project, BattleTowerTrainer.SPEC, battleTowerTrainerLabel(project.names) { classes.getOrNull(it) ?: 0 }, 0) to sets
         }) { (editor, sets) ->
             BattleTowerTrainerEditor(editor, sets, modifier.padding(16.dp))
         }
-        selected == EditorKind.BATTLE_TOWER_SETS -> Loading(project, "Battle Tower sets", { model.recordEditor(EditorKind.BATTLE_TOWER_SETS, project, BattleTowerSet.SPEC, RecordEditorModel.speciesLabel(project.names), 1) }) { editor ->
+        selected == EditorKind.BATTLE_TOWER_SETS -> Loading(project, tr(Res.string.editor_battle_tower_sets), { model.recordEditor(EditorKind.BATTLE_TOWER_SETS, project, BattleTowerSet.SPEC, RecordEditorModel.speciesLabel(project.names), 1) }) { editor ->
             BattleTowerSetEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.MARTS -> Loading(project, "Poké Marts", { MartEditorModel(project, model::projectChanged) }) { editor ->
+        selected == EditorKind.MARTS -> Loading(project, tr(Res.string.editor_marts), { MartEditorModel(project, model::projectChanged) }) { editor ->
             MartEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.TYPE_CHART -> Loading(project, "type chart", { TypeChartEditorModel(project, model::projectChanged) }) { editor ->
+        selected == EditorKind.TYPE_CHART -> Loading(project, tr(Res.string.app_type_chart), { TypeChartEditorModel(project, model::projectChanged) }) { editor ->
             TypeChartEditor(editor, modifier)
         }
         selected == EditorKind.LEARNSET -> Loading(project, "learnsets", { model.recordEditor(EditorKind.LEARNSET, project, Learnset.SPEC, RecordEditorModel.speciesLabel(project.names), 1) }) { editor ->
@@ -280,7 +280,7 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.MOVES -> Loading(project, "moves", { model.recordEditor(EditorKind.MOVES, project, MoveData.SPEC, RecordEditorModel.moveLabel(project.names), 1) }) { editor ->
             MoveEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.EGG_MOVES -> Loading(project, "egg moves", { model.recordEditor(EditorKind.EGG_MOVES, project, EggMoves.SPEC, { "%03d".format(it) }, 0) }) { editor ->
+        selected == EditorKind.EGG_MOVES -> Loading(project, tr(Res.string.app_egg_moves), { model.recordEditor(EditorKind.EGG_MOVES, project, EggMoves.SPEC, { "%03d".format(it) }, 0) }) { editor ->
             EggMoveEditor(editor, modifier.padding(16.dp))
         }
         selected == EditorKind.ROAMERS -> Loading(project, "roamers", { RoamerEditorModel(project, onChanged = model::projectChanged) }) { editor ->
@@ -289,10 +289,10 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.FOSSILS -> Loading(project, "fossils", { FossilEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             FossilEditor(editor, modifier)
         }
-        selected == EditorKind.SHINY_RATES -> Loading(project, "shiny rates", { ShinyRatesEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+        selected == EditorKind.SHINY_RATES -> Loading(project, tr(Res.string.app_shiny_rates), { ShinyRatesEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             ShinyRatesEditor(editor, modifier)
         }
-        selected == EditorKind.STATICS -> Loading(project, "static Pokémon", { StaticEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+        selected == EditorKind.STATICS -> Loading(project, tr(Res.string.app_static_pok_mon), { StaticEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             StaticEditor(editor, modifier.padding(16.dp))
         }
         selected == EditorKind.STARTERS -> Loading(project, "starters", { StarterEditorModel(project, onChanged = model::projectChanged) }) { editor ->
@@ -301,35 +301,35 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.TRADES -> Loading(project, "trades", { model.recordEditor(EditorKind.TRADES, project, NpcTrade.SPEC, RecordEditorModel.tradeLabel(project.names), 0) }) { editor ->
             TradeEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.TMHM -> Loading(project, "TMs and HMs", { TmHmEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+        selected == EditorKind.TMHM -> Loading(project, tr(Res.string.editor_tmhm), { TmHmEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             TmHmEditor(editor, modifier.padding(16.dp))
         }
         selected == EditorKind.ITEMS -> Loading(project, "items", { model.recordEditor(EditorKind.ITEMS, project, ItemData.SPEC, RecordEditorModel.itemLabel(project.names), 1) }) { editor ->
             ItemEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.TOWN_MAP -> Loading(project, "town map", { TownMapEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+        selected == EditorKind.TOWN_MAP -> Loading(project, tr(Res.string.app_town_map), { TownMapEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             TownMapEditor(editor, modifier)
         }
-        selected == EditorKind.HP_BAR -> Loading(project, "HP bar speed", { HpBarSpeedEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+        selected == EditorKind.HP_BAR -> Loading(project, tr(Res.string.editor_hp_bar), { HpBarSpeedEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             HpBarSpeedEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.PHOTOS -> Loading(project, "photo locations", { model.recordEditor(EditorKind.PHOTOS, project, io.github.legendaryredfox.foxhg.core.data.photo.PhotoLocation.SPEC, photoLabel(project), 0) }) { editor ->
+        selected == EditorKind.PHOTOS -> Loading(project, tr(Res.string.app_photo_locations), { model.recordEditor(EditorKind.PHOTOS, project, io.github.legendaryredfox.foxhg.core.data.photo.PhotoLocation.SPEC, photoLabel(project), 0) }) { editor ->
             PhotoEditor(editor, remember(project) { mapHeaderLabels(project) }, modifier.padding(16.dp))
         }
-        selected == EditorKind.BATTLE_RULES -> Loading(project, "battle rules", { BattleRuleEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+        selected == EditorKind.BATTLE_RULES -> Loading(project, tr(Res.string.app_battle_rules), { BattleRuleEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             BattleRuleEditor(editor, modifier.padding(16.dp))
         }
         selected == EditorKind.RESEARCH -> Loading(project, "research", { ResearchEditorModel(project) }) { editor ->
             ResearchEditor(editor, onOpen = model::openAt, modifier = modifier.padding(16.dp))
         }
-        selected == EditorKind.GROUND_ITEMS -> Loading(project, "ground items", { GroundItemEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+        selected == EditorKind.GROUND_ITEMS -> Loading(project, tr(Res.string.app_ground_items), { GroundItemEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             GroundItemEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.HIDDEN_ITEMS -> Loading(project, "hidden items", { HiddenItemEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.HIDDEN_ITEMS]?.let(m::select) } }) { editor ->
+        selected == EditorKind.HIDDEN_ITEMS -> Loading(project, tr(Res.string.app_hidden_items), { HiddenItemEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.HIDDEN_ITEMS]?.let(m::select) } }) { editor ->
             KeepSelection(model, EditorKind.HIDDEN_ITEMS, editor.selectedIndex)
             HiddenItemEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.FLY -> Loading(project, "fly table", { FlyEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.FLY]?.let(m::select) } }) { editor ->
+        selected == EditorKind.FLY -> Loading(project, tr(Res.string.app_fly_table), { FlyEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.FLY]?.let(m::select) } }) { editor ->
             KeepSelection(model, EditorKind.FLY, editor.selectedIndex)
             FlyEditor(editor, modifier.padding(16.dp))
         }
@@ -366,7 +366,7 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.OVERLAYS -> Loading(project, "overlays", { OverlayEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             OverlayEditor(editor, model, modifier.padding(16.dp))
         }
-        selected == EditorKind.TEXT -> Loading(project, "text archives", {
+        selected == EditorKind.TEXT -> Loading(project, tr(Res.string.app_text_archives), {
             MessageEditorModel(project, onChanged = model::projectChanged).also { m ->
                 // The bank and the message are remembered as one number: bank * 100000 + message.
                 model.selectionMemory[EditorKind.TEXT]?.let { m.selectBank(it / 100000); m.selectMessage(it % 100000) }
@@ -375,10 +375,10 @@ private fun Content(model: AppModel, modifier: Modifier) {
             KeepSelection(model, EditorKind.TEXT, editor.banks.selectedIndex * 100000 + editor.messageIndex)
             MessageEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.TRAINER_CLASSES -> Loading(project, "trainer classes", { TrainerClassEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+        selected == EditorKind.TRAINER_CLASSES -> Loading(project, tr(Res.string.app_trainer_classes), { TrainerClassEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             TrainerClassEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.ROCK_SMASH -> Loading(project, "Rock Smash", {
+        selected == EditorKind.ROCK_SMASH -> Loading(project, tr(Res.string.editor_rock_smash), {
             RockSmashEditorModel(project, model::projectChanged, model.selectionMemory[EditorKind.ROCK_SMASH] ?: 0, { model.selectionMemory[EditorKind.ROCK_SMASH] = it }).also { m ->
                 // Open on the first map that drops items instead of the empty first header.
                 if (model.selectionMemory[EditorKind.ROCK_SMASH] == null) m.sites.records.indexOfFirst { it.odds > 0 }.takeIf { it >= 0 }?.let(m.sites::select)
@@ -386,16 +386,16 @@ private fun Content(model: AppModel, modifier: Modifier) {
         }) { editor ->
             RockSmashEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.HEADBUTT -> Loading(project, "headbutt trees", { HeadbuttEditorModel(project, model::projectChanged, model.selectionMemory[EditorKind.HEADBUTT] ?: 0, { model.selectionMemory[EditorKind.HEADBUTT] = it }) }) { editor ->
+        selected == EditorKind.HEADBUTT -> Loading(project, tr(Res.string.app_headbutt_trees), { HeadbuttEditorModel(project, model::projectChanged, model.selectionMemory[EditorKind.HEADBUTT] ?: 0, { model.selectionMemory[EditorKind.HEADBUTT] = it }) }) { editor ->
             HeadbuttEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.SAFARI -> Loading(project, "safari zone", { SafariEditorModel(project, model::projectChanged, model.selectionMemory[EditorKind.SAFARI] ?: 0, { model.selectionMemory[EditorKind.SAFARI] = it }) }) { editor ->
+        selected == EditorKind.SAFARI -> Loading(project, tr(Res.string.app_safari_zone), { SafariEditorModel(project, model::projectChanged, model.selectionMemory[EditorKind.SAFARI] ?: 0, { model.selectionMemory[EditorKind.SAFARI] = it }) }) { editor ->
             SafariEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.BUG_CONTEST -> Loading(project, "bug contest", { BugContestEditorModel(project, model::projectChanged) }) { editor ->
+        selected == EditorKind.BUG_CONTEST -> Loading(project, tr(Res.string.app_bug_contest), { BugContestEditorModel(project, model::projectChanged) }) { editor ->
             BugContestEditor(editor, modifier)
         }
-        selected == EditorKind.HEADERS -> Loading(project, "map headers", { MapHeaderEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.HEADERS]?.let(m::select) } }) { editor ->
+        selected == EditorKind.HEADERS -> Loading(project, tr(Res.string.app_map_headers), { MapHeaderEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.HEADERS]?.let(m::select) } }) { editor ->
             KeepSelection(model, EditorKind.HEADERS, editor.selectedIndex)
             MapHeaderEditor(editor, modifier.padding(16.dp), onOpen = model::openAt)
         }
@@ -403,7 +403,7 @@ private fun Content(model: AppModel, modifier: Modifier) {
             KeepSelection(model, EditorKind.MATRICES, editor.records.selectedIndex)
             MatrixEditor(editor, modifier.padding(16.dp))
         }
-        selected == EditorKind.ENCOUNTERS -> Loading(project, "wild encounters", { EncounterEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.ENCOUNTERS]?.let(m.editor::select) } }) { editor ->
+        selected == EditorKind.ENCOUNTERS -> Loading(project, tr(Res.string.app_wild_encounters), { EncounterEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.ENCOUNTERS]?.let(m.editor::select) } }) { editor ->
             KeepSelection(model, EditorKind.ENCOUNTERS, editor.editor.selectedIndex)
             EncounterEditor(editor, modifier.padding(16.dp))
         }

@@ -65,7 +65,7 @@ fun HeadbuttEditor(model: HeadbuttEditorModel, modifier: Modifier = Modifier) {
     ) { file ->
         val index = model.files.selectedIndex
         EditorHeader(index.toString(), nameOf(model.files.label(index)), trailing = {
-            Chip(if (file.hasTrees) plural(model.treeCount(file), "tree group") else stringResource(Res.string.headbutt_no_trees))
+            Chip(if (file.hasTrees) plural(model.treeCount(file), tr(Res.string.headbutt_tree_group)) else stringResource(Res.string.headbutt_no_trees))
         })
         if (!file.hasTrees) {
             Text(
@@ -77,9 +77,9 @@ fun HeadbuttEditor(model: HeadbuttEditorModel, modifier: Modifier = Modifier) {
         TableCard(stringResource(Res.string.headbutt_rare_b), stringResource(Res.string.headbutt_some_normal_trees_use_this_one_ins), "Rare", file.rare, species) { slot, change ->
             model.setNormal(HeadbuttFile.TABLE_SLOTS + slot, change)
         }
-        TableCard(stringResource(Res.string.headbutt_special_c), stringResource(Res.string.headbutt_trees_in_the_special_groups_always), "Special", file.special, species) { slot, change -> model.setSpecial(slot, change) }
+        TableCard(stringResource(Res.string.headbutt_special_c), stringResource(Res.string.headbutt_trees_in_the_special_groups_always), tr(Res.string.headbutt_special), file.special, species) { slot, change -> model.setSpecial(slot, change) }
         GroupsCard(stringResource(Res.string.headbutt_normal_trees), "Normal", false, file.normalGroups, model)
-        GroupsCard(stringResource(Res.string.headbutt_special_trees), "Special", true, file.specialGroups, model)
+        GroupsCard(stringResource(Res.string.headbutt_special_trees), tr(Res.string.headbutt_special), true, file.specialGroups, model)
     }
 }
 
@@ -117,7 +117,7 @@ private fun GroupsCard(title: String, tag: String, special: Boolean, groups: Lis
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Chip("${g + 1}", emphasis = true)
                 Text(
-                    group.trees.firstOrNull { !it.isUnused }?.let { "Around ${it.x}, ${it.y}" } ?: "Empty group",
+                    group.trees.firstOrNull { !it.isUnused }?.let { tr(Res.string.headbutt_around_x_x, it.x, it.y) } ?: tr(Res.string.headbutt_empty_group),
                     style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f),
                 )
                 TextButton(onClick = { model.removeGroup(special, g) }) { Text(stringResource(Res.string.learnset_remove)) }

@@ -48,7 +48,7 @@ fun SoundEditor(modifier: Modifier = Modifier) {
         )
         DetailPane {
             val info = sdat.sequence(selected)
-            EditorHeader(selected.toString(), info?.name ?: "No sound")
+            EditorHeader(selected.toString(), info?.name ?: tr(Res.string.sound_no_sound))
             if (info != null) {
                 SectionCard(stringResource(Res.string.sound_sound), subtitle = describe(info.name), actions = { Chip(stringResource(Res.string.sound_bank_x, info.bank)) }) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -67,9 +67,9 @@ fun SoundEditor(modifier: Modifier = Modifier) {
 }
 
 private fun describe(name: String): String = when {
-    name.startsWith("SEQ_SE_") -> "Sound effect"
+    name.startsWith("SEQ_SE_") -> tr(Res.string.sound_sound_effect)
     name.startsWith("SEQ_GS_") -> "Music"
     name.startsWith("SEQ_ME_") -> "Jingle"
-    name.startsWith("SEQ_PV") -> "Pokémon cry template (played with each species' own bank)"
+    name.startsWith("SEQ_PV") -> tr(Res.string.sound_pok_mon_cry_template_played_with_e)
     else -> "Sound"
 }

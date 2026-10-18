@@ -59,7 +59,7 @@ class MartEditorModel(private val project: RomProject, private val onChanged: ()
 
     fun label(row: Int): String {
         val m = marts ?: return ""
-        return if (isBadgeRow(row)) "$row  Standard mart (by badges)" else "$row  ${summary(m.specials[row])}"
+        return if (isBadgeRow(row)) tr(Res.string.mart_x_standard_mart_by_badges, row) else "$row  ${summary(m.specials[row])}"
     }
 
     private fun summary(items: List<Int>): String = items.take(3).joinToString(", ") { itemName(it) } + if (items.size > 3) ", ..." else ""
@@ -109,7 +109,7 @@ fun MartEditor(model: MartEditorModel, modifier: Modifier = Modifier) {
 @Composable
 private fun BadgeMart(model: MartEditorModel, marts: Marts) {
     val items = model.names?.items ?: emptyList()
-    EditorHeader(model.selectedIndex.toString(), "Standard mart")
+    EditorHeader(model.selectedIndex.toString(), tr(Res.string.mart_standard_mart))
     SectionCard(
         stringResource(Res.string.mart_items_by_badges),
         subtitle = stringResource(Res.string.mart_the_clerk_of_the_ordinary_pok_mart),
@@ -128,13 +128,13 @@ private fun BadgeMart(model: MartEditorModel, marts: Marts) {
 private fun SpecialMart(model: MartEditorModel, marts: Marts, mart: Int) {
     val items = model.names?.items ?: emptyList()
     val list = marts.specials[mart]
-    EditorHeader(mart.toString(), "Special mart $mart", trailing = { if (marts.isMoved(mart)) Chip(stringResource(Res.string.mart_moved_to_the_synthetic_overlay), emphasis = true) })
+    EditorHeader(mart.toString(), tr(Res.string.mart_special_mart_x, mart), trailing = { if (marts.isMoved(mart)) Chip(stringResource(Res.string.mart_moved_to_the_synthetic_overlay), emphasis = true) })
     SectionCard(
         stringResource(Res.string.editor_items),
         subtitle = "Opened by the script command SpMartScreen $mart. Prices are set per item in the Items editor. " + when {
-            marts.growth == MartGrowth.AVAILABLE -> "It holds ${marts.capacity[mart]} items in the ARM9; more are kept in the synthetic overlay (${marts.areaBytes} of ${HgssLayout.MART_AREA_SIZE} bytes used by all marts)."
-            marts.growth == MartGrowth.NEEDS_EXPANSION -> "It holds up to ${marts.capacity[mart]} items (${list.size} now): the lists sit one after another in the ARM9. Apply the ARM9 expansion patch in the ROM toolbox to let marts grow."
-            else -> "It holds up to ${marts.capacity[mart]} items: the mart area of the synthetic overlay is in use by something else, so marts cannot grow."
+            marts.growth == MartGrowth.AVAILABLE -> tr(Res.string.mart_it_holds_x_items_in_the_arm9_more, marts.capacity[mart], marts.areaBytes, HgssLayout.MART_AREA_SIZE)
+            marts.growth == MartGrowth.NEEDS_EXPANSION -> tr(Res.string.mart_it_holds_up_to_x_items_x_now_the_l, marts.capacity[mart], list.size)
+            else -> tr(Res.string.mart_it_holds_up_to_x_items_the_mart_ar, marts.capacity[mart])
         },
     ) {
         list.forEachIndexed { slot, item ->

@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.app.ui
 
+import io.github.legendaryredfox.foxhg.app.tr
 import org.jetbrains.compose.resources.stringResource
 import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.BorderStroke
@@ -287,7 +288,7 @@ fun SearchBox(value: String, onChange: (String) -> Unit, placeholder: String, mo
                     inner()
                 }
                 if (value.isNotEmpty()) {
-                    Text("✕", Modifier.clickable(role = Role.Button, onClickLabel = "Clear search") { onChange("") }.semantics { contentDescription = "Clear search" }.padding(start = 8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("✕", Modifier.clickable(role = Role.Button, onClickLabel = tr(Res.string.components_clear_search)) { onChange("") }.semantics { contentDescription = tr(Res.string.components_clear_search) }.padding(start = 8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         },

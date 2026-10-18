@@ -47,7 +47,7 @@ class HpBarSpeedEditorModel(private val project: RomProject, private val onChang
         fun label(shift: Int): String {
             val m = HpBarSpeed(shift).multiplier
             val text = if (m >= 1) "x${m.toInt()}" else "x${m}"
-            return if (shift == HpBarSpeed.NORMAL_SHIFT) "$text (the game's)" else text
+            return if (shift == HpBarSpeed.NORMAL_SHIFT) tr(Res.string.hp_bar_speed_x_the_game_s, text) else text
         }
     }
 }

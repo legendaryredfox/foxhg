@@ -58,7 +58,7 @@ private fun TradeConversionCard(model: RecordEditorModel<EvolutionData>) {
                     changed = changes.size
                     converted
                 }
-                message = "Converted ${plural(changed, "evolution")}"
+                message = tr(Res.string.evolution_converted_x, trPlural(Res.plurals.plural_evolution, changed, changed))
             }, enabled = remaining > 0) { Text(stringResource(Res.string.evolution_convert_all)) }
             message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary) }
         }

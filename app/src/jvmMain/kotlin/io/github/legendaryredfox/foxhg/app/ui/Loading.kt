@@ -1,5 +1,8 @@
 package io.github.legendaryredfox.foxhg.app.ui
 
+import io.github.legendaryredfox.foxhg.app.tr
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,7 +27,7 @@ fun LoadingScreen(what: String, modifier: Modifier = Modifier) {
     Box(modifier.fillMaxSize().testTag("loading"), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             CircularProgressIndicator(Modifier.size(44.dp), strokeWidth = 4.dp)
-            Text("Loading $what…", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(tr(Res.string.loading_loading_x, what), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

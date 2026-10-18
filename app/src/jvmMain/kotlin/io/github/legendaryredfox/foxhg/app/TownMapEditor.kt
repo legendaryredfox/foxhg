@@ -47,7 +47,7 @@ class TownMapEditorModel(private val project: RomProject, private val onChanged:
         headers.mapIndexed { i, h -> "%03d  %s".format(i, locations.getOrNull(h.locationName)?.takeIf { it.isNotBlank() } ?: "Map") }
     }
 
-    private fun mapName(header: Int): String = mapLabels.getOrNull(header)?.drop(5) ?: "Header $header"
+    private fun mapName(header: Int): String = mapLabels.getOrNull(header)?.drop(5) ?: tr(Res.string.fly_header_x, header)
 
     val townCount: Int get() = table?.spots?.size ?: 0
     val size: Int get() = townCount + (table?.selections?.size ?: 0)

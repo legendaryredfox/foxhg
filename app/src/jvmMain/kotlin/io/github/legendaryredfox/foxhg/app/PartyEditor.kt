@@ -147,7 +147,7 @@ fun SavePartyScreen(model: SaveEditorModel, names: GameNames?, loadRules: () -> 
             FieldFlow {
                 NumberField(stringResource(Res.string.party_hp_now), mon.currentHp, 0..999, { v -> edit { it.withHp(v.coerceAtMost(it.maxHp), it.maxHp) } }, Modifier.width(100.dp))
                 NumberField(stringResource(Res.string.party_hp_max), mon.maxHp, 1..999, { v -> edit { it.withHp(minOf(it.currentHp, v), v) } }, Modifier.width(100.dp))
-                listOf("Attack", "Defense", "Speed", "Sp. Atk", "Sp. Def").forEachIndexed { i, name ->
+                listOf(tr(Res.string.personal_attack), tr(Res.string.personal_defense), tr(Res.string.personal_speed), tr(Res.string.personal_sp_atk), tr(Res.string.personal_sp_def)).forEachIndexed { i, name ->
                     NumberField(name, mon.stats[i], 1..999, { v -> edit { m -> m.withStats(m.stats.toMutableList().also { it[i] = v }) } }, Modifier.width(100.dp), tag = "Stat $i")
                 }
             }

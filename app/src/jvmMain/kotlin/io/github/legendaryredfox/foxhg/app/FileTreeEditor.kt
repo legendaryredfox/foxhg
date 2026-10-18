@@ -91,12 +91,12 @@ class FileTreeModel(private val project: RomProject, private val romPath: java.n
 
     /** Writes the file's current bytes to [target]; null on success, else the problem. */
     fun export(path: String, target: java.nio.file.Path): String? {
-        val data = bytes(path) ?: return "The ROM has no file $path"
+        val data = bytes(path) ?: return tr(Res.string.file_tree_the_rom_has_no_file_x, path)
         val opened = romPath
         if (opened != null && (target.toAbsolutePath() == opened.toAbsolutePath() || (Files.exists(target) && Files.exists(opened) && Files.isSameFile(target, opened)))) {
-            return "Choose a different file than the ROM you opened"
+            return tr(Res.string.app_choose_a_different_file_than_the_r)
         }
-        return try { Files.write(target, data); null } catch (e: IOException) { "Cannot write $target: ${e.message}" }
+        return try { Files.write(target, data); null } catch (e: IOException) { tr(Res.string.app_cannot_write_x_x, target, e.message) }
     }
 }
 
@@ -121,7 +121,7 @@ fun FileTreeEditor(model: FileTreeModel, appModel: AppModel, modifier: Modifier 
                     Text(file.path, style = Fox.mono)
                     Text("Size ${file.size} bytes (0x%X)  ·  ROM offset 0x%X".format(file.size, file.start), style = MaterialTheme.typography.bodyMedium)
                     OutlinedButton(onClick = {
-                        pickFile("Export ${file.name}", FileDialog.SAVE, "")?.let { target -> model.export(file.path, target)?.let { appModel.error = it } ?: run { appModel.status = "Exported ${file.path} to $target" } }
+                        pickFile(tr(Res.string.csv_buttons_export_x, file.name), FileDialog.SAVE, "")?.let { target -> model.export(file.path, target)?.let { appModel.error = it } ?: run { appModel.status = tr(Res.string.file_tree_exported_x_to_x, file.path, target) } }
                     }, modifier = Modifier.testTag("export-file")) { Text(stringResource(Res.string.file_tree_export_file)) }
                 }
                 SectionCard(stringResource(Res.string.file_tree_bytes), subtitle = stringResource(Res.string.file_tree_the_first_512_bytes)) {
@@ -169,5 +169,5 @@ internal fun hexDump(data: ByteArray, limit: Int = 512): String = buildString {
         for (i in at until minOf(end, at + 16)) append(data[i].toInt().and(0xFF).let { if (it in 32..126) it.toChar() else '.' })
         if (at + 16 < end) append('\n')
     }
-    if (data.isEmpty()) append("(empty file)")
+    if (data.isEmpty()) append(tr(Res.string.file_tree_empty_file))
 }

@@ -76,13 +76,13 @@ private fun VersionCard(model: EncounterEditorModel) {
         },
     ) {}
     if (asking) ConfirmDialog(
-        "Make every area match ${model.otherName}?",
-        "${plural(differing, "area")} will take ${model.otherName}'s wild Pokémon, rates and levels. Your edits in those areas are replaced. Ctrl+Z undoes it.",
-        "Make them match",
+        tr(Res.string.encounter_make_every_area_match_x_2, model.otherName),
+        tr(Res.string.encounter_x_will_take_x_s_wild_pok_mon_rates, pluralStringResource(Res.plurals.plural_area, differing, differing), model.otherName),
+        tr(Res.string.encounter_make_them_match),
         onConfirm = {
             asking = false
             val n = model.copyAllFromOther()
-            message = "Copied into ${plural(n, "area")}"
+            message = tr(Res.string.encounter_copied_into_x, trPlural(Res.plurals.plural_area, n, n))
         },
         onDismiss = { asking = false },
     )
@@ -201,7 +201,7 @@ private fun RosterCard(model: EncounterEditorModel, d: EncounterData, species: L
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Chip("${species.getOrNull(e.species) ?: e.species}  ${e.percent}%")
                             TextButton(
-                                onClick = { message = if (model.removeSpecies(group, e.species)) null else "Cannot remove the last Pokémon of ${group.label.lowercase()}" },
+                                onClick = { message = if (model.removeSpecies(group, e.species)) null else tr(Res.string.encounter_cannot_remove_the_last_pok_mon_of, group.label.lowercase()) },
                                 enabled = roster.size > 1,
                                 modifier = Modifier.testTag("remove:${group.name}:${e.species}"),
                             ) { Text(stringResource(Res.string.learnset_remove)) }
@@ -215,7 +215,7 @@ private fun RosterCard(model: EncounterEditorModel, d: EncounterData, species: L
     adding?.let { group ->
         AddDialog(group, species, onAdd = { id, percent ->
             val ok = model.addSpecies(group, id, percent)
-            message = if (ok) null else "Could not add ${species.getOrNull(id) ?: id} to ${group.label.lowercase()}: already there, or every Pokémon has just one slot"
+            message = if (ok) null else tr(Res.string.encounter_could_not_add_x_to_x_already_there, species.getOrNull(id) ?: id, group.label.lowercase())
             adding = null
         }, onDismiss = { adding = null })
     }

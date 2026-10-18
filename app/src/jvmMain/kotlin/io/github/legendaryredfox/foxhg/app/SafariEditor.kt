@@ -49,7 +49,7 @@ class SafariEditorModel(project: RomProject, onChanged: () -> Unit = {}, first: 
 @Composable
 fun SafariEditor(model: SafariEditorModel, modifier: Modifier = Modifier) {
     val species = model.files.names?.species ?: emptyList()
-    RecordListDetail(model.files, modifier, rowDetail = { i -> model.files.records.getOrNull(i)?.takeIf { it.stub }?.let { "no data" } }) { file ->
+    RecordListDetail(model.files, modifier, rowDetail = { i -> model.files.records.getOrNull(i)?.takeIf { it.stub }?.let { tr(Res.string.safari_no_data) } }) { file ->
         val index = model.files.selectedIndex
         EditorHeader(index.toString(), nameOf(model.files.label(index)))
         if (file.stub) {
@@ -91,7 +91,7 @@ fun SafariEditor(model: SafariEditorModel, modifier: Modifier = Modifier) {
                     }
                     for (optional in listOf(false, true)) {
                         val r = (if (optional) group.optional else group.required)[n]
-                        val label = if (optional) "Optional" else "Required"
+                        val label = if (optional) tr(Res.string.safari_optional) else tr(Res.string.safari_required)
                         FieldFlow {
                             PickerField(stringResource(Res.string.safari_arrangement_x_x, n + 1, label), r.type, SafariZoneFile.OBJECT_TYPES, { v -> model.setRequirement(n, optional) { it.copy(type = v) } }, Modifier.width(200.dp))
                             NumberField(stringResource(Res.string.ground_item_quantity), r.quantity, 0..255, { v -> model.setRequirement(n, optional) { it.copy(quantity = v) } }, Modifier.width(90.dp), tag = "Arrangement ${n + 1} $label quantity")

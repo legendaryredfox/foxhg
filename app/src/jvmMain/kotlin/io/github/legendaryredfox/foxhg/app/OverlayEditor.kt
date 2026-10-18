@@ -66,15 +66,15 @@ class OverlayEditorModel(private val project: RomProject, private val onChanged:
     fun storedSize(entry: OverlayEntry): Long? = project.rom.file(entry.fileId)?.size
 
     fun export(id: Int, target: Path): String? {
-        val data = image(id) ?: return "Overlay $id cannot be read"
-        return try { Files.write(target, data); null } catch (e: IOException) { "Cannot write $target: ${e.message}" }
+        val data = image(id) ?: return tr(Res.string.overlay_overlay_x_cannot_be_read, id)
+        return try { Files.write(target, data); null } catch (e: IOException) { tr(Res.string.app_cannot_write_x_x, target, e.message) }
     }
 
     /** Replaces the decompressed image with the file at [source]; it must be as big as the overlay is. Returns the problem, or null. */
     fun import(id: Int, source: Path): String? {
-        val bytes = try { Files.readAllBytes(source) } catch (e: IOException) { return "Cannot read $source: ${e.message}" }
+        val bytes = try { Files.readAllBytes(source) } catch (e: IOException) { return tr(Res.string.overlay_cannot_read_x_x, source, e.message) }
         return when (val r = project.writeOverlay(id, bytes)) {
-            is FoxResult.Ok -> { revision++; onChanged(); message = "Overlay $id replaced; the ROM changes when it is built."; null }
+            is FoxResult.Ok -> { revision++; onChanged(); message = tr(Res.string.overlay_overlay_x_replaced_the_rom_changes, id); null }
             is FoxResult.Err -> r.message
         }
     }
@@ -83,7 +83,7 @@ class OverlayEditorModel(private val project: RomProject, private val onChanged:
         project.revertOverlay(id)
         revision++
         onChanged()
-        message = "Overlay $id is the ROM's again."
+        message = tr(Res.string.overlay_overlay_x_is_the_rom_s_again, id)
     }
 }
 
@@ -120,7 +120,7 @@ fun OverlayEditor(model: OverlayEditorModel, appModel: AppModel, modifier: Modif
             }
             @Suppress("UNUSED_EXPRESSION") model.revision
             val image = model.image(entry.id)
-            EditorHeader(entry.id.toString(), "Overlay ${entry.id}", trailing = { if (model.isEdited(entry.id)) Chip(stringResource(Res.string.map_edited), emphasis = true) })
+            EditorHeader(entry.id.toString(), tr(Res.string.overlay_overlay_x, entry.id), trailing = { if (model.isEdited(entry.id)) Chip(stringResource(Res.string.map_edited), emphasis = true) })
             SectionCard(stringResource(Res.string.overlay_table_entry), subtitle = stringResource(Res.string.overlay_from_the_overlay_table_y9_bin_of_t)) {
                 Text(
                     "RAM address 0x%08X  ·  code 0x%X bytes  ·  BSS 0x%X bytes\nStatic initialisers 0x%08X to 0x%08X\nFile %d  ·  flags 0x%02X".format(
@@ -138,12 +138,12 @@ fun OverlayEditor(model: OverlayEditorModel, appModel: AppModel, modifier: Modif
             SectionCard(stringResource(Res.string.overlay_image), subtitle = "The decompressed overlay. A replacement must be exactly ${image?.size ?: "?"} bytes: the table and the code after it depend on the size.") {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = {
-                        pickFile("Export overlay ${entry.id}", FileDialog.SAVE, "")?.let { target ->
-                            model.export(entry.id, target)?.let { appModel.error = it } ?: run { appModel.status = "Exported overlay ${entry.id} to $target" }
+                        pickFile(tr(Res.string.overlay_export_overlay_x, entry.id), FileDialog.SAVE, "")?.let { target ->
+                            model.export(entry.id, target)?.let { appModel.error = it } ?: run { appModel.status = tr(Res.string.overlay_exported_overlay_x_to_x, entry.id, target) }
                         }
                     }, modifier = Modifier.testTag("export-overlay")) { Text(stringResource(Res.string.overlay_export_image)) }
                     OutlinedButton(onClick = {
-                        pickFile("Replace overlay ${entry.id}", FileDialog.LOAD, "")?.let { source -> model.import(entry.id, source)?.let { appModel.error = it } }
+                        pickFile(tr(Res.string.overlay_replace_overlay_x, entry.id), FileDialog.LOAD, "")?.let { source -> model.import(entry.id, source)?.let { appModel.error = it } }
                     }, modifier = Modifier.testTag("import-overlay")) { Text(stringResource(Res.string.overlay_replace_with_a_file)) }
                     OutlinedButton(onClick = { model.revert(entry.id) }, enabled = model.isEdited(entry.id), modifier = Modifier.testTag("revert-overlay")) { Text(stringResource(Res.string.message_revert)) }
                 }

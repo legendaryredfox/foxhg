@@ -52,8 +52,8 @@ class PatchToolboxModel(private val project: RomProject, private val onChanged: 
         message = null
         error = null
         when (val r = patch.apply(project)) {
-            is FoxResult.Ok -> { message = "\"${patch.title}\" applied. Ctrl+Z undoes it; the ROM changes when it is built."; onChanged() }
-            is FoxResult.Err -> error = "\"${patch.title}\" failed: ${r.message}"
+            is FoxResult.Ok -> { message = tr(Res.string.patch_toolbox_x_applied_ctrl_z_undoes_it_the_rom, patch.title); onChanged() }
+            is FoxResult.Err -> error = tr(Res.string.patch_toolbox_x_failed_x, patch.title, r.message)
         }
         version++
     }
@@ -93,7 +93,7 @@ fun PatchToolbox(model: PatchToolboxModel, modifier: Modifier = Modifier) {
     }
     asking?.let { patch ->
         ConfirmDialog(
-            "Apply \"${patch.title}\"?",
+            tr(Res.string.patch_toolbox_apply_x, patch.title),
             "These changes go into the project (Ctrl+Z undoes them):\n\n" + model.changes(patch).joinToString("\n") { "- $it" } +
                 "\n\nIf you do not know what they do, do not apply them: a wrong code patch can stop the game from starting.",
             "Apply",

@@ -64,7 +64,7 @@ fun EggMoveEditor(model: RecordEditorModel<EggMoves>, modifier: Modifier = Modif
                 actions = {
                     Chip("${list.size} / ${EggMoves.MAX_PER_SPECIES}", emphasis = list.size > EggMoves.MAX_PER_SPECIES || eggs.overLimit)
                     CsvFileButtons(
-                        "egg moves",
+                        tr(Res.string.app_egg_moves),
                         { EggMoves.toCsv(eggs, { model.names?.species?.getOrNull(it) ?: "" }, { moves.getOrNull(it) ?: "" }) },
                         { text ->
                             when (val r = EggMoves.fromCsv(text, eggs)) {

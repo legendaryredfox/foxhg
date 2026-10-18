@@ -48,7 +48,7 @@ class FlyEditorModel(private val project: RomProject, private val onChanged: () 
 
     val selected: FlyEntry? get() = table?.entries?.getOrNull(selectedIndex)
 
-    private fun mapName(header: Int): String = mapLabels.getOrNull(header)?.drop(5) ?: "Header $header"
+    private fun mapName(header: Int): String = mapLabels.getOrNull(header)?.drop(5) ?: tr(Res.string.fly_header_x, header)
 
     fun label(position: Int): String {
         val e = table?.entries?.getOrNull(position) ?: return "%02d".format(position)

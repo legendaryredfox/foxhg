@@ -60,7 +60,7 @@ class TmHmBulkEditorModel(private val project: RomProject, private val onChanged
         get() {
             val moveNames = names?.moves ?: emptyList()
             val t = moves
-            return List(TmHmBulk.MACHINES) { i -> (t?.name(i) ?: "Machine $i") + (t?.moves?.getOrNull(i)?.let { m -> "  " + (moveNames.getOrNull(m) ?: "Move $m") } ?: "") }
+            return List(TmHmBulk.MACHINES) { i -> (t?.name(i) ?: tr(Res.string.tm_hm_bulk_machine_x, i)) + (t?.moves?.getOrNull(i)?.let { m -> "  " + (moveNames.getOrNull(m) ?: "Move $m") } ?: "") }
         }
 
     fun label(species: Int): String = "%03d  %s".format(species, names?.species?.getOrNull(species) ?: "Form $species")

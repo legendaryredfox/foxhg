@@ -18,25 +18,28 @@ import io.github.legendaryredfox.foxhg.app.ui.SectionCard
 import io.github.legendaryredfox.foxhg.core.data.move.MoveData
 
 /** The flag bits of a move (byte 11), lowest bit first. */
-private val FLAG_NAMES = listOf("Contact", "Protect", "Magic Coat", "Snatch", "Mirror Move", "King's Rock", "Keep HP bar", "Hide shadow")
+private fun flagNames() = listOf(
+    tr(Res.string.move_contact), tr(Res.string.move_protect), tr(Res.string.move_magic_coat), tr(Res.string.move_snatch), tr(Res.string.move_mirror_move), tr(Res.string.move_king_s_rock),
+    tr(Res.string.move_keep_hp_bar), tr(Res.string.move_hide_shadow),
+)
 
 private val CONTEST_TYPES = listOf("Cool", "Beauty", "Cute", "Smart", "Tough")
 
 /** Who a move hits, from its range value (one flag bit, or 0). */
 private fun rangeName(range: Int): String = when (range) {
-    0 -> "One adjacent opponent or ally"
-    1 -> "Varies with the effect"
-    2 -> "One random opponent"
-    4 -> "All adjacent opponents"
-    8 -> "All adjacent Pokémon"
-    16 -> "The user"
-    32 -> "The user's side"
-    64 -> "Every side"
-    128 -> "The opponent's side"
-    256 -> "One adjacent ally"
-    512 -> "The user or one ally"
-    1024 -> "One adjacent opponent"
-    else -> "Several range bits"
+    0 -> tr(Res.string.move_one_adjacent_opponent_or_ally)
+    1 -> tr(Res.string.move_varies_with_the_effect)
+    2 -> tr(Res.string.move_one_random_opponent)
+    4 -> tr(Res.string.move_all_adjacent_opponents)
+    8 -> tr(Res.string.move_all_adjacent_pok_mon)
+    16 -> tr(Res.string.move_the_user)
+    32 -> tr(Res.string.move_the_user_s_side)
+    64 -> tr(Res.string.move_every_side)
+    128 -> tr(Res.string.move_the_opponent_s_side)
+    256 -> tr(Res.string.move_one_adjacent_ally)
+    512 -> tr(Res.string.move_the_user_or_one_ally)
+    1024 -> tr(Res.string.move_one_adjacent_opponent)
+    else -> tr(Res.string.move_several_range_bits)
 }
 
 @Composable
@@ -64,7 +67,7 @@ fun MoveEditor(model: RecordEditorModel<MoveData>, modifier: Modifier = Modifier
         }
         SectionCard(stringResource(Res.string.move_flags), subtitle = stringResource(Res.string.move_interactions_with_abilities_items)) {
             FieldFlow {
-                FLAG_NAMES.forEachIndexed { bit, name ->
+                flagNames().forEachIndexed { bit, name ->
                     ToggleChip(name, m.flags and (1 shl bit) != 0, { on -> model.update { it.copy(flags = if (on) it.flags or (1 shl bit) else it.flags and (1 shl bit).inv()) } })
                 }
             }

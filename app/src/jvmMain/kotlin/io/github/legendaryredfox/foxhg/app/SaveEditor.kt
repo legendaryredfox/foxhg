@@ -130,7 +130,7 @@ class SaveEditorModel(val path: Path, file: SaveFile) {
         val pc = pc ?: return
         val mon = party.members.getOrNull(slot) ?: return
         val box = (listOf(pc.currentBox.coerceIn(0, PcStorageData.BOXES - 1)) + (0 until PcStorageData.BOXES)).firstOrNull { pc.firstEmpty(it) != null }
-        if (box == null) { error = "The PC is full"; return }
+        if (box == null) { error = tr(Res.string.save_the_pc_is_full); return }
         val placed = pc.placing(box, pc.firstEmpty(box)!!, mon)
         when (val r = file.withParty(party.without(slot)).let { f -> (f as? FoxResult.Ok)?.value?.withPcStorage(placed) ?: f }) {
             is FoxResult.Ok -> { file = r.value; error = null }
@@ -144,8 +144,8 @@ class SaveEditorModel(val path: Path, file: SaveFile) {
         val pc = pc ?: return
         val mon = pc.boxes[box][slot]
         if (mon.isEmpty) return
-        if (party.count >= PartyData.SLOTS) { error = "The party is full"; return }
-        val level = rules?.level(mon.species, mon.experience) ?: run { error = "Open the ROM first: the party needs the level and stats, which come from its growth curves and base stats"; return }
+        if (party.count >= PartyData.SLOTS) { error = tr(Res.string.save_the_party_is_full); return }
+        val level = rules?.level(mon.species, mon.experience) ?: run { error = tr(Res.string.save_open_the_rom_first_the_party_needs); return }
         val ready = mon.withLevel(level).settled(rules)
         when (val r = file.withParty(party.with(party.count, ready)).let { f -> (f as? FoxResult.Ok)?.value?.withPcStorage(pc.clearing(box, slot)) ?: f }) {
             is FoxResult.Ok -> { file = r.value; error = null }
@@ -193,7 +193,7 @@ class SaveEditorModel(val path: Path, file: SaveFile) {
             error = null
             true
         } catch (e: java.io.IOException) {
-            error = "Cannot write ${path.fileName}: ${e.message}"
+            error = tr(Res.string.app_cannot_write_x_x, path.fileName, e.message)
             false
         }
     }
@@ -207,7 +207,7 @@ class SaveEditorModel(val path: Path, file: SaveFile) {
     companion object {
         /** Reads the save at [path] (a raw `.sav` or a DeSmuME `.dsv`). */
         fun open(path: Path): FoxResult<SaveEditorModel> {
-            val bytes = try { Files.readAllBytes(path) } catch (e: java.io.IOException) { return FoxResult.Err("Cannot read $path: ${e.message}") }
+            val bytes = try { Files.readAllBytes(path) } catch (e: java.io.IOException) { return FoxResult.Err(tr(Res.string.overlay_cannot_read_x_x, path, e.message)) }
             return when (val parsed = SaveFile.parse(bytes)) {
                 is FoxResult.Ok -> FoxResult.Ok(SaveEditorModel(path, parsed.value))
                 is FoxResult.Err -> parsed
@@ -216,7 +216,7 @@ class SaveEditorModel(val path: Path, file: SaveFile) {
     }
 }
 
-private val JOHTO_BADGES = listOf("Zephyr", "Hive", "Plain", "Fog", "Storm", "Mineral", "Glacier", "Rising")
+private val JOHTO_BADGES = listOf("Zephyr", "Hive", "Plain", "Fog", "Storm", tr(Res.string.personal_mineral), "Glacier", "Rising")
 private val KANTO_BADGES = listOf("Boulder", "Cascade", "Thunder", "Rainbow", "Soul", "Marsh", "Volcano", "Earth")
 
 /** What the save file is: its blocks with their counters and checks, and the chunks of the general block. */

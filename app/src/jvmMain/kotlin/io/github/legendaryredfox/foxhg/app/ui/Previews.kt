@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.app.ui
 
+import io.github.legendaryredfox.foxhg.app.tr
 import org.jetbrains.compose.resources.stringResource
 import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.Canvas
@@ -68,21 +69,21 @@ private fun Picture(bitmap: ImageBitmap?, size: Dp, description: String, quality
 @Composable
 fun PokemonIcon(species: Int, size: Dp = 26.dp) {
     val icons = LocalIcons.current ?: return
-    Picture(icons.pokemon(species), size, "Pokémon icon")
+    Picture(icons.pokemon(species), size, tr(Res.string.previews_pok_mon_icon))
 }
 
 /** The bag icon of an item. */
 @Composable
 fun ItemIcon(item: Int, size: Dp = 26.dp) {
     val icons = LocalIcons.current ?: return
-    Picture(icons.item(item), size, "Item icon")
+    Picture(icons.item(item), size, tr(Res.string.previews_item_icon))
 }
 
 /** The front picture of a trainer class (80x80, scaled smoothly because it is drawn smaller than it is). */
 @Composable
 fun TrainerClassIcon(trainerClass: Int, size: Dp = 26.dp) {
     val icons = LocalIcons.current ?: return
-    Picture(icons.trainerClass(trainerClass), size, "Trainer class picture", FilterQuality.Medium)
+    Picture(icons.trainerClass(trainerClass), size, tr(Res.string.previews_trainer_class_picture), FilterQuality.Medium)
 }
 
 /** The battle pictures of a species, front and back, with a switch to see the shiny colours. */
@@ -94,8 +95,8 @@ fun PokemonPortraits(species: Int, size: Dp = 88.dp) {
     val back = icons.back(species, shiny)
     if (front == null && back == null) return
     Row(Modifier.testTag("portraits"), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        Picture(front, size, "Front picture")
-        Picture(back, size, "Back picture")
+        Picture(front, size, tr(Res.string.previews_front_picture))
+        Picture(back, size, tr(Res.string.previews_back_picture))
         ToggleChip(stringResource(Res.string.previews_shiny), shiny, { shiny = it })
     }
 }
@@ -104,14 +105,14 @@ fun PokemonPortraits(species: Int, size: Dp = 88.dp) {
 @Composable
 fun PokemonFront(species: Int, size: Dp = 56.dp) {
     val icons = LocalIcons.current ?: return
-    Picture(icons.front(species, false), size, "Front picture", FilterQuality.Medium)
+    Picture(icons.front(species, false), size, tr(Res.string.previews_front_picture), FilterQuality.Medium)
 }
 
 /** The overworld sprite of an event's sprite entry, facing 0 up, 1 down, 2 left, 3 right. Nothing when the entry has no 2D sprite. */
 @Composable
 fun OverworldIcon(spriteEntry: Int, facing: Int = 1, size: Dp = 26.dp) {
     val icons = LocalIcons.current ?: return
-    Picture(icons.overworld(spriteEntry, facing), size, "Overworld sprite")
+    Picture(icons.overworld(spriteEntry, facing), size, tr(Res.string.previews_overworld_sprite))
 }
 
 /** A square of [color] with a thin border, for things that have a colour instead of a picture (tile types). */

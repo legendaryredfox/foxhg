@@ -34,7 +34,7 @@ import io.github.legendaryredfox.foxhg.core.game.GameNames
 
 /** Row label of a Battle Tower trainer: its number, name and class. */
 fun battleTowerTrainerLabel(names: GameNames?, classOf: (Int) -> Int): (Int) -> String = { i ->
-    "%03d  %s".format(i, names?.battleTowerNames?.getOrNull(i)?.takeIf { it.isNotBlank() } ?: "Trainer $i") +
+    "%03d  %s".format(i, names?.battleTowerNames?.getOrNull(i)?.takeIf { it.isNotBlank() } ?: tr(Res.string.battle_tower_trainer_x, i)) +
         (names?.trainerClasses?.getOrNull(classOf(i))?.let { "  ($it)" } ?: "")
 }
 
@@ -43,7 +43,7 @@ fun BattleTowerTrainerEditor(model: RecordEditorModel<BattleTowerTrainer>, sets:
     val names = model.names
     RecordListDetail(model, modifier) { t ->
         val index = model.selectedIndex
-        EditorHeader(index.toString(), names?.battleTowerNames?.getOrNull(index) ?: "Trainer $index")
+        EditorHeader(index.toString(), names?.battleTowerNames?.getOrNull(index) ?: tr(Res.string.battle_tower_trainer_x, index))
         SectionCard(stringResource(Res.string.trainer_trainer)) {
             FieldFlow {
                 TrainerClassPicker(stringResource(Res.string.trainer_class), t.trainerClass, names?.trainerClasses ?: emptyList(), { v -> model.update { it.copy(trainerClass = v) } }, Modifier.width(240.dp))

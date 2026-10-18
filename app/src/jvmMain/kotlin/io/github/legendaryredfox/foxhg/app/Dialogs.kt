@@ -33,6 +33,6 @@ private fun nativePickFile(title: String, mode: Int, extension: String): Path? {
     return if (mode == FileDialog.SAVE && !file.endsWith(extension, ignoreCase = true)) Path.of(path.toString() + extension) else path
 }
 
-internal fun chooseRomToOpen(): Path? = pickFile("Open ROM", FileDialog.LOAD, ".nds")
+internal fun chooseRomToOpen(): Path? = pickFile(tr(Res.string.dialogs_open_rom), FileDialog.LOAD, ".nds")
 
-internal fun chooseBuildTarget(): Path? = pickFile("Build ROM", FileDialog.SAVE, ".nds")
+internal fun chooseBuildTarget(): Path? = pickFile(tr(Res.string.dialogs_build_rom), FileDialog.SAVE, ".nds")

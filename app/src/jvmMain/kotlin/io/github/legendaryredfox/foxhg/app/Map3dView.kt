@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -152,7 +154,7 @@ fun Map3dView(model: MapEditorModel, map: Int) {
             ToggleChip("Collision", model.show3dCollision, { model.show3dCollision = it }, Modifier.testTag("chip:3D collision"))
             ToggleChip("Walking surface", model.show3dSurface, { model.show3dSurface = it }, Modifier.testTag("chip:3D surface"))
             ToggleChip("Events", model.show3dEvents, { model.show3dEvents = it }, Modifier.testTag("chip:3D events"))
-            val hint = if (model.moveBuildings) "Move here is on: click the ground to put the selected building there" else "Click a building to select it"
+            val hint = if (model.moveBuildings) tr(Res.string.map3d_view_move_here_is_on_click_the_ground_t) else tr(Res.string.map3d_view_click_a_building_to_select_it)
             Text(hint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }

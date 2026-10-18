@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec

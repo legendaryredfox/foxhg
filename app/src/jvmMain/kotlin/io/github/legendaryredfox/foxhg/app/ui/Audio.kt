@@ -1,5 +1,8 @@
 package io.github.legendaryredfox.foxhg.app.ui
 
+import io.github.legendaryredfox.foxhg.app.tr
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,7 +50,7 @@ class AudioPlayer {
         thread(isDaemon = true, name = "foxhg-audio") {
             try {
                 val pcm = produce()
-                if (pcm == null) { if (generation == mine) { error = "This sound has nothing to play"; playing = null }; return@thread }
+                if (pcm == null) { if (generation == mine) { error = tr(Res.string.audio_this_sound_has_nothing_to_play); playing = null }; return@thread }
                 val bytes = ByteArray(pcm.samples.size * 2)
                 pcm.samples.forEachIndexed { i, s -> bytes[i * 2] = s.toInt().toByte(); bytes[i * 2 + 1] = (s.toInt() shr 8).toByte() }
                 val next = AudioSystem.getClip()
@@ -59,7 +62,7 @@ class AudioPlayer {
                 }
                 next.start()
             } catch (e: Exception) {
-                if (generation == mine) { error = "Cannot play sound: ${e.message ?: e::class.simpleName}"; playing = null }
+                if (generation == mine) { error = tr(Res.string.audio_cannot_play_sound_x, e.message ?: e::class.simpleName); playing = null }
             }
         }
     }
@@ -107,7 +110,7 @@ fun SoundButton(id: Int, withName: Boolean = true) {
     val name = context.sounds.name(id)
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
         PlayButton("seq$id", { it.sequence(id) }, enabled = name != null)
-        if (withName) Text(name ?: "no sound $id", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (withName) Text(name ?: tr(Res.string.audio_no_sound_x, id), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

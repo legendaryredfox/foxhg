@@ -81,7 +81,7 @@ private fun BulkTools(model: RecordEditorModel<Learnset>) {
         val result = change(model.records)
         if (result.changed > 0) model.updateAll { result.records }
         failed = false
-        message = "$verb ${plural(result.changed, "species")}" + if (result.skipped > 0) ", left ${result.skipped} alone (move already there, not known, or the list is full)" else ""
+        message = "$verb ${plural(result.changed, "species")}" + if (result.skipped > 0) tr(Res.string.learnset_left_x_alone_move_already_there_no, result.skipped) else ""
     }
     SectionCard(
         stringResource(Res.string.learnset_bulk_tools),
@@ -99,17 +99,17 @@ private fun BulkTools(model: RecordEditorModel<Learnset>) {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedButton(onClick = {
-                val path = pickFile("Export learnsets", FileDialog.SAVE, ".csv") ?: return@OutlinedButton
+                val path = pickFile(tr(Res.string.learnset_export_learnsets), FileDialog.SAVE, ".csv") ?: return@OutlinedButton
                 runCatching {
                     Files.writeString(path, LearnsetBulk.export(model.records, { model.names?.species?.getOrNull(it) ?: "" }, { moves.getOrNull(it) ?: "" }))
-                }.onSuccess { failed = false; message = "Exported to ${path.fileName}" }.onFailure { failed = true; message = "Export failed: ${it.message}" }
+                }.onSuccess { failed = false; message = tr(Res.string.csv_buttons_exported_to_x, path.fileName) }.onFailure { failed = true; message = tr(Res.string.csv_buttons_export_failed_x, it.message) }
             }) { Text(stringResource(Res.string.learnset_export_csv)) }
             OutlinedButton(onClick = {
-                val path = pickFile("Import learnsets", FileDialog.LOAD, ".csv") ?: return@OutlinedButton
-                val text = runCatching { Files.readString(path) }.getOrElse { failed = true; message = "Import failed: ${it.message}"; return@OutlinedButton }
+                val path = pickFile(tr(Res.string.learnset_import_learnsets), FileDialog.LOAD, ".csv") ?: return@OutlinedButton
+                val text = runCatching { Files.readString(path) }.getOrElse { failed = true; message = tr(Res.string.csv_buttons_import_failed_x, it.message); return@OutlinedButton }
                 when (val result = LearnsetBulk.import(text, model.records)) {
-                    is FoxResult.Ok -> { model.updateAll { result.value }; failed = false; message = "Imported ${path.fileName}: the species in the file now have its moves" }
-                    is FoxResult.Err -> { failed = true; message = "Import rejected: ${result.message}" }
+                    is FoxResult.Ok -> { model.updateAll { result.value }; failed = false; message = tr(Res.string.learnset_imported_x_the_species_in_the_file, path.fileName) }
+                    is FoxResult.Err -> { failed = true; message = tr(Res.string.csv_buttons_import_rejected_x, result.message) }
                 }
             }) { Text(stringResource(Res.string.learnset_import_csv)) }
         }

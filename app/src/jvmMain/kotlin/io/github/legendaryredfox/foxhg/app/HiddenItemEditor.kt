@@ -98,7 +98,7 @@ class HiddenItemEditorModel(private val project: RomProject, private val onChang
             update { it.copy(index = index) }
         } else {
             val owner = table?.entries?.indexOfFirst { it.index == index } ?: -1
-            indexNotice = "Index $index is already used by spot $owner: two spots would share one script and one picked-up flag. Pick another index."
+            indexNotice = tr(Res.string.hidden_item_index_x_is_already_used_by_spot_x, index, owner)
         }
     }
 

@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isMetaPressed
@@ -45,8 +47,8 @@ object Actions {
 
     fun openProject(model: AppModel) = model.guard {
         val start = model.recent.firstOrNull { it.kind == RecentKind.PROJECT }?.path?.parent ?: AppModel.defaultProjectsDir().takeIf { it.toFile().exists() }
-        chooseDirectory("Open project folder", start) { dir ->
-            if (ProjectStore.isProject(dir)) model.openProject(dir) else model.error = "$dir is not a foxhg project folder"
+        chooseDirectory(tr(Res.string.actions_open_project_folder), start) { dir ->
+            if (ProjectStore.isProject(dir)) model.openProject(dir) else model.error = tr(Res.string.actions_x_is_not_a_foxhg_project_folder, dir)
         }
     }
 
@@ -56,17 +58,17 @@ object Actions {
     fun newSave(model: AppModel) = model.guardSave { model.dialog = AppDialog.NewSave }
 
     /** Opens a save file in the save editor; asks first when the save that is open has edits that are not written. */
-    fun openSave(model: AppModel) = model.guardSave { pickFile("Open save file (.sav or .dsv)", java.awt.FileDialog.LOAD, "")?.let(model::openSave) }
+    fun openSave(model: AppModel) = model.guardSave { pickFile(tr(Res.string.actions_open_save_file_sav_or_dsv), java.awt.FileDialog.LOAD, "")?.let(model::openSave) }
 
     /** A file or folder dropped on the window: a project folder opens as a project, a `.nds` as a ROM, anything else is refused. */
     fun openDropped(model: AppModel, files: List<java.nio.file.Path>) {
         val path = files.firstOrNull() ?: return
         when {
             java.nio.file.Files.isDirectory(path) ->
-                if (ProjectStore.isProject(path)) model.guard { model.openProject(path) } else model.error = "$path is not a foxhg project folder"
+                if (ProjectStore.isProject(path)) model.guard { model.openProject(path) } else model.error = tr(Res.string.actions_x_is_not_a_foxhg_project_folder, path)
             path.fileName.toString().endsWith(".nds", ignoreCase = true) -> model.guard { model.openRom(path) }
             path.fileName.toString().let { it.endsWith(".sav", ignoreCase = true) || it.endsWith(".dsv", ignoreCase = true) } -> model.guardSave { model.openSave(path) }
-            else -> model.error = "Drop a .nds ROM, a .sav save or a foxhg project folder, not ${path.fileName}"
+            else -> model.error = tr(Res.string.actions_drop_a_nds_rom_a_sav_save_or_a_fox, path.fileName)
         }
     }
 

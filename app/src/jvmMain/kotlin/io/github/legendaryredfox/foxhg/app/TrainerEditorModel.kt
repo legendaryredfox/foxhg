@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -39,7 +41,7 @@ class TrainerEditorModel(private val project: RomProject, private val onChanged:
 
     val selected: Trainer? get() = trainers.getOrNull(selectedIndex)
 
-    fun name(index: Int): String = names?.trainerNames?.getOrNull(index)?.takeIf { it.isNotBlank() } ?: "Trainer $index"
+    fun name(index: Int): String = names?.trainerNames?.getOrNull(index)?.takeIf { it.isNotBlank() } ?: tr(Res.string.battle_tower_trainer_x, index)
 
     fun classOf(index: Int): Int = trainers.getOrNull(index)?.header?.trainerClass ?: 0
 

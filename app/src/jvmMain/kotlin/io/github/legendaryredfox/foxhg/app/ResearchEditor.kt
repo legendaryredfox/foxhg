@@ -82,7 +82,7 @@ fun ResearchEditor(model: ResearchEditorModel, onOpen: (EditorKind, Int) -> Unit
             SectionCard("${model.searched}: ${results.size} ${if (results.size == 1) "use" else "uses"}", subtitle = if (results.size > ResearchEditorModel.LIMIT) stringResource(Res.string.research_the_first_x_are_listed, ResearchEditorModel.LIMIT) else stringResource(Res.string.research_click_one_to_open_it)) {
                 if (results.isEmpty()) Text(stringResource(Res.string.research_nothing_uses_it), style = MaterialTheme.typography.bodySmall)
                 results.take(ResearchEditorModel.LIMIT).forEachIndexed { i, u ->
-                    val where = if (u.place == Usage.Place.SCRIPT) "Script ${u.file}, item ${u.index}" else "Events ${u.file}, #${u.index}"
+                    val where = if (u.place == Usage.Place.SCRIPT) tr(Res.string.research_script_x_item_x, u.file, u.index) else tr(Res.string.research_events_x_x, u.file, u.index)
                     TextButton(onClick = { onOpen(if (u.place == Usage.Place.SCRIPT) EditorKind.SCRIPTS else EditorKind.EVENTS, u.file) }, modifier = Modifier.testTag("research-result:$i")) {
                         Text("$where: ${u.text}", style = MaterialTheme.typography.bodySmall)
                     }

@@ -79,7 +79,7 @@ fun ShinyRatesEditor(model: ShinyRatesEditorModel, modifier: Modifier = Modifier
         model.message?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("shiny-message")) }
         val rates = model.rates
         if (rates == null) {
-            SectionCard(stringResource(Res.string.shiny_rates_not_installed), subtitle = model.blocked ?: "Installs routines in the synthetic overlay (and the ARM9 expansion if the ROM lacks it) and hooks the places that make these Pokémon. All rates start at 0.") {
+            SectionCard(stringResource(Res.string.shiny_rates_not_installed), subtitle = model.blocked ?: tr(Res.string.shiny_rates_installs_routines_in_the_synthetic)) {
                 OutlinedButton(onClick = model::install, enabled = model.blocked == null, modifier = Modifier.testTag("shiny-install")) { Text(stringResource(Res.string.shiny_rates_install_the_shiny_rate_code)) }
             }
             return@DetailPane

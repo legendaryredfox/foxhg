@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.Canvas
@@ -60,8 +61,17 @@ import io.github.legendaryredfox.foxhg.core.data.map.MapUsages
 import io.github.legendaryredfox.foxhg.core.data.map.TileTypes
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
-enum class MapLayer(val label: String) { TYPES("Tile types"), COLLISION("Collision"), BOTH("Types and collision") }
-enum class MapTool(val label: String) { PAINT("Paint"), FILL("Fill"), PICK("Pick"), EVENTS("Edit events") }
+enum class MapLayer(private val labelResource: StringResource) {
+    TYPES(Res.string.map_tile_types), COLLISION(Res.string.map_collision), BOTH(Res.string.map_types_and_collision);
+
+    val label: String get() = tr(labelResource)
+}
+
+enum class MapTool(private val labelResource: StringResource) {
+    PAINT(Res.string.map_tool_paint), FILL(Res.string.map_tool_fill), PICK(Res.string.map_tool_pick), EVENTS(Res.string.map_edit_events);
+
+    val label: String get() = tr(labelResource)
+}
 
 /** State of the Maps editor: the map files are a [RecordEditorModel], the rest is how they are shown and painted. */
 class MapEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
@@ -140,11 +150,11 @@ class MapEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
     fun usage(map: Int): MapUsage? = usagesOf(map).getOrNull(usageIndex.coerceAtMost((usagesOf(map).size - 1).coerceAtLeast(0)))
 
     fun headerName(header: Int): String =
-        usages.headers.getOrNull(header)?.let { names?.locations?.getOrNull(it.locationName) }?.takeIf { it.isNotBlank() } ?: "Header $header"
+        usages.headers.getOrNull(header)?.let { names?.locations?.getOrNull(it.locationName) }?.takeIf { it.isNotBlank() } ?: tr(Res.string.fly_header_x, header)
 
     fun label(map: Int): String {
         val first = usages.of(map).firstOrNull()
-        return "%03d  %s".format(map, first?.let { headerName(it.header) } ?: "(not in a matrix)")
+        return "%03d  %s".format(map, first?.let { headerName(it.header) } ?: tr(Res.string.map_not_in_a_matrix))
     }
 
     private fun eventFileOf(usage: MapUsage?): Int? = usage?.let { usages.headers.getOrNull(it.header)?.eventFile }
@@ -252,7 +262,7 @@ fun MapEditor(model: MapEditorModel, modifier: Modifier = Modifier) {
         val usages = model.usagesOf(index)
         val usage = model.usage(index)
         if (usages.size > 1) {
-            PickerField(stringResource(Res.string.map_used_as), model.usageIndex.coerceAtMost(usages.size - 1), usages.map { "matrix ${it.matrix} cell ${it.x},${it.y} (${model.headerName(it.header)})" }, { model.usageIndex = it }, Modifier.width(420.dp))
+            PickerField(stringResource(Res.string.map_used_as), model.usageIndex.coerceAtMost(usages.size - 1), usages.map { tr(Res.string.map_matrix_x_cell_x_x_x, it.matrix, it.x, it.y, model.headerName(it.header)) }, { model.usageIndex = it }, Modifier.width(420.dp))
         } else if (usage != null) {
             Text(stringResource(Res.string.map_matrix_x_cell_x_x_map_header_x, usage.matrix, usage.x, usage.y, usage.header), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -408,7 +418,7 @@ private fun MapLegend(model: MapEditorModel, map: MapFile) {
                 Text(stringResource(Res.string.map_type_x_x, info.id, info.label), style = MaterialTheme.typography.bodySmall)
             }
             Text("Collision 0x%02X%s".format(map.collision(x, y), if (Collision.isBlocked(map.collision(x, y))) " (blocked)" else ""), style = MaterialTheme.typography.bodySmall)
-            if (info.surfable || info.encounters) Text(listOfNotNull("surfable".takeIf { info.surfable }, "wild encounters".takeIf { info.encounters }).joinToString(", "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (info.surfable || info.encounters) Text(listOfNotNull("surfable".takeIf { info.surfable }, tr(Res.string.app_wild_encounters).takeIf { info.encounters }).joinToString(", "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else Text(stringResource(Res.string.map_point_at_a_tile), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         val used = (0 until MapFile.SIZE * MapFile.SIZE).map { map.type(it % MapFile.SIZE, it / MapFile.SIZE) }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.take(8)
         Text(stringResource(Res.string.map_most_used_types), style = MaterialTheme.typography.titleSmall)

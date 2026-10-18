@@ -1,5 +1,8 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -96,7 +99,7 @@ class AppModel(
     /** Keeps [new] and writes it to the settings file; a file that cannot be written is reported but the settings still apply this session. */
     fun updateSettings(new: AppSettings) {
         settings = new
-        if (!settingsStore.save(new)) fail("Could not save the settings file")
+        if (!settingsStore.save(new)) fail(tr(Res.string.app_could_not_save_the_settings_file))
     }
 
     var recent: List<RecentEntry> by mutableStateOf(recents.load())
@@ -167,7 +170,7 @@ class AppModel(
                 save = opened.value
                 selected = EditorKind.SAVE_PLAYER
                 error = null
-                status = "Opened save ${path.fileName}"
+                status = tr(Res.string.app_opened_save_x, path.fileName)
                 true
             }
             is FoxResult.Err -> { fail(opened.message); false }
@@ -188,7 +191,7 @@ class AppModel(
             if (Files.exists(path) && !Files.exists(backup)) Files.copy(path, backup)
             Files.write(path, made.toFileBytes())
         } catch (e: java.io.IOException) {
-            fail("Cannot write $path: ${e.message}")
+            fail(tr(Res.string.app_cannot_write_x_x, path, e.message))
             return false
         }
         return openSave(path)
@@ -227,14 +230,14 @@ class AppModel(
         val newSource = try {
             FileRomSource(path)
         } catch (e: java.io.IOException) {
-            fail("Cannot open $path: ${e.message}")
+            fail(tr(Res.string.app_cannot_open_x_x, path, e.message))
             return
         }
         when (val opened = RomProject.open(newSource)) {
             is FoxResult.Ok -> {
                 if (!attach(opened.value, newSource, path, projectDir = null)) { newSource.close(); return }
                 recent = recents.add(RecentKind.ROM, path)
-                status = romHeader.profile.readOnlyReason ?: "Opened ${path.fileName}"
+                status = romHeader.profile.readOnlyReason ?: tr(Res.string.app_opened_x, path.fileName)
             }
             is FoxResult.Err -> {
                 newSource.close()
@@ -269,7 +272,7 @@ class AppModel(
                 val l = loaded.value
                 if (!attach(l.project, l.source, l.romPath, directory)) { l.source.close(); return false }
                 recent = recents.add(RecentKind.PROJECT, directory)
-                status = l.project.rom.header.profile.readOnlyReason ?: "Opened project ${directory.fileName}"
+                status = l.project.rom.header.profile.readOnlyReason ?: tr(Res.string.app_opened_project_x, directory.fileName)
                 return true
             }
         }
@@ -325,16 +328,17 @@ class AppModel(
 
     private fun describe(targets: List<EditTarget>): StepTarget? = if (targets.isEmpty()) null else StepTarget(targets.size, targets[0].label)
 
-    fun undo() { if (task == null) step("Undid", project?.undo()) }
+    fun undo() { if (task == null) step(Res.string.app_undid_change_to_x, project?.undo()) }
 
-    fun redo() { if (task == null) step("Redid", project?.redo()) }
+    fun redo() { if (task == null) step(Res.string.app_redid_change_to_x, project?.redo()) }
 
-    private fun step(verb: String, targets: List<EditTarget>?) {
+    private fun step(message: StringResource, targets: List<EditTarget>?) {
         if (targets == null) return
         undoEpoch++
         projectChanged()
         error = null
-        status = "$verb change to ${describe(targets)}"
+        val what = describe(targets)?.let { if (it.files == 1) it.label else trPlural(Res.plurals.step_files, it.files, it.files) }
+        status = tr(message, what)
     }
 
     // --- saving ----------------------------------------------------------------------------------------------------
@@ -383,7 +387,7 @@ class AppModel(
                 projectDir = directory
                 savedRevision = revision
                 error = null
-                status = "Saved project ${directory.fileName}"
+                status = tr(Res.string.app_saved_project_x, directory.fileName)
                 recent = recents.add(RecentKind.PROJECT, directory)
                 true
             }
@@ -429,26 +433,26 @@ class AppModel(
         if (project == null) return
         val command = settings.emulatorCommand.trim()
         if (command.isEmpty()) {
-            dialog = AppDialog.Settings("Set the emulator command to use Run. Use {rom} where the ROM goes.")
+            dialog = AppDialog.Settings(tr(Res.string.app_set_the_emulator_command_to_use_ru))
             return
         }
         val target = runTarget()
         try {
             Files.createDirectories(target.parent)
         } catch (e: java.io.IOException) {
-            fail("Cannot write to ${target.parent}: ${e.message}")
+            fail(tr(Res.string.app_cannot_write_to_x_x, target.parent, e.message))
             return
         }
-        startTask("Building the ROM to run") { report ->
+        startTask(tr(Res.string.app_building_the_rom_to_run)) { report ->
             build(target, keepBackup = false, report = report)
             if (error != null) return@startTask
-            Emulator.launcher(Emulator.command(command, target))?.let { fail("Cannot start the emulator: $it"); return@startTask }
-            status = "Started the emulator with $target"
+            Emulator.launcher(Emulator.command(command, target))?.let { fail(tr(Res.string.app_cannot_start_the_emulator_x, it)); return@startTask }
+            status = tr(Res.string.app_started_the_emulator_with_x, target)
         }
     }
 
     /** [build] in the background, with the progress window. */
-    fun buildInBackground(target: Path) = startTask("Building ${target.fileName}") { report -> build(target, report = report) }
+    fun buildInBackground(target: Path) = startTask(tr(Res.string.app_building_x, target.fileName)) { report -> build(target, report = report) }
 
     /**
      * Writes the ROM with every edit applied to [target]. The opened ROM is not modified. The ROM is built into a `.part` file next
@@ -458,7 +462,7 @@ class AppModel(
         val project = project ?: return
         val opened = romPath
         if (opened != null && (target.toAbsolutePath() == opened.toAbsolutePath() || (Files.exists(target) && Files.exists(opened) && Files.isSameFile(target, opened)))) {
-            fail("Choose a different file than the ROM you opened")
+            fail(tr(Res.string.app_choose_a_different_file_than_the_r))
             return
         }
         val part = target.resolveSibling(target.fileName.toString() + ".part")
@@ -480,10 +484,10 @@ class AppModel(
                 throw e
             }
             error = null
-            status = if (kept) "Built $target (the previous file is ${backup.fileName})" else "Built $target"
+            status = if (kept) tr(Res.string.app_built_x_the_previous_file_is_x, target, backup.fileName) else "Built $target"
         } catch (e: Exception) {
             runCatching { Files.deleteIfExists(part) }
-            fail("Cannot build $target: ${e.message ?: e::class.simpleName}")
+            fail(tr(Res.string.app_cannot_build_x_x, target, e.message ?: e::class.simpleName))
         }
     }
 
