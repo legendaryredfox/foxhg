@@ -31,12 +31,13 @@ class BattleRule(
 /**
  * The simple battle tweaks of the guide for HeartGold English: each is one byte in an overlay (an immediate of a Thumb instruction of the battle
  * code) or in a battle script (a NARC file), so a rule is read and written byte by byte; the critical hit table is five rules, one byte each. Tweaks that
- * need several bytes that change together in another way (paralysis shifts, Magnitude, Flail, Disable, Taunt, no hail damage, the bug fixes) are not here.
+ * need several bytes that change together in another way (paralysis shifts, Flail, Disable, Taunt, no hail damage, the bug fixes) are not here.
  */
 object BattleRules {
     const val SUB_SEQ = "a/0/0/1"
     const val BE_SEQ = "a/0/3/0"
     private const val BATTLE_OVERLAY = 12
+    private const val TRAINER_AI_OVERLAY = 10
 
     private fun ov(vararg offsets: Int) = offsets.map { BattleSite.Overlay(BATTLE_OVERLAY, it) }
     private fun chance(n: Int) = if (n <= 0) "" else "1 in $n (about ${"%.1f".format(100.0 / n).removeSuffix(".0")} %)"
@@ -98,6 +99,22 @@ object BattleRules {
         BattleRule("crit-stage-2", "Critical hits", "Critical hit chance, stage +2", "See stage 0 (the game has 4 here).", ov(0x3528A), 4, 1..255) { chance(it) },
         BattleRule("crit-stage-3", "Critical hits", "Critical hit chance, stage +3", "See stage 0 (the game has 3 here).", ov(0x3528B), 3, 1..255) { chance(it) },
         BattleRule("crit-stage-4", "Critical hits", "Critical hit chance, stage +4", "See stage 0 (the game has 2 here).", ov(0x3528C), 2, 1..255) { chance(it) },
+        BattleRule("magnitude-4", "Move effects", "Magnitude 4 power", "Power of Magnitude when the roll is 4; the Trainer AI keeps its own copy of the table in overlay 10, written together.",
+            listOf(BattleSite.Overlay(BATTLE_OVERLAY, 0xA89A), BattleSite.Overlay(TRAINER_AI_OVERLAY, 0x351C)), 10, 1..255) { "power $it" },
+        BattleRule("magnitude-5", "Move effects", "Magnitude 5 power", "Power of Magnitude when the roll is 5; the Trainer AI keeps its own copy of the table in overlay 10, written together.",
+            listOf(BattleSite.Overlay(BATTLE_OVERLAY, 0xA8AA), BattleSite.Overlay(TRAINER_AI_OVERLAY, 0x3524)), 30, 1..255) { "power $it" },
+        BattleRule("magnitude-6", "Move effects", "Magnitude 6 power", "Power of Magnitude when the roll is 6; the Trainer AI keeps its own copy of the table in overlay 10, written together.",
+            listOf(BattleSite.Overlay(BATTLE_OVERLAY, 0xA8BA), BattleSite.Overlay(TRAINER_AI_OVERLAY, 0x352C)), 50, 1..255) { "power $it" },
+        BattleRule("magnitude-7", "Move effects", "Magnitude 7 power", "Power of Magnitude when the roll is 7; the Trainer AI keeps its own copy of the table in overlay 10, written together.",
+            listOf(BattleSite.Overlay(BATTLE_OVERLAY, 0xA8CA), BattleSite.Overlay(TRAINER_AI_OVERLAY, 0x3534)), 70, 1..255) { "power $it" },
+        BattleRule("magnitude-8", "Move effects", "Magnitude 8 power", "Power of Magnitude when the roll is 8; the Trainer AI keeps its own copy of the table in overlay 10, written together.",
+            listOf(BattleSite.Overlay(BATTLE_OVERLAY, 0xA8DA), BattleSite.Overlay(TRAINER_AI_OVERLAY, 0x353C)), 90, 1..255) { "power $it" },
+        BattleRule("magnitude-9", "Move effects", "Magnitude 9 power", "Power of Magnitude when the roll is 9; the Trainer AI keeps its own copy of the table in overlay 10, written together.",
+            listOf(BattleSite.Overlay(BATTLE_OVERLAY, 0xA8EA), BattleSite.Overlay(TRAINER_AI_OVERLAY, 0x3544)), 110, 1..255) { "power $it" },
+        BattleRule("magnitude-10", "Move effects", "Magnitude 10 power", "Power of Magnitude when the roll is 10; the Trainer AI keeps its own copy of the table in overlay 10, written together.",
+            listOf(BattleSite.Overlay(BATTLE_OVERLAY, 0xA8F4), BattleSite.Overlay(TRAINER_AI_OVERLAY, 0x3548)), 150, 1..255) { "power $it" },
+        BattleRule("gyro-ball", "Move effects", "Gyro Ball power multiplier", "The target's Speed divided by the user's is multiplied by this to get the power (at most 150); the Trainer AI has its own copy in overlay 10, written together.",
+            listOf(BattleSite.Overlay(BATTLE_OVERLAY, 0xBEAA), BattleSite.Overlay(TRAINER_AI_OVERLAY, 0x347C)), 25, 1..255) { "x$it" },
         BattleRule("encore", "Move effects", "Encore duration (base)", "Turns Encore lasts, before the extra random part the code adds.", ov(0x939A), 5, 1..255) { turns(it) },
     )
 

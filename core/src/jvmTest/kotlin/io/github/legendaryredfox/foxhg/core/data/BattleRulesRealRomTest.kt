@@ -33,6 +33,12 @@ class BattleRulesRealRomTest {
             // the other rules of the same files and overlay are untouched
             for (rule in BattleRules.all.filter { it !in listOf(burn, slow, reckless) }) assertEquals(rule.vanilla, (BattleRules.read(project, rule) as FoxResult.Ok).value, "${rule.id} untouched")
             assertTrue(project.isDirty)
+            // a rule with a place in two overlays (the Trainer AI keeps a copy of the Magnitude table): both change
+            val magnitude = BattleRules.byId("magnitude-10")!!
+            assertEquals(2, magnitude.sites.map { (it as io.github.legendaryredfox.foxhg.core.data.battlerule.BattleSite.Overlay).id }.toSet().size)
+            assertTrue(BattleRules.write(project, magnitude, 200) is FoxResult.Ok)
+            assertEquals(200, (BattleRules.read(project, magnitude) as FoxResult.Ok).value)
+            assertTrue(BattleRules.write(project, magnitude, magnitude.vanilla) is FoxResult.Ok)
             assertTrue(BattleRules.write(project, burn, 0) is FoxResult.Err, "a divisor of 0 would divide by zero")
             assertTrue(BattleRules.write(project, BattleRules.byId("grip-claw")!!, 8) is FoxResult.Err, "the game does not take a Grip Claw duration above 7")
             for (rule in listOf(burn, slow, reckless)) assertTrue(BattleRules.write(project, rule, rule.vanilla) is FoxResult.Ok)
