@@ -234,6 +234,20 @@ class ListEditorsUiEndToEndTest {
     }
 
     @Test
+    fun editingABattleRuleOnItsScreenWritesTheBattleScript() = withHeartGoldApp { _, project ->
+        val burn = io.github.legendaryredfox.foxhg.core.data.battlerule.BattleRules.byId("burn-damage")!!
+        val value = { (io.github.legendaryredfox.foxhg.core.data.battlerule.BattleRules.read(project, burn) as FoxResult.Ok).value }
+        assertEquals(8, value())
+        open("Battle rules")
+        onNodeWithTag("number:Battle rule").typeNumber(16)
+        waitForIdle()
+        assertEquals(16, value(), "the burn divisor went into battle script 26")
+        tap(onNodeWithTag("battle-rule-restore"), inScrollPane = false)
+        waitForIdle()
+        assertEquals(8, value(), "the restore button put the game's value back")
+    }
+
+    @Test
     fun applyingToolboxPatchesOnTheirScreen() = withHeartGoldApp { model, project ->
         open("ROM toolbox")
         onNodeWithTag("apply:dynamic-camera").assertIsNotEnabled()

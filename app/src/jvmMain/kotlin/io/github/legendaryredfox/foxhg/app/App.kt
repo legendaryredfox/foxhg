@@ -312,6 +312,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.PHOTOS -> Loading(project, "photo locations", { model.recordEditor(EditorKind.PHOTOS, project, io.github.legendaryredfox.foxhg.core.data.photo.PhotoLocation.SPEC, photoLabel(project), 0) }) { editor ->
             PhotoEditor(editor, remember(project) { mapHeaderLabels(project) }, modifier.padding(16.dp))
         }
+        selected == EditorKind.BATTLE_RULES -> Loading(project, "battle rules", { BattleRuleEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+            BattleRuleEditor(editor, modifier.padding(16.dp))
+        }
         selected == EditorKind.GROUND_ITEMS -> Loading(project, "ground items", { GroundItemEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             GroundItemEditor(editor, modifier.padding(16.dp))
         }
