@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -85,32 +87,32 @@ fun StarterEditor(model: StarterEditorModel, modifier: Modifier = Modifier) {
     val starters = model.starters ?: return
     val species = model.names?.species?.take(Starters.MAX_SPECIES + 1) ?: emptyList()
     DetailPane(modifier) {
-        Text("Starters", style = MaterialTheme.typography.headlineSmall)
-        SectionCard("The three Poké Balls", subtitle = "Left, middle and right ball in Professor Elm's lab (Chikorita, Cyndaquil and Totodile in the original)") {
+        Text(stringResource(Res.string.editor_starters), style = MaterialTheme.typography.headlineSmall)
+        SectionCard(stringResource(Res.string.starter_the_three_pok_balls), subtitle = stringResource(Res.string.starter_left_middle_and_right_ball_in_prof)) {
             Row(horizontalArrangement = Arrangement.spacedBy(24.dp), verticalAlignment = Alignment.Top) {
                 for (slot in 0 until 3) {
                     androidx.compose.foundation.layout.Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         PokemonFront(starters.species[slot], 72.dp)
-                        SpeciesPicker("Ball ${slot + 1}", starters.species[slot], species, { v -> if (v in 1..Starters.MAX_SPECIES) model.setSpecies(slot, v) }, Modifier.width(200.dp))
+                        SpeciesPicker(stringResource(Res.string.starter_ball_x, slot + 1), starters.species[slot], species, { v -> if (v in 1..Starters.MAX_SPECIES) model.setSpecies(slot, v) }, Modifier.width(200.dp))
                     }
                 }
             }
         }
-        SectionCard("Given with the Pokémon", subtitle = if (starters.level == null || starters.heldItem == null) "Part of this is not found in this ROM, so it can not be changed" else null) {
+        SectionCard(stringResource(Res.string.starter_given_with_the_pok_mon), subtitle = if (starters.level == null || starters.heldItem == null) "Part of this is not found in this ROM, so it can not be changed" else null) {
             FieldFlow {
-                starters.level?.let { NumberField("Level", it, 1..100, { v -> model.setLevel(v) }, Modifier.width(100.dp)) }
-                starters.heldItem?.let { PickerField("Held item", it, model.names?.items?.take(256) ?: emptyList(), { v -> model.setHeldItem(v) }, Modifier.width(240.dp)) }
+                starters.level?.let { NumberField(stringResource(Res.string.learnset_level), it, 1..100, { v -> model.setLevel(v) }, Modifier.width(100.dp)) }
+                starters.heldItem?.let { PickerField(stringResource(Res.string.starter_held_item), it, model.names?.items?.take(256) ?: emptyList(), { v -> model.setHeldItem(v) }, Modifier.width(240.dp)) }
             }
-            Text("The held item is one byte in the game, so only items 0 to 255 can be chosen.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(Res.string.starter_the_held_item_is_one_byte_in_the_g), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        SectionCard("What follows", subtitle = "A starter is not data in a table: it is spread over the game's code") {
+        SectionCard(stringResource(Res.string.starter_what_follows), subtitle = stringResource(Res.string.starter_a_starter_is_not_data_in_a_table_i)) {
             Text(
                 "Changing a ball also updates the cries table of the chooser, the seven scripts in which the rival picks the Pokémon that is strong against yours, " +
                     "and the species and type words in the professor's questions. Names the game shows elsewhere (the rival's lines, the Pokédex) are not touched.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             model.message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.testTag("starter-message")) }
-            OutlinedButton(onClick = model::restoreVanilla, modifier = Modifier.testTag("starter-restore")) { Text("Restore the original three") }
+            OutlinedButton(onClick = model::restoreVanilla, modifier = Modifier.testTag("starter-restore")) { Text(stringResource(Res.string.starter_restore_the_original_three)) }
         }
     }
 }

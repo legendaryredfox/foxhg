@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,11 +45,11 @@ private fun TradeConversionCard(model: RecordEditorModel<EvolutionData>) {
     var message by remember { mutableStateOf<String?>(null) }
     val remaining = model.records.sumOf { r -> r.slots.count { it.known?.isTrade == true } }
     SectionCard(
-        "Remove trade evolutions",
+        stringResource(Res.string.evolution_remove_trade_evolutions),
         subtitle = if (remaining > 0) "${plural(remaining, "trade evolution")} left. Trade becomes a level-up; trade with an item becomes using that item." else "No trade evolutions left.",
     ) {
         FieldFlow {
-            NumberField("Trade becomes level", level, 2..100, { level = it }, Modifier.width(150.dp))
+            NumberField(stringResource(Res.string.evolution_trade_becomes_level), level, 2..100, { level = it }, Modifier.width(150.dp))
             Button(onClick = {
                 var changed = 0
                 model.updateAll { records ->
@@ -56,7 +58,7 @@ private fun TradeConversionCard(model: RecordEditorModel<EvolutionData>) {
                     converted
                 }
                 message = "Converted ${plural(changed, "evolution")}"
-            }, enabled = remaining > 0) { Text("Convert all") }
+            }, enabled = remaining > 0) { Text(stringResource(Res.string.evolution_convert_all)) }
             message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary) }
         }
     }
@@ -73,30 +75,30 @@ private fun Detail(model: RecordEditorModel<EvolutionData>, data: EvolutionData)
         CsvButtons(model, EvolutionData.CSV, "evolutions")
         PokemonPortraits(model.selectedIndex)
     })
-    SectionCard("Evolutions", subtitle = "Up to ${EvolutionData.SLOTS} ways to evolve. Leave the method on None to unuse a slot.") {
+    SectionCard(stringResource(Res.string.editor_evolutions), subtitle = stringResource(Res.string.evolution_up_to_x_ways_to_evolve_leave_the_m, EvolutionData.SLOTS)) {
         data.slots.forEachIndexed { slot, entry ->
             val method = entry.known
             FieldFlow {
                 PickerField(
-                    "Method ${slot + 1}", method?.ordinal ?: 0, methods,
+                    stringResource(Res.string.evolution_method_x, slot + 1), method?.ordinal ?: 0, methods,
                     { v -> model.update { it.with(slot, entry.copy(method = EvolutionMethod.entries[v].id)) } },
                     Modifier.width(230.dp),
                 )
                 if (method == null) {
-                    Text("Unknown method ${entry.method}", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(Res.string.evolution_unknown_method_x, entry.method), color = MaterialTheme.colorScheme.error)
                 } else {
                     val setParam = { v: Int -> model.update { it.with(slot, entry.copy(param = v)) } }
                     when (method.param) {
                         ParamKind.NONE -> {}
-                        ParamKind.LEVEL -> NumberField("Level", entry.param, 1..100, setParam, Modifier.width(90.dp))
-                        ParamKind.FRIENDSHIP -> NumberField("Friendship", entry.param, 0..255, setParam, Modifier.width(110.dp))
-                        ParamKind.BEAUTY -> NumberField("Beauty", entry.param, 0..255, setParam, Modifier.width(110.dp))
-                        ParamKind.ITEM -> ItemPicker("Item", entry.param, items, setParam, Modifier.width(220.dp))
-                        ParamKind.MOVE -> PickerField("Move", entry.param, moves, setParam, Modifier.width(220.dp))
-                        ParamKind.SPECIES -> SpeciesPicker("Species", entry.param, species, setParam, Modifier.width(220.dp))
+                        ParamKind.LEVEL -> NumberField(stringResource(Res.string.learnset_level), entry.param, 1..100, setParam, Modifier.width(90.dp))
+                        ParamKind.FRIENDSHIP -> NumberField(stringResource(Res.string.personal_friendship), entry.param, 0..255, setParam, Modifier.width(110.dp))
+                        ParamKind.BEAUTY -> NumberField(stringResource(Res.string.evolution_beauty), entry.param, 0..255, setParam, Modifier.width(110.dp))
+                        ParamKind.ITEM -> ItemPicker(stringResource(Res.string.evolution_item), entry.param, items, setParam, Modifier.width(220.dp))
+                        ParamKind.MOVE -> PickerField(stringResource(Res.string.learnset_move), entry.param, moves, setParam, Modifier.width(220.dp))
+                        ParamKind.SPECIES -> SpeciesPicker(stringResource(Res.string.evolution_species), entry.param, species, setParam, Modifier.width(220.dp))
                     }
                     if (method != EvolutionMethod.NONE) {
-                        SpeciesPicker("Evolves into", entry.target, species, { v -> model.update { it.with(slot, entry.copy(target = v)) } }, Modifier.width(220.dp))
+                        SpeciesPicker(stringResource(Res.string.evolution_evolves_into), entry.target, species, { v -> model.update { it.with(slot, entry.copy(target = v)) } }, Modifier.width(220.dp))
                     }
                 }
             }

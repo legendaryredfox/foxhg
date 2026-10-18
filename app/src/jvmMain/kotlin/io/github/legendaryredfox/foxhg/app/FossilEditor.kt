@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -63,11 +65,11 @@ fun FossilEditor(model: FossilEditorModel, modifier: Modifier = Modifier) {
     }
     val species = model.names?.species?.take(Fossils.MAX_SPECIES + 1) ?: emptyList()
     DetailPane(modifier) {
-        Text("Fossils", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(Res.string.editor_fossils), style = MaterialTheme.typography.headlineSmall)
         model.error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("fossil-message")) }
         SectionCard(
-            "Revived Pokémon",
-            subtitle = "The scientist in the Pewter City museum asks this table which Pokémon a fossil gives. The level (20) is in his script, and the items are the ones his script and the bag know.",
+            stringResource(Res.string.fossil_revived_pok_mon),
+            subtitle = stringResource(Res.string.fossil_the_scientist_in_the_pewter_city_m),
         ) {
             for ((slot, fossil) in fossils.fossils.withIndex()) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -75,7 +77,7 @@ fun FossilEditor(model: FossilEditorModel, modifier: Modifier = Modifier) {
                     SpeciesPicker(Fossils.NAMES[slot], fossil.species, species, { v -> if (v in 1..Fossils.MAX_SPECIES) model.setSpecies(slot, v) }, Modifier.width(240.dp))
                 }
             }
-            OutlinedButton(onClick = model::restoreVanilla, modifier = Modifier.testTag("fossil-restore")) { Text("Restore the original seven") }
+            OutlinedButton(onClick = model::restoreVanilla, modifier = Modifier.testTag("fossil-restore")) { Text(stringResource(Res.string.fossil_restore_the_original_seven)) }
         }
     }
 }

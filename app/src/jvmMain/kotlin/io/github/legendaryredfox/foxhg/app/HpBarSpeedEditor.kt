@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
@@ -58,13 +60,13 @@ fun HpBarSpeedEditor(model: HpBarSpeedEditorModel, modifier: Modifier = Modifier
         return
     }
     DetailPane(modifier) {
-        Text("HP bar speed", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(Res.string.editor_hp_bar), style = MaterialTheme.typography.headlineSmall)
         model.error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("hpbar-message")) }
-        SectionCard("Battle HP bar", subtitle = "How fast the HP bar drains and fills in battle, from the guide \"Changing the HP bar speed\" (one instruction of overlay 12).") {
+        SectionCard(stringResource(Res.string.hp_bar_speed_battle_hp_bar), subtitle = stringResource(Res.string.hp_bar_speed_how_fast_the_hp_bar_drains_and_fil)) {
             val labels = HpBarSpeedEditorModel.SHIFTS.map(HpBarSpeedEditorModel::label)
-            PickerField("Speed", HpBarSpeedEditorModel.SHIFTS.indexOf(speed.shift).coerceAtLeast(0), labels, { v -> model.set(HpBarSpeed(HpBarSpeedEditorModel.SHIFTS[v])) }, Modifier.width(240.dp).testTag("hpbar-speed"))
-            if (speed.shift !in HpBarSpeedEditorModel.SHIFTS) Text("The ROM has a custom speed (shift ${speed.shift}).", style = MaterialTheme.typography.bodySmall)
-            OutlinedButton(onClick = { model.set(HpBarSpeed.VANILLA) }, modifier = Modifier.testTag("hpbar-restore")) { Text("Restore the game's speed") }
+            PickerField(stringResource(Res.string.personal_speed), HpBarSpeedEditorModel.SHIFTS.indexOf(speed.shift).coerceAtLeast(0), labels, { v -> model.set(HpBarSpeed(HpBarSpeedEditorModel.SHIFTS[v])) }, Modifier.width(240.dp).testTag("hpbar-speed"))
+            if (speed.shift !in HpBarSpeedEditorModel.SHIFTS) Text(stringResource(Res.string.hp_bar_speed_the_rom_has_a_custom_speed_shift_x, speed.shift), style = MaterialTheme.typography.bodySmall)
+            OutlinedButton(onClick = { model.set(HpBarSpeed.VANILLA) }, modifier = Modifier.testTag("hpbar-restore")) { Text(stringResource(Res.string.hp_bar_speed_restore_the_game_s_speed)) }
         }
     }
 }

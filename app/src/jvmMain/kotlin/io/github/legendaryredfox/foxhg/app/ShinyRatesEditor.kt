@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
@@ -68,7 +70,7 @@ class ShinyRatesEditorModel(private val project: RomProject, private val onChang
 @Composable
 fun ShinyRatesEditor(model: ShinyRatesEditorModel, modifier: Modifier = Modifier) {
     DetailPane(modifier) {
-        Text("Shiny rates", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(Res.string.editor_shiny_rates), style = MaterialTheme.typography.headlineSmall)
         Text(
             "The game makes a Pokémon shiny only by chance, 8 in 65536. This screen sets the chance for four kinds of Pokémon, each on its own: wild encounters, static battles (the fixed battles of the Static Pokémon screen), gifts and eggs, and trainers. " +
                 "Fields are in hundredths of a percent: 1000 is 10 %, 10000 is 100 %, 0 leaves the game as it is.",
@@ -77,22 +79,22 @@ fun ShinyRatesEditor(model: ShinyRatesEditorModel, modifier: Modifier = Modifier
         model.message?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("shiny-message")) }
         val rates = model.rates
         if (rates == null) {
-            SectionCard("Not installed", subtitle = model.blocked ?: "Installs routines in the synthetic overlay (and the ARM9 expansion if the ROM lacks it) and hooks the places that make these Pokémon. All rates start at 0.") {
-                OutlinedButton(onClick = model::install, enabled = model.blocked == null, modifier = Modifier.testTag("shiny-install")) { Text("Install the shiny rate code") }
+            SectionCard(stringResource(Res.string.shiny_rates_not_installed), subtitle = model.blocked ?: "Installs routines in the synthetic overlay (and the ARM9 expansion if the ROM lacks it) and hooks the places that make these Pokémon. All rates start at 0.") {
+                OutlinedButton(onClick = model::install, enabled = model.blocked == null, modifier = Modifier.testTag("shiny-install")) { Text(stringResource(Res.string.shiny_rates_install_the_shiny_rate_code)) }
             }
             return@DetailPane
         }
-        SectionCard("Chance of a shiny", subtitle = "Wild encounters keep Cute Charm and Synchronize. A trainer's Pokémon keep their nature and gender.") {
+        SectionCard(stringResource(Res.string.shiny_rates_chance_of_a_shiny), subtitle = stringResource(Res.string.shiny_rates_wild_encounters_keep_cute_charm_an)) {
             @Composable fun rateRow(label: String, tag: String, value: Int, put: (ShinyRates, Int) -> ShinyRates) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     NumberField(label, ShinyRates.toBasisPoints(value), 0..10000, { v -> model.set { put(it, ShinyRates.fromBasisPoints(v)) } }, Modifier.width(240.dp), tag = tag)
                     Text("%.2f %%".format(ShinyRates.percent(value)), style = MaterialTheme.typography.bodyMedium)
                 }
             }
-            rateRow("Wild encounters (grass, water, rods, caves)", "Shiny wild", rates.wild) { r, v -> r.copy(wild = v) }
-            rateRow("Static battles (Lugia, Ho-Oh, Snorlax, legendaries, ...)", "Shiny scripted", rates.scripted) { r, v -> r.copy(scripted = v) }
-            rateRow("Gift Pokémon and eggs", "Shiny gift", rates.gift) { r, v -> r.copy(gift = v) }
-            rateRow("Trainers' Pokémon", "Shiny trainer", rates.trainer) { r, v -> r.copy(trainer = v) }
+            rateRow(stringResource(Res.string.shiny_rates_wild_encounters_grass_water_rods_c), "Shiny wild", rates.wild) { r, v -> r.copy(wild = v) }
+            rateRow(stringResource(Res.string.shiny_rates_static_battles_lugia_ho_oh_snorlax), "Shiny scripted", rates.scripted) { r, v -> r.copy(scripted = v) }
+            rateRow(stringResource(Res.string.shiny_rates_gift_pok_mon_and_eggs), "Shiny gift", rates.gift) { r, v -> r.copy(gift = v) }
+            rateRow(stringResource(Res.string.shiny_rates_trainers_pok_mon), "Shiny trainer", rates.trainer) { r, v -> r.copy(trainer = v) }
         }
     }
 }

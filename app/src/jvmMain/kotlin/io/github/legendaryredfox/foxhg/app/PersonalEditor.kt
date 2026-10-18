@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,7 +43,7 @@ fun PersonalEditor(model: PersonalEditorModel, modifier: Modifier = Modifier) {
             selected = model.selectedIndex,
             search = model.search,
             onSearch = { model.search = it },
-            placeholder = "Search species…",
+            placeholder = stringResource(Res.string.personal_search_species),
             label = model::label,
             onSelect = model::select,
             isEdited = model::isEdited,
@@ -63,59 +65,59 @@ private fun Form(model: PersonalEditorModel, p: PersonalData) {
         PokemonPortraits(model.selectedIndex)
     })
 
-    SectionCard("Base stats", subtitle = "Total ${p.baseStatTotal}") {
-        StatRow("HP", p.baseHp) { v -> model.update { it.copy(baseHp = v) } }
-        StatRow("Attack", p.baseAttack) { v -> model.update { it.copy(baseAttack = v) } }
-        StatRow("Defense", p.baseDefense) { v -> model.update { it.copy(baseDefense = v) } }
-        StatRow("Sp. Atk", p.baseSpAttack) { v -> model.update { it.copy(baseSpAttack = v) } }
-        StatRow("Sp. Def", p.baseSpDefense) { v -> model.update { it.copy(baseSpDefense = v) } }
-        StatRow("Speed", p.baseSpeed) { v -> model.update { it.copy(baseSpeed = v) } }
+    SectionCard(stringResource(Res.string.personal_base_stats), subtitle = stringResource(Res.string.personal_total_x, p.baseStatTotal)) {
+        StatRow(stringResource(Res.string.personal_hp), p.baseHp) { v -> model.update { it.copy(baseHp = v) } }
+        StatRow(stringResource(Res.string.personal_attack), p.baseAttack) { v -> model.update { it.copy(baseAttack = v) } }
+        StatRow(stringResource(Res.string.personal_defense), p.baseDefense) { v -> model.update { it.copy(baseDefense = v) } }
+        StatRow(stringResource(Res.string.personal_sp_atk), p.baseSpAttack) { v -> model.update { it.copy(baseSpAttack = v) } }
+        StatRow(stringResource(Res.string.personal_sp_def), p.baseSpDefense) { v -> model.update { it.copy(baseSpDefense = v) } }
+        StatRow(stringResource(Res.string.personal_speed), p.baseSpeed) { v -> model.update { it.copy(baseSpeed = v) } }
     }
 
-    SectionCard("Types and abilities") {
+    SectionCard(stringResource(Res.string.personal_types_and_abilities)) {
         FieldFlow {
-            PickerField("Type 1", p.type1, types, { v -> model.update { it.copy(type1 = v) } })
-            PickerField("Type 2", p.type2, types, { v -> model.update { it.copy(type2 = v) } })
-            PickerField("Ability 1", p.ability1, abilities, { v -> model.update { it.copy(ability1 = v) } })
-            PickerField("Ability 2", p.ability2, abilities, { v -> model.update { it.copy(ability2 = v) } })
+            PickerField(stringResource(Res.string.personal_type_1), p.type1, types, { v -> model.update { it.copy(type1 = v) } })
+            PickerField(stringResource(Res.string.personal_type_2), p.type2, types, { v -> model.update { it.copy(type2 = v) } })
+            PickerField(stringResource(Res.string.personal_ability_1), p.ability1, abilities, { v -> model.update { it.copy(ability1 = v) } })
+            PickerField(stringResource(Res.string.personal_ability_2), p.ability2, abilities, { v -> model.update { it.copy(ability2 = v) } })
         }
     }
 
-    SectionCard("Catching and growth") {
+    SectionCard(stringResource(Res.string.personal_catching_and_growth)) {
         FieldFlow {
-            NumberField("Catch rate", p.catchRate, 0..255, { v -> model.update { it.copy(catchRate = v) } })
-            NumberField("Base EXP", p.baseExp, 0..255, { v -> model.update { it.copy(baseExp = v) } })
-            NumberField("Friendship", p.baseFriendship, 0..255, { v -> model.update { it.copy(baseFriendship = v) } })
-            NumberField("Safari flee", p.safariFleeRate, 0..255, { v -> model.update { it.copy(safariFleeRate = v) } })
-            NumberField("Hatch cycles", p.hatchCycles, 0..255, { v -> model.update { it.copy(hatchCycles = v) } })
-            NumberField("Gender (255 none)", p.genderRatio, 0..255, { v -> model.update { it.copy(genderRatio = v) } }, Modifier.width(140.dp))
+            NumberField(stringResource(Res.string.personal_catch_rate), p.catchRate, 0..255, { v -> model.update { it.copy(catchRate = v) } })
+            NumberField(stringResource(Res.string.personal_base_exp), p.baseExp, 0..255, { v -> model.update { it.copy(baseExp = v) } })
+            NumberField(stringResource(Res.string.personal_friendship), p.baseFriendship, 0..255, { v -> model.update { it.copy(baseFriendship = v) } })
+            NumberField(stringResource(Res.string.personal_safari_flee), p.safariFleeRate, 0..255, { v -> model.update { it.copy(safariFleeRate = v) } })
+            NumberField(stringResource(Res.string.personal_hatch_cycles), p.hatchCycles, 0..255, { v -> model.update { it.copy(hatchCycles = v) } })
+            NumberField(stringResource(Res.string.personal_gender_255_none), p.genderRatio, 0..255, { v -> model.update { it.copy(genderRatio = v) } }, Modifier.width(140.dp))
         }
         FieldFlow {
-            PickerField("Growth rate", p.growthRate, GROWTH_RATES, { v -> model.update { it.copy(growthRate = v) } })
-            PickerField("Egg group 1", p.eggGroup1, EGG_GROUPS, { v -> model.update { it.copy(eggGroup1 = v) } })
-            PickerField("Egg group 2", p.eggGroup2, EGG_GROUPS, { v -> model.update { it.copy(eggGroup2 = v) } })
-        }
-    }
-
-    SectionCard("EV yield", subtitle = "Effort points given when this Pokémon is defeated (0–3 each)") {
-        FieldFlow {
-            NumberField("HP", p.evHp, 0..3, { v -> model.update { it.copy(evHp = v) } }, Modifier.width(70.dp))
-            NumberField("Atk", p.evAttack, 0..3, { v -> model.update { it.copy(evAttack = v) } }, Modifier.width(70.dp))
-            NumberField("Def", p.evDefense, 0..3, { v -> model.update { it.copy(evDefense = v) } }, Modifier.width(70.dp))
-            NumberField("SpA", p.evSpAttack, 0..3, { v -> model.update { it.copy(evSpAttack = v) } }, Modifier.width(70.dp))
-            NumberField("SpD", p.evSpDefense, 0..3, { v -> model.update { it.copy(evSpDefense = v) } }, Modifier.width(70.dp))
-            NumberField("Spe", p.evSpeed, 0..3, { v -> model.update { it.copy(evSpeed = v) } }, Modifier.width(70.dp))
+            PickerField(stringResource(Res.string.personal_growth_rate), p.growthRate, GROWTH_RATES, { v -> model.update { it.copy(growthRate = v) } })
+            PickerField(stringResource(Res.string.personal_egg_group_1), p.eggGroup1, EGG_GROUPS, { v -> model.update { it.copy(eggGroup1 = v) } })
+            PickerField(stringResource(Res.string.personal_egg_group_2), p.eggGroup2, EGG_GROUPS, { v -> model.update { it.copy(eggGroup2 = v) } })
         }
     }
 
-    SectionCard("Held items in the wild") {
+    SectionCard(stringResource(Res.string.personal_ev_yield), subtitle = stringResource(Res.string.personal_effort_points_given_when_this_pok)) {
+        FieldFlow {
+            NumberField(stringResource(Res.string.personal_hp), p.evHp, 0..3, { v -> model.update { it.copy(evHp = v) } }, Modifier.width(70.dp))
+            NumberField(stringResource(Res.string.personal_atk), p.evAttack, 0..3, { v -> model.update { it.copy(evAttack = v) } }, Modifier.width(70.dp))
+            NumberField(stringResource(Res.string.personal_def), p.evDefense, 0..3, { v -> model.update { it.copy(evDefense = v) } }, Modifier.width(70.dp))
+            NumberField(stringResource(Res.string.personal_spa), p.evSpAttack, 0..3, { v -> model.update { it.copy(evSpAttack = v) } }, Modifier.width(70.dp))
+            NumberField(stringResource(Res.string.personal_spd), p.evSpDefense, 0..3, { v -> model.update { it.copy(evSpDefense = v) } }, Modifier.width(70.dp))
+            NumberField(stringResource(Res.string.personal_spe), p.evSpeed, 0..3, { v -> model.update { it.copy(evSpeed = v) } }, Modifier.width(70.dp))
+        }
+    }
+
+    SectionCard(stringResource(Res.string.personal_held_items_in_the_wild)) {
         FieldFlow {
             ItemPicker("Common (50%)", p.heldItemCommon, items, { v -> model.update { it.copy(heldItemCommon = v) } }, Modifier.width(240.dp))
             ItemPicker("Rare (5%)", p.heldItemRare, items, { v -> model.update { it.copy(heldItemRare = v) } }, Modifier.width(240.dp))
         }
     }
 
-    SectionCard("TM / HM compatibility") {
+    SectionCard(stringResource(Res.string.personal_tm_hm_compatibility)) {
         @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
         androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             for (index in 0 until 100) {

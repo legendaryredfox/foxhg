@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -45,7 +47,7 @@ fun EggMoveEditor(model: RecordEditorModel<EggMoves>, modifier: Modifier = Modif
             selected = species,
             search = search,
             onSearch = { search = it },
-            placeholder = "Search…",
+            placeholder = stringResource(Res.string.egg_move_search),
             label = label,
             onSelect = { species = it },
             isEdited = { false },
@@ -57,7 +59,7 @@ fun EggMoveEditor(model: RecordEditorModel<EggMoves>, modifier: Modifier = Modif
             val list = eggs.movesOf(species)
             EditorHeader(species.toString(), nameOf(label(species)), trailing = { PokemonPortraits(species) })
             SectionCard(
-                "Egg moves",
+                stringResource(Res.string.editor_egg_moves),
                 subtitle = if (eggs.overLimit) "Over the limit: the game only finds species whose header is within the first ${EggMoves.SCAN_LIMIT} words" else "Only moves the parents can pass down appear here",
                 actions = {
                     Chip("${list.size} / ${EggMoves.MAX_PER_SPECIES}", emphasis = list.size > EggMoves.MAX_PER_SPECIES || eggs.overLimit)
@@ -73,14 +75,14 @@ fun EggMoveEditor(model: RecordEditorModel<EggMoves>, modifier: Modifier = Modif
                     )
                 },
             ) {
-                if (list.isEmpty()) Text("No egg moves.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (list.isEmpty()) Text(stringResource(Res.string.egg_move_no_egg_moves), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 list.forEachIndexed { i, move ->
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
-                        PickerField("Move", move, moves, { v -> model.update { e -> e.withMoves(species, list.toMutableList().also { it[i] = v }) } }, Modifier.width(260.dp))
-                        TextButton(onClick = { model.update { e -> e.withMoves(species, list.filterIndexed { k, _ -> k != i }) } }) { Text("Remove") }
+                        PickerField(stringResource(Res.string.learnset_move), move, moves, { v -> model.update { e -> e.withMoves(species, list.toMutableList().also { it[i] = v }) } }, Modifier.width(260.dp))
+                        TextButton(onClick = { model.update { e -> e.withMoves(species, list.filterIndexed { k, _ -> k != i }) } }) { Text(stringResource(Res.string.learnset_remove)) }
                     }
                 }
-                Button(onClick = { model.update { e -> e.withMoves(species, list + 1) } }) { Text("Add move") }
+                Button(onClick = { model.update { e -> e.withMoves(species, list + 1) } }) { Text(stringResource(Res.string.learnset_add_move)) }
             }
         }
     }

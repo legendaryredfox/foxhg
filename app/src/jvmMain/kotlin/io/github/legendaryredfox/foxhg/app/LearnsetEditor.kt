@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
@@ -39,26 +41,26 @@ fun LearnsetEditor(model: RecordEditorModel<Learnset>, modifier: Modifier = Modi
         val moves = model.names?.moves ?: emptyList()
         EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = { PokemonPortraits(model.selectedIndex) })
         SectionCard(
-            "Level-up moves",
+            stringResource(Res.string.learnset_level_up_moves),
             subtitle = if (learnset.overLimit) "Over the limit: the game reads only the first ${Learnset.MAX_ENTRIES}" else "Learned in this order as the level is reached",
             actions = {
                 Chip("${learnset.entries.size} / ${Learnset.MAX_ENTRIES}", emphasis = learnset.overLimit)
-                OutlinedButton(onClick = { model.update { it.sorted() } }) { Text("Sort by level") }
+                OutlinedButton(onClick = { model.update { it.sorted() } }) { Text(stringResource(Res.string.learnset_sort_by_level)) }
             },
         ) {
             if (learnset.entries.isEmpty()) {
-                Text("No level-up moves.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(Res.string.learnset_no_level_up_moves), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             learnset.entries.forEachIndexed { i, entry ->
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
-                    NumberField("Level", entry.level, 1..100, { v -> model.update { l -> l.replaceAt(i, entry.copy(level = v)) } }, Modifier.width(80.dp))
-                    PickerField("Move", entry.move, moves, { v -> model.update { l -> l.replaceAt(i, entry.copy(move = v)) } }, Modifier.width(260.dp))
-                    TextButton(onClick = { model.update { l -> l.copy(entries = l.entries.filterIndexed { k, _ -> k != i }) } }) { Text("Remove") }
+                    NumberField(stringResource(Res.string.learnset_level), entry.level, 1..100, { v -> model.update { l -> l.replaceAt(i, entry.copy(level = v)) } }, Modifier.width(80.dp))
+                    PickerField(stringResource(Res.string.learnset_move), entry.move, moves, { v -> model.update { l -> l.replaceAt(i, entry.copy(move = v)) } }, Modifier.width(260.dp))
+                    TextButton(onClick = { model.update { l -> l.copy(entries = l.entries.filterIndexed { k, _ -> k != i }) } }) { Text(stringResource(Res.string.learnset_remove)) }
                 }
             }
             Button(onClick = {
                 model.update { l -> l.copy(entries = l.entries + LearnsetEntry(move = 1, level = l.entries.lastOrNull()?.level ?: 1)) }
-            }) { Text("Add move") }
+            }) { Text(stringResource(Res.string.learnset_add_move)) }
         }
         BulkTools(model)
     }
@@ -81,18 +83,18 @@ private fun BulkTools(model: RecordEditorModel<Learnset>) {
         message = "$verb ${plural(result.changed, "species")}" + if (result.skipped > 0) ", left ${result.skipped} alone (move already there, not known, or the list is full)" else ""
     }
     SectionCard(
-        "Bulk tools",
+        stringResource(Res.string.learnset_bulk_tools),
         subtitle = "Apply to the ${plural(shown.size, "species")} shown in the list: search to narrow it. Teaching skips a species that knows the move or already has ${Learnset.MAX_ENTRIES} moves",
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
-            PickerField("Bulk move", move, moves, { move = it }, Modifier.width(240.dp))
-            NumberField("Level", level, 1..100, { level = it }, Modifier.width(80.dp), tag = "Bulk level")
-            OutlinedButton(onClick = { apply("Taught it to") { LearnsetBulk.teach(it, shown, move, level) } }, modifier = Modifier.testTag("bulk-teach")) { Text("Teach") }
-            OutlinedButton(onClick = { apply("Took it from") { LearnsetBulk.forget(it, shown, move) } }, modifier = Modifier.testTag("bulk-forget")) { Text("Forget") }
+            PickerField(stringResource(Res.string.learnset_bulk_move), move, moves, { move = it }, Modifier.width(240.dp))
+            NumberField(stringResource(Res.string.learnset_level), level, 1..100, { level = it }, Modifier.width(80.dp), tag = "Bulk level")
+            OutlinedButton(onClick = { apply("Taught it to") { LearnsetBulk.teach(it, shown, move, level) } }, modifier = Modifier.testTag("bulk-teach")) { Text(stringResource(Res.string.learnset_teach)) }
+            OutlinedButton(onClick = { apply("Took it from") { LearnsetBulk.forget(it, shown, move) } }, modifier = Modifier.testTag("bulk-forget")) { Text(stringResource(Res.string.learnset_forget)) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
-            PickerField("Replace with", replacement, moves, { replacement = it }, Modifier.width(240.dp))
-            OutlinedButton(onClick = { apply("Replaced it in") { LearnsetBulk.replace(it, shown, move, replacement) } }, modifier = Modifier.testTag("bulk-replace")) { Text("Replace the move above") }
+            PickerField(stringResource(Res.string.learnset_replace_with), replacement, moves, { replacement = it }, Modifier.width(240.dp))
+            OutlinedButton(onClick = { apply("Replaced it in") { LearnsetBulk.replace(it, shown, move, replacement) } }, modifier = Modifier.testTag("bulk-replace")) { Text(stringResource(Res.string.learnset_replace_the_move_above)) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedButton(onClick = {
@@ -100,7 +102,7 @@ private fun BulkTools(model: RecordEditorModel<Learnset>) {
                 runCatching {
                     Files.writeString(path, LearnsetBulk.export(model.records, { model.names?.species?.getOrNull(it) ?: "" }, { moves.getOrNull(it) ?: "" }))
                 }.onSuccess { failed = false; message = "Exported to ${path.fileName}" }.onFailure { failed = true; message = "Export failed: ${it.message}" }
-            }) { Text("Export CSV") }
+            }) { Text(stringResource(Res.string.learnset_export_csv)) }
             OutlinedButton(onClick = {
                 val path = pickFile("Import learnsets", FileDialog.LOAD, ".csv") ?: return@OutlinedButton
                 val text = runCatching { Files.readString(path) }.getOrElse { failed = true; message = "Import failed: ${it.message}"; return@OutlinedButton }
@@ -108,7 +110,7 @@ private fun BulkTools(model: RecordEditorModel<Learnset>) {
                     is FoxResult.Ok -> { model.updateAll { result.value }; failed = false; message = "Imported ${path.fileName}: the species in the file now have its moves" }
                     is FoxResult.Err -> { failed = true; message = "Import rejected: ${result.message}" }
                 }
-            }) { Text("Import CSV") }
+            }) { Text(stringResource(Res.string.learnset_import_csv)) }
         }
         message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant) }
     }

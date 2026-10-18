@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
@@ -72,9 +74,9 @@ fun RoamerEditor(model: RoamerEditorModel, modifier: Modifier = Modifier) {
     val roamers = model.roamers ?: return
     val species = model.names?.species?.take(Roamers.MAX_SPECIES + 1) ?: emptyList()
     DetailPane(modifier) {
-        Text("Roaming Pokémon", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(Res.string.roamer_roaming_pok_mon), style = MaterialTheme.typography.headlineSmall)
         SectionCard(
-            "The four roamers",
+            stringResource(Res.string.roamer_the_four_roamers),
             subtitle = "The script command CreateRoamer only says which of the four starts (0 to 3); the species and level are in the game's code. " +
                 "Raikou and Entei take species 1 to 255, Latias a number that is a byte times a power of two (for example 380), Latios any species",
         ) {
@@ -83,16 +85,16 @@ fun RoamerEditor(model: RoamerEditorModel, modifier: Modifier = Modifier) {
                     androidx.compose.foundation.layout.Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         PokemonFront(roamers.roamers[slot].species, 72.dp)
                         SpeciesPicker(Roamers.NAMES[slot] + " (roamer $slot)", roamers.roamers[slot].species, species, { v -> if (v in 1..Roamers.MAX_SPECIES) model.setSpecies(slot, v) }, Modifier.width(210.dp))
-                        NumberField("Level", roamers.roamers[slot].level, 1..100, { v -> model.setLevel(slot, v) }, Modifier.width(100.dp), tag = "${Roamers.NAMES[slot]} level")
+                        NumberField(stringResource(Res.string.learnset_level), roamers.roamers[slot].level, 1..100, { v -> model.setLevel(slot, v) }, Modifier.width(100.dp), tag = "${Roamers.NAMES[slot]} level")
                     }
                 }
             }
             model.message?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("roamer-message")) }
             Text(
-                "A roamer's route and the way it flees depend on its species in the code, and the scripts that hide the overworld legendaries are not changed.",
+                stringResource(Res.string.roamer_a_roamer_s_route_and_the_way_it_fl),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            OutlinedButton(onClick = model::restoreVanilla, modifier = Modifier.testTag("roamer-restore")) { Text("Restore the original four") }
+            OutlinedButton(onClick = model::restoreVanilla, modifier = Modifier.testTag("roamer-restore")) { Text(stringResource(Res.string.roamer_restore_the_original_four)) }
         }
     }
 }

@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -63,25 +65,25 @@ fun GrowthEditor(model: GrowthEditorModel, modifier: Modifier = Modifier) {
     val curve = table.records[model.rate]
     val problems = curve.problems()
     DetailPane(modifier.padding(16.dp)) {
-        Text("Growth rates", style = MaterialTheme.typography.headlineSmall)
-        SectionCard("Growth rate", subtitle = "Which species use which rate is set in Personal data. The last two rates are unused by the game and equal Medium Fast") {
+        Text(stringResource(Res.string.editor_growth), style = MaterialTheme.typography.headlineSmall)
+        SectionCard(stringResource(Res.string.personal_growth_rate), subtitle = stringResource(Res.string.growth_which_species_use_which_rate_is_se)) {
             @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
             FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 GrowthCurve.NAMES.forEachIndexed { r, name -> ToggleChip(name, model.rate == r, { model.rate = r }) }
             }
-            ToggleChip("Shift later levels", model.shiftLater, { model.shiftLater = it })
+            ToggleChip(stringResource(Res.string.growth_shift_later_levels), model.shiftLater, { model.shiftLater = it })
         }
         SectionCard(
-            "Experience by level",
-            subtitle = "Total experience needed to be at each level. Level 1 always needs 0. Changing a level moves the later ones too unless the switch above is off",
+            stringResource(Res.string.growth_experience_by_level),
+            subtitle = stringResource(Res.string.growth_total_experience_needed_to_be_at_e),
         ) {
             for (level in 2..GrowthCurve.LEVELS) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
-                    NumberField("Level $level", curve.exp[level], 0..99_999_999, { v -> model.setLevel(level, v) }, Modifier.width(150.dp), tag = "Level $level")
-                    if (level < GrowthCurve.LEVELS) Chip("+${curve.toNext(level)} to level ${level + 1}", emphasis = (level + 1) in problems)
+                    NumberField(stringResource(Res.string.growth_level_x, level), curve.exp[level], 0..99_999_999, { v -> model.setLevel(level, v) }, Modifier.width(150.dp), tag = "Level $level")
+                    if (level < GrowthCurve.LEVELS) Chip(stringResource(Res.string.growth_x_to_level_x, curve.toNext(level), level + 1), emphasis = (level + 1) in problems)
                 }
             }
-            problems.forEach { Text("Level $it needs less experience than level ${it - 1}", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            problems.forEach { Text(stringResource(Res.string.growth_level_x_needs_less_experience_than, it, it - 1), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         }
     }
 }

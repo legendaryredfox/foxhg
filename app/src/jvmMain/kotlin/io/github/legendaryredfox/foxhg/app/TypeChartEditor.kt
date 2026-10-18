@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -75,9 +77,9 @@ fun TypeChartEditor(model: TypeChartEditorModel, modifier: Modifier = Modifier) 
     }
     val chart = model.chart ?: return
     DetailPane(modifier.padding(16.dp)) {
-        Text("Type chart", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(Res.string.editor_type_chart), style = MaterialTheme.typography.headlineSmall)
         SectionCard(
-            "Effectiveness",
+            stringResource(Res.string.type_chart_effectiveness),
             subtitle = "Rows attack, columns defend. Click a cell to cycle 1x, 2x, 1/2x, 0x. The table has room for ${HgssLayout.TYPE_CHART_SLOTS - 1} non-neutral pairs (${chart.slotsUsed - 1} used): " +
                 "setting a pair back to 1x frees a slot. Immunities of Ghost are the ones Foresight, Odd-Eye and Scrappy switch off",
         ) {
@@ -92,9 +94,9 @@ fun TypeChartEditor(model: TypeChartEditorModel, modifier: Modifier = Modifier) 
             }
             model.message?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Chip("2x super effective", emphasis = true)
-                Chip("1/2x not very effective")
-                Chip("0x no effect")
+                Chip(stringResource(Res.string.type_chart_2x_super_effective), emphasis = true)
+                Chip(stringResource(Res.string.type_chart_1_2x_not_very_effective))
+                Chip(stringResource(Res.string.type_chart_0x_no_effect))
             }
         }
     }

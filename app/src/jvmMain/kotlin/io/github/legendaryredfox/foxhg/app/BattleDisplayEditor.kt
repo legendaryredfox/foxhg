@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
@@ -97,7 +99,7 @@ fun BattleDisplayEditor(model: BattleDisplayEditorModel, modifier: Modifier = Mo
             selected = model.selectedIndex,
             search = model.search,
             onSearch = { model.search = it },
-            placeholder = "Search species…",
+            placeholder = stringResource(Res.string.personal_search_species),
             label = model::label,
             onSelect = model::select,
             isEdited = model::isEdited,
@@ -110,20 +112,20 @@ fun BattleDisplayEditor(model: BattleDisplayEditorModel, modifier: Modifier = Mo
 @Composable
 private fun Form(model: BattleDisplayEditorModel, d: BattleDisplay) {
     EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = { PokemonPortraits(model.selectedIndex) })
-    SectionCard("Sprite and shadow", subtitle = "Vertical offset of the battle sprite, and the position and size of its shadow. Offsets are signed") {
+    SectionCard(stringResource(Res.string.battle_display_sprite_and_shadow), subtitle = stringResource(Res.string.battle_display_vertical_offset_of_the_battle_spri)) {
         FieldFlow {
-            NumberField("Sprite Y", d.spriteY, -128..127, { v -> model.update { it.copy(spriteY = v) } }, Modifier.width(110.dp))
-            NumberField("Shadow X", d.shadowX, -128..127, { v -> model.update { it.copy(shadowX = v) } }, Modifier.width(110.dp))
-            NumberField("Shadow size", d.shadowSize, 0..255, { v -> model.update { it.copy(shadowSize = v) } }, Modifier.width(110.dp))
-            NumberField("Movement (raw)", d.movement, 0..255, { v -> model.update { it.copy(movement = v) } }, Modifier.width(130.dp))
+            NumberField(stringResource(Res.string.battle_display_sprite_y), d.spriteY, -128..127, { v -> model.update { it.copy(spriteY = v) } }, Modifier.width(110.dp))
+            NumberField(stringResource(Res.string.battle_display_shadow_x), d.shadowX, -128..127, { v -> model.update { it.copy(shadowX = v) } }, Modifier.width(110.dp))
+            NumberField(stringResource(Res.string.battle_display_shadow_size), d.shadowSize, 0..255, { v -> model.update { it.copy(shadowSize = v) } }, Modifier.width(110.dp))
+            NumberField(stringResource(Res.string.battle_display_movement_raw), d.movement, 0..255, { v -> model.update { it.copy(movement = v) } }, Modifier.width(130.dp))
         }
     }
-    SectionCard("Sprite heights", subtitle = "0 to 255, per battle sprite. A slot with no sprite (a species with one gender) cannot be edited") {
+    SectionCard(stringResource(Res.string.battle_display_sprite_heights), subtitle = stringResource(Res.string.battle_display_0_to_255_per_battle_sprite_a_slot)) {
         FieldFlow {
             BattleDisplay.HEIGHT_NAMES.forEachIndexed { slot, name ->
                 val height = d.heights[slot]
                 if (height == null) {
-                    Text("$name: no sprite", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(Res.string.battle_display_x_no_sprite, name), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 } else {
                     NumberField(name, height, 0..255, { v -> model.update { it.copy(heights = it.heights.toMutableList().also { list -> list[slot] = v }) } }, Modifier.width(130.dp))
                 }
