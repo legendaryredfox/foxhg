@@ -303,6 +303,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.ITEMS -> Loading(project, "items", { model.recordEditor(EditorKind.ITEMS, project, ItemData.SPEC, RecordEditorModel.itemLabel(project.names), 1) }) { editor ->
             ItemEditor(editor, modifier.padding(16.dp))
         }
+        selected == EditorKind.TOWN_MAP -> Loading(project, "town map", { TownMapEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+            TownMapEditor(editor, modifier)
+        }
         selected == EditorKind.GROUND_ITEMS -> Loading(project, "ground items", { GroundItemEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             GroundItemEditor(editor, modifier.padding(16.dp))
         }

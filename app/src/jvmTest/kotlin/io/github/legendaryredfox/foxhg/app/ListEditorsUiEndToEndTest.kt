@@ -198,6 +198,18 @@ class ListEditorsUiEndToEndTest {
     }
 
     @Test
+    fun editingATownOnTheTownMapScreenWritesOverlay101() = withHeartGoldApp { _, project ->
+        val table = { (io.github.legendaryredfox.foxhg.core.data.townmap.TownMap.load(project) as FoxResult.Ok).value }
+        assertEquals(0x20, table().spots[0].redX)
+        open("Town Map")
+        onNodeWithTag("number:Red X").typeNumber(33)
+        waitForIdle()
+        assertEquals(33, table().spots[0].redX, "the red X went into overlay 101")
+        assertEquals(0x0B, table().spots[0].redY)
+        assertTrue(project.isDirty)
+    }
+
+    @Test
     fun applyingToolboxPatchesOnTheirScreen() = withHeartGoldApp { model, project ->
         open("ROM toolbox")
         onNodeWithTag("apply:dynamic-camera").assertIsNotEnabled()

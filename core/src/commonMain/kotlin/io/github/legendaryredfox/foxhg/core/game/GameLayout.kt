@@ -64,6 +64,13 @@ object HgssLayout {
     const val FLY_TABLE_ARM9 = 0xF9E80
     const val FLY_TABLE_ENTRIES = 30
 
+    /** The PokeGear map (Town Map) tables live in overlay 101: [TOWN_MAP_SPOTS] visited-town entries of 14 bytes, [TOWN_MAP_SELECTIONS] selection entries of 16 bytes. */
+    const val TOWN_MAP_OVERLAY = 101
+    const val TOWN_MAP_SPOTS_OFFSET = 0x10274
+    const val TOWN_MAP_SPOTS = 27
+    const val TOWN_MAP_SELECTIONS_OFFSET = 0xFC32
+    const val TOWN_MAP_SELECTIONS = 100
+
     /**
      * The synthetic overlay: member 0 of this NARC, once the ARM9 expansion patch has run, is a code and data area that the ARM9 loads to
      * [SYNTHETIC_OVERLAY_ADDRESS] at start-up. [SYNTHETIC_OVERLAY_SIZE] bytes after the expansion.
