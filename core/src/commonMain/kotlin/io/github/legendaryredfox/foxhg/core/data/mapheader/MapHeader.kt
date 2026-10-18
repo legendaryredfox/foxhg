@@ -2,6 +2,8 @@ package io.github.legendaryredfox.foxhg.core.data.mapheader
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.arm9.Arm9
+import io.github.legendaryredfox.foxhg.core.data.csv.CsvColumn
+import io.github.legendaryredfox.foxhg.core.data.csv.RecordCsv
 import io.github.legendaryredfox.foxhg.core.nds.Game
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
@@ -56,6 +58,8 @@ data class MapHeader(
     /** Seven permission bits, see [Permission]. */
     val permissions: Int get() = bits(flags32, 25, 7)
 
+    fun withCoordinateUnknown(v: Int): MapHeader = copy(coordinates = setBits(coordinates.toLong(), 0, 4, v).toInt())
+    fun withPermissions(v: Int): MapHeader = copy(flags32 = setBits(flags32, 25, 7, v))
     fun withWorldMap(x: Int, y: Int): MapHeader =
         copy(coordinates = setBits(setBits(coordinates.toLong(), 4, 6, x), 10, 6, y).toInt())
     fun withAreaIcon(v: Int): MapHeader = copy(areaProperties = (areaProperties and 0xF0) or (v and 0xF))
@@ -105,6 +109,37 @@ data class MapHeader(
     companion object {
         const val SIZE = 24
         const val NO_ENCOUNTERS = 0xFF
+
+        /**
+         * CSV columns for a table of headers: every field, with the packed words split into their bit fields so the file reads like the
+         * editor (the `id` column is the header number, `name` the location name). Together they cover every bit of the 24 bytes.
+         */
+        val CSV = RecordCsv(
+            listOf(
+                CsvColumn<MapHeader>("wild_encounter_file", 0..0xFF, { it.wildEncounterFile }, { r, v -> r.copy(wildEncounterFile = v) }),
+                CsvColumn("area_data", 0..0xFF, { it.areaData }, { r, v -> r.copy(areaData = v) }),
+                CsvColumn("matrix", 0..0xFFFF, { it.matrix }, { r, v -> r.copy(matrix = v) }),
+                CsvColumn("script", 0..0xFFFF, { it.script }, { r, v -> r.copy(script = v) }),
+                CsvColumn("level_script", 0..0xFFFF, { it.levelScript }, { r, v -> r.copy(levelScript = v) }),
+                CsvColumn("text_archive", 0..0xFFFF, { it.textArchive }, { r, v -> r.copy(textArchive = v) }),
+                CsvColumn("music_day", 0..0xFFFF, { it.musicDay }, { r, v -> r.copy(musicDay = v) }),
+                CsvColumn("music_night", 0..0xFFFF, { it.musicNight }, { r, v -> r.copy(musicNight = v) }),
+                CsvColumn("event_file", 0..0xFFFF, { it.eventFile }, { r, v -> r.copy(eventFile = v) }),
+                CsvColumn("location_name", 0..0xFF, { it.locationName }, { r, v -> r.copy(locationName = v) }),
+                CsvColumn("area_icon", 0..15, { it.areaIcon }, { r, v -> r.withAreaIcon(v) }),
+                CsvColumn("mom_call_intro", 0..15, { it.momCallIntro }, { r, v -> r.withMomCallIntro(v) }),
+                CsvColumn("world_map_x", 0..63, { it.worldMapX }, { r, v -> r.withWorldMap(v, r.worldMapY) }),
+                CsvColumn("world_map_y", 0..63, { it.worldMapY }, { r, v -> r.withWorldMap(r.worldMapX, v) }),
+                CsvColumn("coordinate_unknown", 0..15, { it.coordinateUnknown }, { r, v -> r.withCoordinateUnknown(v) }),
+                CsvColumn("kanto", 0..1, { if (it.isKanto) 1 else 0 }, { r, v -> r.withKanto(v == 1) }),
+                CsvColumn("weather", 0..127, { it.weather }, { r, v -> r.withWeather(v) }),
+                CsvColumn("location_type", 0..15, { it.locationType }, { r, v -> r.withLocationType(v) }),
+                CsvColumn("camera", 0..63, { it.camera }, { r, v -> r.withCamera(v) }),
+                CsvColumn("follow_mode", 0..3, { it.followMode }, { r, v -> r.withFollowMode(v) }),
+                CsvColumn("battle_background", 0..31, { it.battleBackground }, { r, v -> r.withBattleBackground(v) }),
+                CsvColumn("permissions", 0..127, { it.permissions }, { r, v -> r.withPermissions(v) }),
+            ),
+        )
 
         fun parse(bytes: ByteArray, offset: Int): MapHeader = MapHeader(
             wildEncounterFile = bytes.u8(offset), areaData = bytes.u8(offset + 1), coordinates = bytes.u16(offset + 2),

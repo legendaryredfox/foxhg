@@ -71,6 +71,20 @@ class MapHeaderEditorModel(private val project: RomProject, private val onChange
         }
     }
 
+    /** Replaces the whole table (a CSV import) with one ARM9 write; a table that does not fit leaves everything as it was. */
+    fun updateAll(change: (List<MapHeader>) -> List<MapHeader>) {
+        val updated = change(headers)
+        if (updated == headers) return
+        when (val saved = MapHeaderTable.write(project, updated)) {
+            is FoxResult.Ok -> {
+                headers = updated
+                version++
+                onChanged()
+            }
+            is FoxResult.Err -> loadError = saved.message
+        }
+    }
+
     fun isEdited(index: Int): Boolean {
         version // subscribe
         return original.getOrNull(index)?.let { it != headers.getOrNull(index) } ?: false

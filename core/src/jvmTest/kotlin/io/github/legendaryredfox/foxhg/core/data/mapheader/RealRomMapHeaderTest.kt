@@ -55,4 +55,30 @@ class RealRomMapHeaderTest {
             assertEquals(headers.map { it.toBytes().toList() }, MapHeaderTable.original(project).map { it.toBytes().toList() }, "original() ignores the edit")
         }
     }
+
+    @Test
+    fun csvRoundTripsEveryHeaderAndAppliesAnEdit() {
+        if (!Files.exists(romPath)) {
+            println("SKIPPED: no ROM at ${romPath.toAbsolutePath()}")
+            return
+        }
+        FileRomSource(romPath).use { source ->
+            val project = RomProject.open(source).ok()
+            val names = project.names!!
+            val headers = MapHeaderTable.load(project).ok()
+            val csv = MapHeader.CSV.export(headers) { names.locations.getOrElse(headers[it].locationName) { "" } }
+            val back = MapHeader.CSV.import(csv, headers).ok()
+            assertEquals(headers.map { it.toBytes().toList() }, back.map { it.toBytes().toList() }, "export then import keeps every byte of every header")
+
+            val lines = csv.split("\r\n").filter { it.isNotEmpty() }.toMutableList()
+            val cols = lines[0].split(",")
+            val weather = cols.indexOf("weather")
+            val row = lines[3].split(",").toMutableList().also { it[weather] = "5" }
+            lines[3] = row.joinToString(",")
+            val edited = MapHeader.CSV.import(lines.joinToString("\r\n"), headers).ok()
+            assertEquals(5, edited[2].weather)
+            assertEquals(headers[2].withWeather(5).toBytes().toList(), edited[2].toBytes().toList(), "only the weather bits change")
+            assertTrue(MapHeader.CSV.import(csv.replaceFirst(",weather", ",nonsense"), headers) is FoxResult.Err, "an unknown column rejects the file")
+        }
+    }
 }

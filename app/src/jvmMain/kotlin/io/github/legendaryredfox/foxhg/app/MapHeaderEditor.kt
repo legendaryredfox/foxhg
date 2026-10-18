@@ -50,6 +50,7 @@ fun MapHeaderEditor(model: MapHeaderEditorModel, modifier: Modifier = Modifier, 
 private fun Detail(model: MapHeaderEditorModel, h: MapHeader, onOpen: (EditorKind, Int) -> Unit) {
     val locations = model.names?.locations ?: emptyList()
     EditorHeader(model.selectedIndex.toString(), model.locationName(model.selectedIndex), trailing = {
+        CsvButtons(MapHeader.CSV, "map headers", { model.all }, { model.locationName(it) }) { change -> model.updateAll(change) }
         AsyncMapPicture(model.selectedIndex, 96.dp) { model.pictures.ofHeader(model.selectedIndex) }
         if (h.wildEncounterFile != MapHeader.NO_ENCOUNTERS) Chip("Wild: ${nameOf(model.encounterAreas.label(h.wildEncounterFile))}")
     })
