@@ -1,5 +1,8 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
@@ -62,22 +65,21 @@ fun HeadbuttEditor(model: HeadbuttEditorModel, modifier: Modifier = Modifier) {
     ) { file ->
         val index = model.files.selectedIndex
         EditorHeader(index.toString(), nameOf(model.files.label(index)), trailing = {
-            Chip(if (file.hasTrees) plural(model.treeCount(file), "tree group") else "No trees")
+            Chip(if (file.hasTrees) plural(model.treeCount(file), "tree group") else stringResource(Res.string.headbutt_no_trees))
         })
         if (!file.hasTrees) {
             Text(
-                "This map has no Headbutt trees, so its tables are never used. Add a tree group to give it some. " +
-                    "The tree tile must also have the Headbutt type (6) and be blocked in the Maps editor.",
+                stringResource(Res.string.headbutt_this_map_has_no_headbutt_trees_so),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        TableCard("Common (A)", "Most normal trees use this table", "Common", file.common, species) { slot, change -> model.setNormal(slot, change) }
-        TableCard("Rare (B)", "Some normal trees use this one instead, decided by the player's Trainer ID", "Rare", file.rare, species) { slot, change ->
+        TableCard(stringResource(Res.string.headbutt_common_a), stringResource(Res.string.headbutt_most_normal_trees_use_this_table), "Common", file.common, species) { slot, change -> model.setNormal(slot, change) }
+        TableCard(stringResource(Res.string.headbutt_rare_b), stringResource(Res.string.headbutt_some_normal_trees_use_this_one_ins), "Rare", file.rare, species) { slot, change ->
             model.setNormal(HeadbuttFile.TABLE_SLOTS + slot, change)
         }
-        TableCard("Special (C)", "Trees in the special groups always use this table", "Special", file.special, species) { slot, change -> model.setSpecial(slot, change) }
-        GroupsCard("Normal trees", "Normal", false, file.normalGroups, model)
-        GroupsCard("Special trees", "Special", true, file.specialGroups, model)
+        TableCard(stringResource(Res.string.headbutt_special_c), stringResource(Res.string.headbutt_trees_in_the_special_groups_always), "Special", file.special, species) { slot, change -> model.setSpecial(slot, change) }
+        GroupsCard(stringResource(Res.string.headbutt_normal_trees), "Normal", false, file.normalGroups, model)
+        GroupsCard(stringResource(Res.string.headbutt_special_trees), "Special", true, file.specialGroups, model)
     }
 }
 
@@ -90,12 +92,12 @@ private fun TableCard(
     species: List<String>,
     set: (Int, (HeadbuttEncounter) -> HeadbuttEncounter) -> Unit,
 ) {
-    SectionCard(title, subtitle = "$subtitle. Species 0 is an empty slot; fill every slot if the map has trees") {
+    SectionCard(title, subtitle = stringResource(Res.string.headbutt_x_species_0_is_an_empty_slot_fill, subtitle)) {
         table.forEachIndexed { slot, e ->
             FieldFlow {
                 SpeciesPicker("$tag ${slot + 1}", e.species, species, { v -> set(slot) { it.copy(species = v) } }, Modifier.width(240.dp))
-                NumberField("Min level", e.minLevel, 0..100, { v -> set(slot) { it.copy(minLevel = v, maxLevel = maxOf(it.maxLevel, v)) } }, Modifier.width(90.dp), tag = "$tag ${slot + 1} min")
-                NumberField("Max level", e.maxLevel, 0..100, { v -> set(slot) { it.copy(maxLevel = v, minLevel = minOf(it.minLevel, v)) } }, Modifier.width(90.dp), tag = "$tag ${slot + 1} max")
+                NumberField(stringResource(Res.string.headbutt_min_level), e.minLevel, 0..100, { v -> set(slot) { it.copy(minLevel = v, maxLevel = maxOf(it.maxLevel, v)) } }, Modifier.width(90.dp), tag = "$tag ${slot + 1} min")
+                NumberField(stringResource(Res.string.headbutt_max_level), e.maxLevel, 0..100, { v -> set(slot) { it.copy(maxLevel = v, minLevel = minOf(it.minLevel, v)) } }, Modifier.width(90.dp), tag = "$tag ${slot + 1} max")
                 Chip("${HeadbuttFile.SLOT_CHANCE[slot]}%")
             }
         }
@@ -106,9 +108,9 @@ private fun TableCard(
 private fun GroupsCard(title: String, tag: String, special: Boolean, groups: List<HeadbuttTreeGroup>, model: HeadbuttEditorModel) {
     SectionCard(
         title,
-        subtitle = "${plural(groups.size, "group")}. A group is one tree, which can be headbutted from up to ${HeadbuttTreeGroup.SIZE} tiles. Coordinates are map-wide: matrix cell x 32 + tile in the map. 65535 x 65535 is unused",
+        subtitle = stringResource(Res.string.headbutt_x_a_group_is_one_tree_which_can_be, pluralStringResource(Res.plurals.plural_group, groups.size, groups.size), HeadbuttTreeGroup.SIZE),
         actions = {
-            Button(onClick = { model.addGroup(special) }, enabled = groups.size < HeadbuttEditorModel.MAX_GROUPS) { Text("Add tree") }
+            Button(onClick = { model.addGroup(special) }, enabled = groups.size < HeadbuttEditorModel.MAX_GROUPS) { Text(stringResource(Res.string.headbutt_add_tree)) }
         },
     ) {
         groups.forEachIndexed { g, group ->
@@ -118,14 +120,14 @@ private fun GroupsCard(title: String, tag: String, special: Boolean, groups: Lis
                     group.trees.firstOrNull { !it.isUnused }?.let { "Around ${it.x}, ${it.y}" } ?: "Empty group",
                     style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f),
                 )
-                TextButton(onClick = { model.removeGroup(special, g) }) { Text("Remove") }
+                TextButton(onClick = { model.removeGroup(special, g) }) { Text(stringResource(Res.string.learnset_remove)) }
             }
             group.trees.forEachIndexed { t, tree ->
                 FieldFlow {
-                    NumberField("X", tree.x, 0..0xFFFF, { v -> model.setTree(special, g, t, tree.copy(x = v)) }, Modifier.width(90.dp), tag = "$tag ${g + 1} tile ${t + 1} X")
-                    NumberField("Y", tree.y, 0..0xFFFF, { v -> model.setTree(special, g, t, tree.copy(y = v)) }, Modifier.width(90.dp), tag = "$tag ${g + 1} tile ${t + 1} Y")
+                    NumberField(stringResource(Res.string.headbutt_x), tree.x, 0..0xFFFF, { v -> model.setTree(special, g, t, tree.copy(x = v)) }, Modifier.width(90.dp), tag = "$tag ${g + 1} tile ${t + 1} X")
+                    NumberField(stringResource(Res.string.headbutt_y), tree.y, 0..0xFFFF, { v -> model.setTree(special, g, t, tree.copy(y = v)) }, Modifier.width(90.dp), tag = "$tag ${g + 1} tile ${t + 1} Y")
                     Text(
-                        if (tree.isUnused) "unused" else "matrix ${tree.x / HeadbuttTree.MAP_SIZE}, ${tree.y / HeadbuttTree.MAP_SIZE}  tile ${tree.x % HeadbuttTree.MAP_SIZE}, ${tree.y % HeadbuttTree.MAP_SIZE}",
+                        if (tree.isUnused) stringResource(Res.string.headbutt_unused) else stringResource(Res.string.headbutt_matrix_x_x_tile_x_x, tree.x / HeadbuttTree.MAP_SIZE, tree.y / HeadbuttTree.MAP_SIZE, tree.x % HeadbuttTree.MAP_SIZE, tree.y % HeadbuttTree.MAP_SIZE),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

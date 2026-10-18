@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,17 +49,17 @@ import io.github.legendaryredfox.foxhg.core.data.map.MapFile
 fun BuildingCard(model: MapEditorModel, map: MapFile) {
     val selected = model.selectedBuilding?.takeIf { it in map.buildings.indices }
     SectionCard(
-        "Buildings",
-        subtitle = "3D models placed on the map. Select one here or click it in the 3D view; Move here puts the selected building where you click the ground",
+        stringResource(Res.string.building_buildings),
+        subtitle = stringResource(Res.string.building_3d_models_placed_on_the_map_select),
         actions = { Chip(map.buildings.size.toString()) },
     ) {
         FieldFlow {
-            ToggleChip("Move here", model.moveBuildings, { model.moveBuildings = it }, Modifier.testTag("chip:Move here"))
-            OutlinedButton(onClick = { model.addBuilding(map.buildings.getOrNull(selected ?: -1)?.modelId?.toInt() ?: map.buildings.lastOrNull()?.modelId?.toInt() ?: 0, 0.5, 0.5) }) { Text("Add building") }
-            OutlinedButton(onClick = { selected?.let(model::duplicateBuilding) }, enabled = selected != null) { Text("Duplicate building") }
-            OutlinedButton(onClick = { selected?.let(model::removeBuilding) }, enabled = selected != null) { Text("Remove building") }
+            ToggleChip(stringResource(Res.string.building_move_here), model.moveBuildings, { model.moveBuildings = it }, Modifier.testTag("chip:Move here"))
+            OutlinedButton(onClick = { model.addBuilding(map.buildings.getOrNull(selected ?: -1)?.modelId?.toInt() ?: map.buildings.lastOrNull()?.modelId?.toInt() ?: 0, 0.5, 0.5) }) { Text(stringResource(Res.string.building_add_building)) }
+            OutlinedButton(onClick = { selected?.let(model::duplicateBuilding) }, enabled = selected != null) { Text(stringResource(Res.string.building_duplicate_building)) }
+            OutlinedButton(onClick = { selected?.let(model::removeBuilding) }, enabled = selected != null) { Text(stringResource(Res.string.building_remove_building)) }
         }
-        if (map.buildings.isEmpty()) Text("None.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (map.buildings.isEmpty()) Text(stringResource(Res.string.building_none), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         map.buildings.forEachIndexed { i, b ->
             Row(
                 Modifier.fillMaxWidth().testTag("building:$i")
@@ -75,22 +77,22 @@ fun BuildingCard(model: MapEditorModel, map: MapFile) {
             var browsing by remember(selected) { mutableStateOf(false) }
             FieldFlow {
                 BuildingPreview(model, b.modelId.toInt(), 72)
-                OutlinedButton(onClick = { browsing = !browsing }, modifier = Modifier.testTag("browse-models")) { Text(if (browsing) "Close models" else "Browse models") }
-                NumberField("Model", b.modelId.toInt(), 0..maxOf(1, model.pictures.buildingModelCount - 1), { v -> model.updateBuilding(selected) { it.copy(modelId = v.toLong()) } }, Modifier.width(100.dp))
-                DecimalField("X", b.x.value, -512.0..512.0, { v -> model.updateBuilding(selected) { it.copy(x = FixedPos.of(v)) } })
-                DecimalField("Height", b.y.value, -512.0..512.0, { v -> model.updateBuilding(selected) { it.copy(y = FixedPos.of(v)) } })
-                DecimalField("Z", b.z.value, -512.0..512.0, { v -> model.updateBuilding(selected) { it.copy(z = FixedPos.of(v)) } })
+                OutlinedButton(onClick = { browsing = !browsing }, modifier = Modifier.testTag("browse-models")) { Text(if (browsing) stringResource(Res.string.building_close_models) else stringResource(Res.string.building_browse_models)) }
+                NumberField(stringResource(Res.string.building_model), b.modelId.toInt(), 0..maxOf(1, model.pictures.buildingModelCount - 1), { v -> model.updateBuilding(selected) { it.copy(modelId = v.toLong()) } }, Modifier.width(100.dp))
+                DecimalField(stringResource(Res.string.headbutt_x), b.x.value, -512.0..512.0, { v -> model.updateBuilding(selected) { it.copy(x = FixedPos.of(v)) } })
+                DecimalField(stringResource(Res.string.town_map_height), b.y.value, -512.0..512.0, { v -> model.updateBuilding(selected) { it.copy(y = FixedPos.of(v)) } })
+                DecimalField(stringResource(Res.string.building_z), b.z.value, -512.0..512.0, { v -> model.updateBuilding(selected) { it.copy(z = FixedPos.of(v)) } })
             }
             if (browsing) ModelBrowser(model, b.modelId.toInt()) { id -> model.updateBuilding(selected) { it.copy(modelId = id.toLong()) } }
             FieldFlow {
-                NumberField("Rotation X", b.rotationX.toInt(), 0..Int.MAX_VALUE, { v -> model.updateBuilding(selected) { it.copy(rotationX = v.toLong()) } }, Modifier.width(110.dp))
-                NumberField("Rotation Y", b.rotationY.toInt(), 0..Int.MAX_VALUE, { v -> model.updateBuilding(selected) { it.copy(rotationY = v.toLong()) } }, Modifier.width(110.dp))
-                NumberField("Rotation Z", b.rotationZ.toInt(), 0..Int.MAX_VALUE, { v -> model.updateBuilding(selected) { it.copy(rotationZ = v.toLong()) } }, Modifier.width(110.dp))
-                NumberField("Scale X", b.width.toInt(), 0..Int.MAX_VALUE, { v -> model.updateBuilding(selected) { it.copy(width = v.toLong()) } }, Modifier.width(100.dp))
-                NumberField("Scale Y", b.height.toInt(), 0..Int.MAX_VALUE, { v -> model.updateBuilding(selected) { it.copy(height = v.toLong()) } }, Modifier.width(100.dp))
-                NumberField("Scale Z", b.length.toInt(), 0..Int.MAX_VALUE, { v -> model.updateBuilding(selected) { it.copy(length = v.toLong()) } }, Modifier.width(100.dp))
+                NumberField(stringResource(Res.string.building_rotation_x), b.rotationX.toInt(), 0..Int.MAX_VALUE, { v -> model.updateBuilding(selected) { it.copy(rotationX = v.toLong()) } }, Modifier.width(110.dp))
+                NumberField(stringResource(Res.string.building_rotation_y), b.rotationY.toInt(), 0..Int.MAX_VALUE, { v -> model.updateBuilding(selected) { it.copy(rotationY = v.toLong()) } }, Modifier.width(110.dp))
+                NumberField(stringResource(Res.string.building_rotation_z), b.rotationZ.toInt(), 0..Int.MAX_VALUE, { v -> model.updateBuilding(selected) { it.copy(rotationZ = v.toLong()) } }, Modifier.width(110.dp))
+                NumberField(stringResource(Res.string.building_scale_x), b.width.toInt(), 0..Int.MAX_VALUE, { v -> model.updateBuilding(selected) { it.copy(width = v.toLong()) } }, Modifier.width(100.dp))
+                NumberField(stringResource(Res.string.building_scale_y), b.height.toInt(), 0..Int.MAX_VALUE, { v -> model.updateBuilding(selected) { it.copy(height = v.toLong()) } }, Modifier.width(100.dp))
+                NumberField(stringResource(Res.string.building_scale_z), b.length.toInt(), 0..Int.MAX_VALUE, { v -> model.updateBuilding(selected) { it.copy(length = v.toLong()) } }, Modifier.width(100.dp))
             }
-            Text("Rotation and scale are the raw numbers of the file (every building of the game uses 0 and 16); the 3D view does not apply them yet.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(Res.string.building_rotation_and_scale_are_the_raw_num), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

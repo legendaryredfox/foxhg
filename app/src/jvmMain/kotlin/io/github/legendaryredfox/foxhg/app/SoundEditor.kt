@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,7 +30,7 @@ fun SoundEditor(modifier: Modifier = Modifier) {
     val sounds = context?.sounds
     val sdat = sounds?.sdat
     if (sounds == null || sdat == null) {
-        Text("This ROM has no readable sound archive.", color = MaterialTheme.colorScheme.error, modifier = modifier)
+        Text(stringResource(Res.string.sound_this_rom_has_no_readable_sound_arc), color = MaterialTheme.colorScheme.error, modifier = modifier)
         return
     }
     var search by remember { mutableStateOf("") }
@@ -40,7 +42,7 @@ fun SoundEditor(modifier: Modifier = Modifier) {
     }
     Row(modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         ListPane(
-            rows = rows, selected = selected, search = search, onSearch = { search = it }, placeholder = "Search sounds…",
+            rows = rows, selected = selected, search = search, onSearch = { search = it }, placeholder = stringResource(Res.string.sound_search_sounds),
             label = { id -> "%04d  %s".format(id, sounds.name(id) ?: "") }, onSelect = { selected = it }, isEdited = { false },
             width = 330.dp,
         )
@@ -48,14 +50,14 @@ fun SoundEditor(modifier: Modifier = Modifier) {
             val info = sdat.sequence(selected)
             EditorHeader(selected.toString(), info?.name ?: "No sound")
             if (info != null) {
-                SectionCard("Sound", subtitle = describe(info.name), actions = { Chip("bank ${info.bank}") }) {
+                SectionCard(stringResource(Res.string.sound_sound), subtitle = describe(info.name), actions = { Chip(stringResource(Res.string.sound_bank_x, info.bank)) }) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         PlayButton("seq$selected", { it.sequence(selected) })
-                        Text("Play", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(Res.string.sound_play), style = MaterialTheme.typography.bodyMedium)
                     }
                     AudioStatus()
                     Text(
-                        "Sequence ${info.id}, volume ${info.volume}, file ${info.file}. Previews are rendered by foxhg's own player, so timbres can differ a little from the console.",
+                        stringResource(Res.string.sound_sequence_x_volume_x_file_x_preview, info.id, info.volume, info.file),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

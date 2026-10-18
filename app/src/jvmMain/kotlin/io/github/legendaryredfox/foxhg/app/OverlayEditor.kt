@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -89,7 +91,7 @@ class OverlayEditorModel(private val project: RomProject, private val onChanged:
 fun OverlayEditor(model: OverlayEditorModel, appModel: AppModel, modifier: Modifier = Modifier) {
     Row(modifier.fillMaxSize()) {
         Column(Modifier.width(300.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("${model.overlays.size} overlays", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(Res.string.overlay_x_overlays, model.overlays.size), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             @Suppress("UNUSED_EXPRESSION") model.revision
             LazyColumn(Modifier.fillMaxSize().testTag("overlay-list"), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 items(model.overlays, key = { it.id }) { o ->
@@ -104,7 +106,7 @@ fun OverlayEditor(model: OverlayEditorModel, appModel: AppModel, modifier: Modif
                         Text("%3d".format(o.id), style = Fox.mono)
                         Text("0x%08X".format(o.ramAddress), Modifier.weight(1f), style = Fox.mono)
                         if (model.isEdited(o.id)) Text("●", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
-                        if (o.isCompressed) Text("packed", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (o.isCompressed) Text(stringResource(Res.string.message_packed), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -113,13 +115,13 @@ fun OverlayEditor(model: OverlayEditorModel, appModel: AppModel, modifier: Modif
         val entry = id?.let(model::entry)
         Column(Modifier.fillMaxSize().padding(start = 20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             if (entry == null) {
-                Text("Pick an overlay to see where the game loads it and its bytes.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(Res.string.overlay_pick_an_overlay_to_see_where_the_g), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 return@Column
             }
             @Suppress("UNUSED_EXPRESSION") model.revision
             val image = model.image(entry.id)
-            EditorHeader(entry.id.toString(), "Overlay ${entry.id}", trailing = { if (model.isEdited(entry.id)) Chip("edited", emphasis = true) })
-            SectionCard("Table entry", subtitle = "From the overlay table (y9.bin) of the ROM") {
+            EditorHeader(entry.id.toString(), "Overlay ${entry.id}", trailing = { if (model.isEdited(entry.id)) Chip(stringResource(Res.string.map_edited), emphasis = true) })
+            SectionCard(stringResource(Res.string.overlay_table_entry), subtitle = stringResource(Res.string.overlay_from_the_overlay_table_y9_bin_of_t)) {
                 Text(
                     "RAM address 0x%08X  ·  code 0x%X bytes  ·  BSS 0x%X bytes\nStatic initialisers 0x%08X to 0x%08X\nFile %d  ·  flags 0x%02X".format(
                         entry.ramAddress, entry.ramSize, entry.bssSize, entry.staticInitStart, entry.staticInitEnd, entry.fileId, entry.flags,
@@ -133,21 +135,21 @@ fun OverlayEditor(model: OverlayEditorModel, appModel: AppModel, modifier: Modif
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
-            SectionCard("Image", subtitle = "The decompressed overlay. A replacement must be exactly ${image?.size ?: "?"} bytes: the table and the code after it depend on the size.") {
+            SectionCard(stringResource(Res.string.overlay_image), subtitle = "The decompressed overlay. A replacement must be exactly ${image?.size ?: "?"} bytes: the table and the code after it depend on the size.") {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = {
                         pickFile("Export overlay ${entry.id}", FileDialog.SAVE, "")?.let { target ->
                             model.export(entry.id, target)?.let { appModel.error = it } ?: run { appModel.status = "Exported overlay ${entry.id} to $target" }
                         }
-                    }, modifier = Modifier.testTag("export-overlay")) { Text("Export image…") }
+                    }, modifier = Modifier.testTag("export-overlay")) { Text(stringResource(Res.string.overlay_export_image)) }
                     OutlinedButton(onClick = {
                         pickFile("Replace overlay ${entry.id}", FileDialog.LOAD, "")?.let { source -> model.import(entry.id, source)?.let { appModel.error = it } }
-                    }, modifier = Modifier.testTag("import-overlay")) { Text("Replace with a file…") }
-                    OutlinedButton(onClick = { model.revert(entry.id) }, enabled = model.isEdited(entry.id), modifier = Modifier.testTag("revert-overlay")) { Text("Revert") }
+                    }, modifier = Modifier.testTag("import-overlay")) { Text(stringResource(Res.string.overlay_replace_with_a_file)) }
+                    OutlinedButton(onClick = { model.revert(entry.id) }, enabled = model.isEdited(entry.id), modifier = Modifier.testTag("revert-overlay")) { Text(stringResource(Res.string.message_revert)) }
                 }
                 model.message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }
-            SectionCard("Bytes", subtitle = "The first 512 bytes") {
+            SectionCard(stringResource(Res.string.file_tree_bytes), subtitle = stringResource(Res.string.file_tree_the_first_512_bytes)) {
                 Text(hexDump(image ?: ByteArray(0)), style = Fox.mono, modifier = Modifier.testTag("overlay-hex"))
             }
         }

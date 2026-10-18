@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -61,10 +63,9 @@ class PatchToolboxModel(private val project: RomProject, private val onChanged: 
 fun PatchToolbox(model: PatchToolboxModel, modifier: Modifier = Modifier) {
     var asking by remember { mutableStateOf<RomPatch?>(null) }
     DetailPane(modifier) {
-        Text("ROM toolbox", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(Res.string.editor_toolbox), style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Patches to the game's code and data. They change the project, not the ROM on disk: Build ROM… writes them. Each one checks the bytes it replaces " +
-                "first and refuses a ROM that differs from a clean HeartGold English. They were not tried in game (a patched ROM was only booted to the intro).",
+            stringResource(Res.string.patch_toolbox_patches_to_the_game_s_code_and_dat),
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         model.message?.let { Text(it, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.testTag("toolbox-message")) }
@@ -75,12 +76,12 @@ fun PatchToolbox(model: PatchToolboxModel, modifier: Modifier = Modifier) {
                 var showChanges by remember(patch.id) { mutableStateOf(false) }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     when (status) {
-                        PatchStatus.Applied -> Chip("Applied", emphasis = true, modifier = Modifier.testTag("status:${patch.id}"))
-                        PatchStatus.Available -> Chip("Not applied", modifier = Modifier.testTag("status:${patch.id}"))
+                        PatchStatus.Applied -> Chip(stringResource(Res.string.patch_toolbox_applied), emphasis = true, modifier = Modifier.testTag("status:${patch.id}"))
+                        PatchStatus.Available -> Chip(stringResource(Res.string.patch_toolbox_not_applied), modifier = Modifier.testTag("status:${patch.id}"))
                         is PatchStatus.Unavailable -> Chip(status.reason, modifier = Modifier.testTag("status:${patch.id}"))
                     }
-                    OutlinedButton(onClick = { showChanges = !showChanges }) { Text(if (showChanges) "Hide changes" else "Show changes") }
-                    Button(onClick = { asking = patch }, enabled = status == PatchStatus.Available, modifier = Modifier.testTag("apply:${patch.id}")) { Text("Apply") }
+                    OutlinedButton(onClick = { showChanges = !showChanges }) { Text(if (showChanges) stringResource(Res.string.patch_toolbox_hide_changes) else stringResource(Res.string.patch_toolbox_show_changes)) }
+                    Button(onClick = { asking = patch }, enabled = status == PatchStatus.Available, modifier = Modifier.testTag("apply:${patch.id}")) { Text(stringResource(Res.string.patch_toolbox_apply)) }
                 }
                 if (showChanges) {
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

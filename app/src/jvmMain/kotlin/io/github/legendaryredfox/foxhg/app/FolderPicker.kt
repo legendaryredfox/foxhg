@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -68,8 +70,8 @@ fun FolderPicker(request: FolderRequest, onClose: () -> Unit) {
         text = {
             Column(Modifier.width(520.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedButton(onClick = { current.parent?.let { current = it } }, enabled = current.parent != null, modifier = Modifier.testTag("folder-up")) { Text("Up") }
-                    OutlinedButton(onClick = { current = Path.of(System.getProperty("user.home")) }) { Text("Home") }
+                    OutlinedButton(onClick = { current.parent?.let { current = it } }, enabled = current.parent != null, modifier = Modifier.testTag("folder-up")) { Text(stringResource(Res.string.folder_picker_up)) }
+                    OutlinedButton(onClick = { current = Path.of(System.getProperty("user.home")) }) { Text(stringResource(Res.string.folder_picker_home)) }
                     BasicTextField(
                         value = typed,
                         onValueChange = { typed = it; runCatching { Path.of(it) }.getOrNull()?.takeIf { p -> Files.isDirectory(p) }?.let { p -> current = p.toAbsolutePath().normalize() } },
@@ -89,7 +91,7 @@ fun FolderPicker(request: FolderRequest, onClose: () -> Unit) {
                 }
                 Box(Modifier.fillMaxWidth().height(280.dp).background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.small).border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.small)) {
                     if (folders.isEmpty()) {
-                        Text("No subfolders", Modifier.padding(14.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(Res.string.folder_picker_no_subfolders), Modifier.padding(14.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else {
                         LazyColumn(Modifier.fillMaxWidth()) {
                             items(folders) { folder ->
@@ -105,10 +107,10 @@ fun FolderPicker(request: FolderRequest, onClose: () -> Unit) {
                         }
                     }
                 }
-                Text("Choosing: $current", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(stringResource(Res.string.folder_picker_choosing_x, current), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         },
-        confirmButton = { Button(onClick = { request.onPick(current); onClose() }, modifier = Modifier.testTag("folder-choose")) { Text("Choose this folder") } },
-        dismissButton = { TextButton(onClick = onClose) { Text("Cancel") } },
+        confirmButton = { Button(onClick = { request.onPick(current); onClose() }, modifier = Modifier.testTag("folder-choose")) { Text(stringResource(Res.string.folder_picker_choose_this_folder)) } },
+        dismissButton = { TextButton(onClick = onClose) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }

@@ -1,5 +1,8 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -50,7 +53,7 @@ fun SafariEditor(model: SafariEditorModel, modifier: Modifier = Modifier) {
         val index = model.files.selectedIndex
         EditorHeader(index.toString(), nameOf(model.files.label(index)))
         if (file.stub) {
-            Text("This area has no Pokémon data in the ROM.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(Res.string.safari_this_area_has_no_pok_mon_data_in_t), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             return@RecordListDetail
         }
         FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -60,39 +63,38 @@ fun SafariEditor(model: SafariEditorModel, modifier: Modifier = Modifier) {
         SafariZoneFile.TIMES.forEachIndexed { time, timeName ->
             SectionCard(
                 "$timeName: ${SafariZoneFile.GROUPS[model.group]}",
-                subtitle = "The ten Pokémon the area gives at this time of day when no object arrangement applies",
+                subtitle = stringResource(Res.string.safari_the_ten_pok_mon_the_area_gives_at),
             ) {
                 group.base(time).forEachIndexed { slot, e ->
                     val tag = "$timeName ${slot + 1}"
                     FieldFlow {
                         SpeciesPicker(tag, e.species, species, { v -> model.setBase(time, slot) { it.copy(species = v) } }, Modifier.width(240.dp))
-                        NumberField("Level", e.level, 0..100, { v -> model.setBase(time, slot) { it.copy(level = v) } }, Modifier.width(90.dp), tag = "$tag level")
+                        NumberField(stringResource(Res.string.learnset_level), e.level, 0..100, { v -> model.setBase(time, slot) { it.copy(level = v) } }, Modifier.width(90.dp), tag = "$tag level")
                     }
                 }
             }
         }
         if (group.objectSlots > 0) {
             SectionCard(
-                "Object arrangements",
-                subtitle = "${plural(group.objectSlots, "arrangement")}: when the player has placed the required objects (and, if set, the optional ones) in the area, " +
-                    "this Pokémon replaces the usual ones at that time of day",
+                stringResource(Res.string.safari_object_arrangements),
+                subtitle = stringResource(Res.string.safari_x_when_the_player_has_placed_the_r, pluralStringResource(Res.plurals.plural_arrangement, group.objectSlots, group.objectSlots)),
             ) {
                 for (n in 0 until group.objectSlots) {
-                    Chip("Arrangement ${n + 1}", emphasis = true)
+                    Chip(stringResource(Res.string.safari_arrangement_x, n + 1), emphasis = true)
                     for (time in 0..2) {
                         val e = group.objects(time)[n]
                         val tag = "Arrangement ${n + 1} ${SafariZoneFile.TIMES[time]}"
                         FieldFlow {
                             SpeciesPicker(tag, e.species, species, { v -> model.setObject(time, n) { it.copy(species = v) } }, Modifier.width(240.dp))
-                            NumberField("Level", e.level, 0..100, { v -> model.setObject(time, n) { it.copy(level = v) } }, Modifier.width(90.dp), tag = "$tag level")
+                            NumberField(stringResource(Res.string.learnset_level), e.level, 0..100, { v -> model.setObject(time, n) { it.copy(level = v) } }, Modifier.width(90.dp), tag = "$tag level")
                         }
                     }
                     for (optional in listOf(false, true)) {
                         val r = (if (optional) group.optional else group.required)[n]
                         val label = if (optional) "Optional" else "Required"
                         FieldFlow {
-                            PickerField("Arrangement ${n + 1} $label", r.type, SafariZoneFile.OBJECT_TYPES, { v -> model.setRequirement(n, optional) { it.copy(type = v) } }, Modifier.width(200.dp))
-                            NumberField("Quantity", r.quantity, 0..255, { v -> model.setRequirement(n, optional) { it.copy(quantity = v) } }, Modifier.width(90.dp), tag = "Arrangement ${n + 1} $label quantity")
+                            PickerField(stringResource(Res.string.safari_arrangement_x_x, n + 1, label), r.type, SafariZoneFile.OBJECT_TYPES, { v -> model.setRequirement(n, optional) { it.copy(type = v) } }, Modifier.width(200.dp))
+                            NumberField(stringResource(Res.string.ground_item_quantity), r.quantity, 0..255, { v -> model.setRequirement(n, optional) { it.copy(quantity = v) } }, Modifier.width(90.dp), tag = "Arrangement ${n + 1} $label quantity")
                         }
                     }
                 }

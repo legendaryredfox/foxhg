@@ -80,8 +80,7 @@ fun TypeChartEditor(model: TypeChartEditorModel, modifier: Modifier = Modifier) 
         Text(stringResource(Res.string.editor_type_chart), style = MaterialTheme.typography.headlineSmall)
         SectionCard(
             stringResource(Res.string.type_chart_effectiveness),
-            subtitle = "Rows attack, columns defend. Click a cell to cycle 1x, 2x, 1/2x, 0x. The table has room for ${HgssLayout.TYPE_CHART_SLOTS - 1} non-neutral pairs (${chart.slotsUsed - 1} used): " +
-                "setting a pair back to 1x frees a slot. Immunities of Ghost are the ones Foresight, Odd-Eye and Scrappy switch off",
+            subtitle = stringResource(Res.string.type_chart_rows_attack_columns_defend_click_a, HgssLayout.TYPE_CHART_SLOTS - 1, chart.slotsUsed - 1),
         ) {
             Row(Modifier.padding(start = 96.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 model.types.forEach { d -> Text(model.typeName(d).take(3), Modifier.width(38.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }

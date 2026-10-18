@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -58,12 +60,12 @@ fun MatrixEditor(model: MatrixEditorModel, modifier: Modifier = Modifier) {
         val (cx, cy) = cell.let { (x, y) -> minOf(x, matrix.width - 1) to minOf(y, matrix.height - 1) }
         val users = model.usedBy[index].orEmpty()
 
-        EditorHeader(index.toString(), matrix.name, trailing = { Chip("${matrix.width} × ${matrix.height}") })
+        EditorHeader(index.toString(), matrix.name, trailing = { Chip(stringResource(Res.string.matrix_x_x, matrix.width, matrix.height)) })
         if (users.isNotEmpty()) {
             Text("Used by: " + users.distinct().take(6).joinToString(", ") + if (users.distinct().size > 6) " …" else "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
-        SectionCard("Overview", subtitle = "The tiles of every cell, as in the Maps editor") {
+        SectionCard(stringResource(Res.string.matrix_overview), subtitle = stringResource(Res.string.matrix_the_tiles_of_every_cell_as_in_the)) {
             val schematic = model.pictures.ofMatrix(matrix)
             // The rendered scenes replace the schematic when they are ready.
             var progress by remember(matrix) { mutableStateOf(0f) }
@@ -81,35 +83,35 @@ fun MatrixEditor(model: MatrixEditorModel, modifier: Modifier = Modifier) {
             MapPicture(bitmap, width.dp, (width * schematic.height / schematic.width).dp)
         }
 
-        SectionCard("Grid", subtitle = "Each cell is a map file. Click a cell to edit it; empty cells have no map.") {
+        SectionCard(stringResource(Res.string.matrix_grid), subtitle = stringResource(Res.string.matrix_each_cell_is_a_map_file_click_a_ce)) {
             Grid(matrix, cx, cy) { x, y -> cell = x to y }
         }
 
-        SectionCard("Cell ($cx, $cy)") {
+        SectionCard(stringResource(Res.string.matrix_cell_x_x, cx, cy)) {
             FieldFlow {
-                NumberField("Map file", matrix.map(cx, cy).let { if (it == GameMatrix.EMPTY) 0 else it }, 0..65534, { v -> editor.update { it.withMap(cx, cy, v) } }, Modifier.width(120.dp))
-                OutlinedButton(onClick = { editor.update { it.withMap(cx, cy, GameMatrix.EMPTY) } }, enabled = matrix.map(cx, cy) != GameMatrix.EMPTY) { Text("Make empty") }
+                NumberField(stringResource(Res.string.matrix_map_file), matrix.map(cx, cy).let { if (it == GameMatrix.EMPTY) 0 else it }, 0..65534, { v -> editor.update { it.withMap(cx, cy, v) } }, Modifier.width(120.dp))
+                OutlinedButton(onClick = { editor.update { it.withMap(cx, cy, GameMatrix.EMPTY) } }, enabled = matrix.map(cx, cy) != GameMatrix.EMPTY) { Text(stringResource(Res.string.matrix_make_empty)) }
                 if (matrix.hasHeaders) {
-                    PickerField("Map header", matrix.header(cx, cy) ?: 0, model.headerNames, { v -> editor.update { it.withHeader(cx, cy, v) } }, Modifier.width(260.dp))
+                    PickerField(stringResource(Res.string.matrix_map_header), matrix.header(cx, cy) ?: 0, model.headerNames, { v -> editor.update { it.withHeader(cx, cy, v) } }, Modifier.width(260.dp))
                 }
                 if (matrix.hasAltitudes) {
-                    NumberField("Altitude", matrix.altitude(cx, cy) ?: 0, 0..255, { v -> editor.update { it.withAltitude(cx, cy, v) } }, Modifier.width(100.dp))
+                    NumberField(stringResource(Res.string.matrix_altitude), matrix.altitude(cx, cy) ?: 0, 0..255, { v -> editor.update { it.withAltitude(cx, cy, v) } }, Modifier.width(100.dp))
                 }
             }
         }
 
-        SectionCard("Matrix") {
+        SectionCard(stringResource(Res.string.map_header_matrix)) {
             var newWidth by remember(index) { mutableStateOf(matrix.width) }
             var newHeight by remember(index) { mutableStateOf(matrix.height) }
             FieldFlow {
-                NumberField("Width", newWidth, 1..255, { newWidth = it }, Modifier.width(90.dp))
-                NumberField("Height", newHeight, 1..255, { newHeight = it }, Modifier.width(90.dp))
-                Button(onClick = { editor.update { it.resized(newWidth, newHeight) } }, enabled = newWidth != matrix.width || newHeight != matrix.height) { Text("Resize") }
+                NumberField(stringResource(Res.string.town_map_width), newWidth, 1..255, { newWidth = it }, Modifier.width(90.dp))
+                NumberField(stringResource(Res.string.town_map_height), newHeight, 1..255, { newHeight = it }, Modifier.width(90.dp))
+                Button(onClick = { editor.update { it.resized(newWidth, newHeight) } }, enabled = newWidth != matrix.width || newHeight != matrix.height) { Text(stringResource(Res.string.matrix_resize)) }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Sections", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                ToggleChip("Map headers", matrix.hasHeaders, { on -> editor.update { it.withSections(on, it.hasAltitudes) } })
-                ToggleChip("Altitudes", matrix.hasAltitudes, { on -> editor.update { it.withSections(it.hasHeaders, on) } })
+                Text(stringResource(Res.string.matrix_sections), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                ToggleChip(stringResource(Res.string.editor_headers), matrix.hasHeaders, { on -> editor.update { it.withSections(on, it.hasAltitudes) } })
+                ToggleChip(stringResource(Res.string.matrix_altitudes), matrix.hasAltitudes, { on -> editor.update { it.withSections(it.hasHeaders, on) } })
             }
         }
     }

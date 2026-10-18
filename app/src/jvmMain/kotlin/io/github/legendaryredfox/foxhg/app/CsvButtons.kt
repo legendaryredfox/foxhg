@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -29,7 +31,7 @@ fun <T> CsvButtons(csv: RecordCsv<T>, fileName: String, records: () -> List<T>, 
         runCatching {
             Files.writeString(path, csv.export(records(), label))
         }.onSuccess { report("Exported to ${path.fileName}", false) }.onFailure { report("Export failed: ${it.message}", true) }
-    }) { Text("Export CSV") }
+    }) { Text(stringResource(Res.string.learnset_export_csv)) }
     OutlinedButton(onClick = {
         val path = pickFile("Import $fileName", FileDialog.LOAD, ".csv") ?: return@OutlinedButton
         val text = runCatching { Files.readString(path) }.getOrElse { return@OutlinedButton report("Import failed: ${it.message}", true) }
@@ -37,7 +39,7 @@ fun <T> CsvButtons(csv: RecordCsv<T>, fileName: String, records: () -> List<T>, 
             is FoxResult.Ok -> { replaceAll { result.value }; report("Imported ${path.fileName}", false) }
             is FoxResult.Err -> report("Import rejected: ${result.message}", true)
         }
-    }) { Text("Import CSV") }
+    }) { Text(stringResource(Res.string.learnset_import_csv)) }
     message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant) }
 }
 
@@ -51,13 +53,13 @@ fun CsvFileButtons(fileName: String, export: () -> String, import: (String) -> S
         runCatching { Files.writeString(path, export()) }
             .onSuccess { failed = false; message = "Exported to ${path.fileName}" }
             .onFailure { failed = true; message = "Export failed: ${it.message}" }
-    }) { Text("Export CSV") }
+    }) { Text(stringResource(Res.string.learnset_export_csv)) }
     OutlinedButton(onClick = {
         val path = pickFile("Import $fileName", FileDialog.LOAD, ".csv") ?: return@OutlinedButton
         val text = runCatching { Files.readString(path) }.getOrElse { failed = true; message = "Import failed: ${it.message}"; return@OutlinedButton }
         val problem = import(text)
         failed = problem != null
         message = problem?.let { "Import rejected: $it" } ?: "Imported ${path.fileName}"
-    }) { Text("Import CSV") }
+    }) { Text(stringResource(Res.string.learnset_import_csv)) }
     message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant) }
 }

@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -93,7 +95,7 @@ fun GroundItemEditor(model: GroundItemEditorModel, modifier: Modifier = Modifier
             selected = model.selectedIndex,
             search = model.search,
             onSearch = { model.search = it },
-            placeholder = "Search items, places or a script number…",
+            placeholder = stringResource(Res.string.ground_item_search_items_places_or_a_script_nu),
             label = model::label,
             onSelect = model::select,
             isEdited = { false },
@@ -101,17 +103,17 @@ fun GroundItemEditor(model: GroundItemEditorModel, modifier: Modifier = Modifier
         )
         val ball = model.selected
         DetailPane {
-            Chip("${model.balls.size} item balls")
+            Chip(stringResource(Res.string.ground_item_x_item_balls, model.balls.size))
             if (ball != null) {
                 EditorHeader(ball.scriptNumber.toString(), model.itemName(ball.item))
-                SectionCard("Ball", subtitle = "What the player finds") {
+                SectionCard(stringResource(Res.string.ground_item_ball), subtitle = stringResource(Res.string.ground_item_what_the_player_finds)) {
                     FieldFlow {
-                        ItemPicker("Item", ball.item, model.names?.items ?: emptyList(), { v -> model.change(v, ball.quantity) }, Modifier.width(240.dp))
-                        NumberField("Quantity", ball.quantity, 1..GroundItems.MAX_QUANTITY, { v -> model.change(ball.item, v) }, Modifier.width(100.dp))
+                        ItemPicker(stringResource(Res.string.evolution_item), ball.item, model.names?.items ?: emptyList(), { v -> model.change(v, ball.quantity) }, Modifier.width(240.dp))
+                        NumberField(stringResource(Res.string.ground_item_quantity), ball.quantity, 1..GroundItems.MAX_QUANTITY, { v -> model.change(ball.item, v) }, Modifier.width(100.dp))
                     }
                     val where = model.where(ball)
                     Text(
-                        if (ball.usedBy.isEmpty()) "No overworld event runs script ${ball.scriptNumber}: put it on an overworld object of a map to place the ball."
+                        if (ball.usedBy.isEmpty()) stringResource(Res.string.ground_item_no_overworld_event_runs_script_x_p, ball.scriptNumber)
                         else "Used by ${ball.usedBy.size} ${if (ball.usedBy.size == 1) "map" else "maps"}${if (where.isNotEmpty()) ": $where" else ""}. Every event with script ${ball.scriptNumber} gives this item.",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

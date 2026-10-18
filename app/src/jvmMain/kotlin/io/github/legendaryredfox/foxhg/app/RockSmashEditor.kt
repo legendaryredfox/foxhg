@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
@@ -64,12 +66,12 @@ fun RockSmashEditor(model: RockSmashEditorModel, modifier: Modifier = Modifier) 
         val index = model.sites.selectedIndex
         EditorHeader(index.toString(), nameOf(model.sites.label(index)))
         SectionCard(
-            "Item drop",
-            subtitle = "Only rolled when smashing a rock does not start a wild battle (the encounter rate is set in the Wild encounters editor)",
+            stringResource(Res.string.rock_smash_item_drop),
+            subtitle = stringResource(Res.string.rock_smash_only_rolled_when_smashing_a_rock_d),
         ) {
             FieldFlow {
                 NumberField("Drop chance %", site.odds, 0..100, { v -> model.sites.update { it.copy(odds = v) } }, Modifier.width(130.dp), tag = "Odds")
-                PickerField("Item table", site.type, RockSmashSite.TABLE_NAMES, { v -> model.sites.update { it.copy(type = v) } }, Modifier.width(200.dp))
+                PickerField(stringResource(Res.string.rock_smash_item_table), site.type, RockSmashSite.TABLE_NAMES, { v -> model.sites.update { it.copy(type = v) } }, Modifier.width(200.dp))
             }
             Text(
                 "0 turns drops off for this map. +5% with Suction Cups, Magnet Pull or Keen Eye in the lead, +5% with a follower that used Rock Smash.",
@@ -80,10 +82,10 @@ fun RockSmashEditor(model: RockSmashEditorModel, modifier: Modifier = Modifier) 
         model.items?.let { tables ->
             RockSmashSite.TABLE_NAMES.forEachIndexed { t, name ->
                 SectionCard(
-                    "$name table",
-                    subtitle = "Shared by every map that uses it. Serene Grace and Super Luck move a roll one slot toward the rarer end",
+                    stringResource(Res.string.rock_smash_x_table, name),
+                    subtitle = stringResource(Res.string.rock_smash_shared_by_every_map_that_uses_it_s),
                     actions = {
-                        if (t == site.type) Chip("this map", emphasis = true)
+                        if (t == site.type) Chip(stringResource(Res.string.rock_smash_this_map), emphasis = true)
                         Chip(plural(model.mapsUsing(t), "map"))
                     },
                 ) {

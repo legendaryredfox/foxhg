@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -53,7 +55,7 @@ fun TrainerEditor(model: TrainerEditorModel, modifier: Modifier = Modifier) {
                 selected = model.selectedIndex,
                 search = model.search,
                 onSearch = { model.search = it },
-                placeholder = "Name, class or Pokémon…",
+                placeholder = stringResource(Res.string.trainer_name_class_or_pok_mon),
                 label = model::label,
                 onSelect = model::select,
                 isEdited = model::isEdited,
@@ -77,14 +79,14 @@ private fun ReplaceSpeciesCard(model: TrainerEditorModel) {
     val fromName = species.getOrNull(from) ?: "#$from"
     val toName = species.getOrNull(to) ?: "#$to"
     SectionCard(
-        "Replace a Pokémon in every trainer party",
-        subtitle = "Keeps level and everything else; changes the species only",
-        actions = { OutlinedButton(onClick = { open = !open }, modifier = Modifier.testTag("replace-toggle")) { Text(if (open) "Hide" else "Show") } },
+        stringResource(Res.string.trainer_replace_a_pok_mon_in_every_trainer),
+        subtitle = stringResource(Res.string.trainer_keeps_level_and_everything_else_ch),
+        actions = { OutlinedButton(onClick = { open = !open }, modifier = Modifier.testTag("replace-toggle")) { Text(if (open) stringResource(Res.string.trainer_hide) else stringResource(Res.string.trainer_show)) } },
     ) {
         if (open) FieldFlow {
-            SpeciesPicker("Replace", from, species, { from = it }, Modifier.width(200.dp))
-            SpeciesPicker("With", to, species, { to = it }, Modifier.width(200.dp))
-            OutlinedButton(onClick = { asking = true }, enabled = from != to, modifier = Modifier.testTag("replace-open")) { Text("Replace…") }
+            SpeciesPicker(stringResource(Res.string.trainer_replace), from, species, { from = it }, Modifier.width(200.dp))
+            SpeciesPicker(stringResource(Res.string.trainer_with), to, species, { to = it }, Modifier.width(200.dp))
+            OutlinedButton(onClick = { asking = true }, enabled = from != to, modifier = Modifier.testTag("replace-open")) { Text(stringResource(Res.string.trainer_replace_2)) }
         }
         message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary) }
     }
@@ -113,27 +115,27 @@ private fun Detail(model: TrainerEditorModel, trainer: Trainer) {
         TrainerClassIcon(h.trainerClass, 64.dp)
     })
 
-    SectionCard("Trainer") {
+    SectionCard(stringResource(Res.string.trainer_trainer)) {
         FieldFlow {
-            TrainerClassPicker("Class", h.trainerClass, names?.trainerClasses ?: emptyList(), { v -> model.update { it.withHeader(it.header.copy(trainerClass = v)) } }, Modifier.width(220.dp))
-            NumberField("AI flags", h.aiFlags.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), 0..Int.MAX_VALUE, { v -> model.update { it.withHeader(it.header.copy(aiFlags = v.toLong())) } }, Modifier.width(130.dp))
+            TrainerClassPicker(stringResource(Res.string.trainer_class), h.trainerClass, names?.trainerClasses ?: emptyList(), { v -> model.update { it.withHeader(it.header.copy(trainerClass = v)) } }, Modifier.width(220.dp))
+            NumberField(stringResource(Res.string.trainer_ai_flags), h.aiFlags.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), 0..Int.MAX_VALUE, { v -> model.update { it.withHeader(it.header.copy(aiFlags = v.toLong())) } }, Modifier.width(130.dp))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Battle", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(Res.string.move_battle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             // The game stores 2 for a double battle and 0 for a single one.
-            ToggleChip("Double battle", h.doubleBattle != 0L, { on -> model.update { it.withHeader(it.header.copy(doubleBattle = if (on) 2L else 0L)) } })
+            ToggleChip(stringResource(Res.string.trainer_double_battle), h.doubleBattle != 0L, { on -> model.update { it.withHeader(it.header.copy(doubleBattle = if (on) 2L else 0L)) } })
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Party format", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            ToggleChip("Custom moves", h.hasCustomMoves, { v -> model.update { it.withHeader(it.header.withFlags(v, it.header.hasHeldItems)) } })
-            ToggleChip("Held items", h.hasHeldItems, { v -> model.update { it.withHeader(it.header.withFlags(it.header.hasCustomMoves, v)) } })
+            Text(stringResource(Res.string.trainer_party_format), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            ToggleChip(stringResource(Res.string.trainer_custom_moves), h.hasCustomMoves, { v -> model.update { it.withHeader(it.header.withFlags(v, it.header.hasHeldItems)) } })
+            ToggleChip(stringResource(Res.string.trainer_held_items), h.hasHeldItems, { v -> model.update { it.withHeader(it.header.withFlags(it.header.hasCustomMoves, v)) } })
         }
     }
 
-    SectionCard("Items used in battle") {
+    SectionCard(stringResource(Res.string.trainer_items_used_in_battle)) {
         FieldFlow {
             for (slot in 0 until 4) {
-                ItemPicker("Item ${slot + 1}", h.items.getOrElse(slot) { 0 }, names?.items ?: emptyList(), { v ->
+                ItemPicker(stringResource(Res.string.mart_item_x, slot + 1), h.items.getOrElse(slot) { 0 }, names?.items ?: emptyList(), { v ->
                     model.update { it.withHeader(it.header.copy(items = it.header.items.toMutableList().also { l -> l[slot] = v })) }
                 }, Modifier.width(200.dp))
             }
@@ -141,9 +143,9 @@ private fun Detail(model: TrainerEditorModel, trainer: Trainer) {
     }
 
     SectionCard(
-        "Party",
-        subtitle = "${trainer.party.size} of ${Trainer.MAX_PARTY}",
-        actions = { Button(onClick = model::addMon, enabled = trainer.party.size < Trainer.MAX_PARTY) { Text("Add Pokémon") } },
+        stringResource(Res.string.editor_save_party),
+        subtitle = stringResource(Res.string.trainer_x_of_x, trainer.party.size, Trainer.MAX_PARTY),
+        actions = { Button(onClick = model::addMon, enabled = trainer.party.size < Trainer.MAX_PARTY) { Text(stringResource(Res.string.trainer_add_pok_mon)) } },
     ) {
         trainer.party.forEachIndexed { slot, mon -> MonCard(model, trainer, slot, mon) }
     }
@@ -164,22 +166,22 @@ private fun MonCard(model: TrainerEditorModel, trainer: Trainer, slot: Int, mon:
                 Chip("${slot + 1}", emphasis = true)
                 PokemonFront(mon.species)
                 Text(names?.species?.getOrNull(mon.species) ?: "#${mon.species}", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                TextButton(onClick = { model.removeMon(slot) }) { Text("Remove") }
+                TextButton(onClick = { model.removeMon(slot) }) { Text(stringResource(Res.string.learnset_remove)) }
             }
             FieldFlow {
-                SpeciesPicker("Species", mon.species, names?.species ?: emptyList(), { v -> model.updateMon(slot) { it.withSpecies(v) } }, Modifier.width(200.dp))
-                NumberField("Level", mon.level, 1..100, { v -> model.updateMon(slot) { it.copy(level = v) } }, Modifier.width(80.dp))
-                NumberField("Form", mon.form, 0..63, { v -> model.updateMon(slot) { it.copy(speciesAndForm = (v shl 10) or it.species) } }, Modifier.width(80.dp))
-                NumberField("IV scale", mon.difficulty, 0..255, { v -> model.updateMon(slot) { it.copy(difficulty = v) } }, Modifier.width(90.dp))
-                NumberField("Gender / ability", mon.genderAbility, 0..255, { v -> model.updateMon(slot) { it.copy(genderAbility = v) } }, Modifier.width(130.dp))
+                SpeciesPicker(stringResource(Res.string.evolution_species), mon.species, names?.species ?: emptyList(), { v -> model.updateMon(slot) { it.withSpecies(v) } }, Modifier.width(200.dp))
+                NumberField(stringResource(Res.string.learnset_level), mon.level, 1..100, { v -> model.updateMon(slot) { it.copy(level = v) } }, Modifier.width(80.dp))
+                NumberField(stringResource(Res.string.trainer_form), mon.form, 0..63, { v -> model.updateMon(slot) { it.copy(speciesAndForm = (v shl 10) or it.species) } }, Modifier.width(80.dp))
+                NumberField(stringResource(Res.string.trainer_iv_scale), mon.difficulty, 0..255, { v -> model.updateMon(slot) { it.copy(difficulty = v) } }, Modifier.width(90.dp))
+                NumberField(stringResource(Res.string.trainer_gender_ability), mon.genderAbility, 0..255, { v -> model.updateMon(slot) { it.copy(genderAbility = v) } }, Modifier.width(130.dp))
                 if (h.hasHeldItems) {
-                    ItemPicker("Held item", mon.item, names?.items ?: emptyList(), { v -> model.updateMon(slot) { it.copy(item = v) } }, Modifier.width(200.dp))
+                    ItemPicker(stringResource(Res.string.starter_held_item), mon.item, names?.items ?: emptyList(), { v -> model.updateMon(slot) { it.copy(item = v) } }, Modifier.width(200.dp))
                 }
             }
             if (h.hasCustomMoves) {
                 FieldFlow {
                     for (m in 0 until 4) {
-                        PickerField("Move ${m + 1}", mon.moves.getOrElse(m) { 0 }, names?.moves ?: emptyList(), { v ->
+                        PickerField(stringResource(Res.string.trainer_move_x, m + 1), mon.moves.getOrElse(m) { 0 }, names?.moves ?: emptyList(), { v ->
                             model.updateMon(slot) { it.copy(moves = it.moves.toMutableList().also { l -> l[m] = v }) }
                         }, Modifier.width(190.dp))
                     }

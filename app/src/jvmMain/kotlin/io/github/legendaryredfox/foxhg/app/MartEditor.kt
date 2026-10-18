@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -96,7 +98,7 @@ fun MartEditor(model: MartEditorModel, modifier: Modifier = Modifier) {
     Row(modifier.fillMaxWidth()) {
         ListPane(
             rows = model.rows(), selected = model.selectedIndex, search = model.search, onSearch = { model.search = it },
-            placeholder = "Search marts or items…", label = model::label, onSelect = model::select, isEdited = model::isEdited,
+            placeholder = stringResource(Res.string.mart_search_marts_or_items), label = model::label, onSelect = model::select, isEdited = model::isEdited,
         )
         DetailPane {
             if (model.isBadgeRow(model.selectedIndex)) BadgeMart(model, marts) else SpecialMart(model, marts, model.selectedIndex)
@@ -109,13 +111,13 @@ private fun BadgeMart(model: MartEditorModel, marts: Marts) {
     val items = model.names?.items ?: emptyList()
     EditorHeader(model.selectedIndex.toString(), "Standard mart")
     SectionCard(
-        "Items by badges",
-        subtitle = "The clerk of the ordinary Poké Marts sells every item whose tier is at or below the player's: 0 badges is tier 1, 1 to 2 tier 2, 3 to 4 tier 3, 5 to 6 tier 4, 7 tier 5, 8 tier 6",
+        stringResource(Res.string.mart_items_by_badges),
+        subtitle = stringResource(Res.string.mart_the_clerk_of_the_ordinary_pok_mart),
     ) {
         marts.badge.forEachIndexed { i, e ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
-                ItemPicker("Item ${i + 1}", e.item, items, { v -> model.update { it.withBadge(i, e.copy(item = v)) } }, Modifier.width(240.dp))
-                NumberField("Tier", e.tier, 1..6, { v -> model.update { it.withBadge(i, e.copy(tier = v)) } }, Modifier.width(80.dp), tag = "Tier ${i + 1}")
+                ItemPicker(stringResource(Res.string.mart_item_x, i + 1), e.item, items, { v -> model.update { it.withBadge(i, e.copy(item = v)) } }, Modifier.width(240.dp))
+                NumberField(stringResource(Res.string.mart_tier), e.tier, 1..6, { v -> model.update { it.withBadge(i, e.copy(tier = v)) } }, Modifier.width(80.dp), tag = "Tier ${i + 1}")
                 model.price(e.item)?.let { Chip("$it") }
             }
         }
@@ -126,9 +128,9 @@ private fun BadgeMart(model: MartEditorModel, marts: Marts) {
 private fun SpecialMart(model: MartEditorModel, marts: Marts, mart: Int) {
     val items = model.names?.items ?: emptyList()
     val list = marts.specials[mart]
-    EditorHeader(mart.toString(), "Special mart $mart", trailing = { if (marts.isMoved(mart)) Chip("Moved to the synthetic overlay", emphasis = true) })
+    EditorHeader(mart.toString(), "Special mart $mart", trailing = { if (marts.isMoved(mart)) Chip(stringResource(Res.string.mart_moved_to_the_synthetic_overlay), emphasis = true) })
     SectionCard(
-        "Items",
+        stringResource(Res.string.editor_items),
         subtitle = "Opened by the script command SpMartScreen $mart. Prices are set per item in the Items editor. " + when {
             marts.growth == MartGrowth.AVAILABLE -> "It holds ${marts.capacity[mart]} items in the ARM9; more are kept in the synthetic overlay (${marts.areaBytes} of ${HgssLayout.MART_AREA_SIZE} bytes used by all marts)."
             marts.growth == MartGrowth.NEEDS_EXPANSION -> "It holds up to ${marts.capacity[mart]} items (${list.size} now): the lists sit one after another in the ARM9. Apply the ARM9 expansion patch in the ROM toolbox to let marts grow."
@@ -137,14 +139,14 @@ private fun SpecialMart(model: MartEditorModel, marts: Marts, mart: Int) {
     ) {
         list.forEachIndexed { slot, item ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
-                ItemPicker("Item ${slot + 1}", item, items, { v -> model.update { it.withItem(mart, slot, v) } }, Modifier.width(240.dp))
+                ItemPicker(stringResource(Res.string.mart_item_x, slot + 1), item, items, { v -> model.update { it.withItem(mart, slot, v) } }, Modifier.width(240.dp))
                 model.price(item)?.let { Chip("$it") }
-                OutlinedButton(onClick = { model.update { it.withRemoved(mart, slot) } }, enabled = list.size > 1, modifier = Modifier.testTag("mart-remove:$slot")) { Text("Remove") }
+                OutlinedButton(onClick = { model.update { it.withRemoved(mart, slot) } }, enabled = list.size > 1, modifier = Modifier.testTag("mart-remove:$slot")) { Text(stringResource(Res.string.learnset_remove)) }
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedButton(onClick = { model.update { it.withAdded(mart, POTION) } }, enabled = marts.canAdd(mart), modifier = Modifier.testTag("mart-add")) { Text("Add item") }
-            if (!marts.canAdd(mart)) Text(if (marts.growth == MartGrowth.AVAILABLE) "Full: no room left for more items" else "Full: remove an item to add another", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedButton(onClick = { model.update { it.withAdded(mart, POTION) } }, enabled = marts.canAdd(mart), modifier = Modifier.testTag("mart-add")) { Text(stringResource(Res.string.mart_add_item)) }
+            if (!marts.canAdd(mart)) Text(if (marts.growth == MartGrowth.AVAILABLE) stringResource(Res.string.mart_full_no_room_left_for_more_items) else stringResource(Res.string.mart_full_remove_an_item_to_add_another), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

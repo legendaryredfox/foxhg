@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -111,7 +113,7 @@ fun ListPane(
     ) {
         SearchBox(search, onSearch, placeholder, Modifier.fillMaxWidth(), searchFocus)
         if (rows.isEmpty()) {
-            Text("No match", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(8.dp))
+            Text(stringResource(Res.string.record_list_no_match), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(8.dp))
         } else {
             Box(Modifier.fillMaxSize()) {
             LazyColumn(Modifier.fillMaxSize().padding(end = 8.dp), state = state, verticalArrangement = Arrangement.spacedBy(1.dp)) {
@@ -169,7 +171,7 @@ fun <T> RecordListDetail(
             selected = model.selectedIndex,
             search = model.search,
             onSearch = { model.search = it },
-            placeholder = "Search…",
+            placeholder = stringResource(Res.string.egg_move_search),
             label = model::label,
             onSelect = { model.select(it); onSelect(it) },
             isEdited = model::isEdited,

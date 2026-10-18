@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,7 +37,7 @@ fun MapHeaderEditor(model: MapHeaderEditorModel, modifier: Modifier = Modifier, 
             selected = model.selectedIndex,
             search = model.search,
             onSearch = { model.search = it },
-            placeholder = "Search maps…",
+            placeholder = stringResource(Res.string.map_header_search_maps),
             label = model::label,
             onSelect = model::select,
             isEdited = model::isEdited,
@@ -52,54 +54,54 @@ private fun Detail(model: MapHeaderEditorModel, h: MapHeader, onOpen: (EditorKin
     EditorHeader(model.selectedIndex.toString(), model.locationName(model.selectedIndex), trailing = {
         CsvButtons(MapHeader.CSV, "map headers", { model.all }, { model.locationName(it) }) { change -> model.updateAll(change) }
         AsyncMapPicture(model.selectedIndex, 96.dp) { model.pictures.ofHeader(model.selectedIndex) }
-        if (h.wildEncounterFile != MapHeader.NO_ENCOUNTERS) Chip("Wild: ${nameOf(model.encounterAreas.label(h.wildEncounterFile))}")
+        if (h.wildEncounterFile != MapHeader.NO_ENCOUNTERS) Chip(stringResource(Res.string.map_header_wild_x, nameOf(model.encounterAreas.label(h.wildEncounterFile))))
     })
 
-    SectionCard("Place", subtitle = "The name shown when you enter, and where the map sits in the world") {
+    SectionCard(stringResource(Res.string.photo_place), subtitle = stringResource(Res.string.map_header_the_name_shown_when_you_enter_and)) {
         FieldFlow {
-            PickerField("Location name", h.locationName, locations, { v -> model.update { it.copy(locationName = v) } }, Modifier.width(240.dp))
-            NumberField("Area icon", h.areaIcon, 0..15, { v -> model.update { it.withAreaIcon(v) } }, Modifier.width(90.dp))
-            NumberField("Location type", h.locationType, 0..15, { v -> model.update { it.withLocationType(v) } }, Modifier.width(110.dp))
-            NumberField("World map X", h.worldMapX, 0..63, { v -> model.update { it.withWorldMap(v, it.worldMapY) } }, Modifier.width(100.dp))
-            NumberField("World map Y", h.worldMapY, 0..63, { v -> model.update { it.withWorldMap(it.worldMapX, v) } }, Modifier.width(100.dp))
+            PickerField(stringResource(Res.string.map_header_location_name), h.locationName, locations, { v -> model.update { it.copy(locationName = v) } }, Modifier.width(240.dp))
+            NumberField(stringResource(Res.string.map_header_area_icon), h.areaIcon, 0..15, { v -> model.update { it.withAreaIcon(v) } }, Modifier.width(90.dp))
+            NumberField(stringResource(Res.string.map_header_location_type), h.locationType, 0..15, { v -> model.update { it.withLocationType(v) } }, Modifier.width(110.dp))
+            NumberField(stringResource(Res.string.map_header_world_map_x), h.worldMapX, 0..63, { v -> model.update { it.withWorldMap(v, it.worldMapY) } }, Modifier.width(100.dp))
+            NumberField(stringResource(Res.string.map_header_world_map_y), h.worldMapY, 0..63, { v -> model.update { it.withWorldMap(it.worldMapX, v) } }, Modifier.width(100.dp))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Region", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            ToggleChip("Kanto", h.isKanto, { v -> model.update { it.withKanto(v) } })
+            Text(stringResource(Res.string.map_header_region), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            ToggleChip(stringResource(Res.string.map_header_kanto), h.isKanto, { v -> model.update { it.withKanto(v) } })
         }
     }
 
-    SectionCard("What the map uses", subtitle = "Numbers are file indexes in the ROM; the matching editors open them") {
+    SectionCard(stringResource(Res.string.map_header_what_the_map_uses), subtitle = stringResource(Res.string.map_header_numbers_are_file_indexes_in_the_ro)) {
         FieldFlow {
-            NumberField("Matrix", h.matrix, 0..65535, { v -> model.update { it.copy(matrix = v) } }, Modifier.width(100.dp))
-            TextButton(onClick = { onOpen(EditorKind.MATRICES, h.matrix) }) { Text("Open matrix") }
-            NumberField("Area data", h.areaData, 0..255, { v -> model.update { it.copy(areaData = v) } }, Modifier.width(100.dp))
-            NumberField("Script file", h.script, 0..65535, { v -> model.update { it.copy(script = v) } }, Modifier.width(110.dp))
-            TextButton(onClick = { onOpen(EditorKind.SCRIPTS, h.script) }) { Text("Open script file") }
-            NumberField("Level script", h.levelScript, 0..65535, { v -> model.update { it.copy(levelScript = v) } }, Modifier.width(110.dp))
-            NumberField("Text archive", h.textArchive, 0..65535, { v -> model.update { it.copy(textArchive = v) } }, Modifier.width(110.dp))
-            TextButton(onClick = { onOpen(EditorKind.TEXT, h.textArchive * 100000) }) { Text("Open text archive") }
-            NumberField("Event file", h.eventFile, 0..65535, { v -> model.update { it.copy(eventFile = v) } }, Modifier.width(110.dp))
-            TextButton(onClick = { onOpen(EditorKind.EVENTS, h.eventFile) }) { Text("Open event file") }
-            NumberField("Wild file (255 none)", h.wildEncounterFile, 0..255, { v -> model.update { it.copy(wildEncounterFile = v) } }, Modifier.width(150.dp))
-            if (h.wildEncounterFile != MapHeader.NO_ENCOUNTERS) TextButton(onClick = { onOpen(EditorKind.ENCOUNTERS, h.wildEncounterFile) }) { Text("Open wild file") }
+            NumberField(stringResource(Res.string.map_header_matrix), h.matrix, 0..65535, { v -> model.update { it.copy(matrix = v) } }, Modifier.width(100.dp))
+            TextButton(onClick = { onOpen(EditorKind.MATRICES, h.matrix) }) { Text(stringResource(Res.string.map_header_open_matrix)) }
+            NumberField(stringResource(Res.string.map_header_area_data), h.areaData, 0..255, { v -> model.update { it.copy(areaData = v) } }, Modifier.width(100.dp))
+            NumberField(stringResource(Res.string.map_header_script_file), h.script, 0..65535, { v -> model.update { it.copy(script = v) } }, Modifier.width(110.dp))
+            TextButton(onClick = { onOpen(EditorKind.SCRIPTS, h.script) }) { Text(stringResource(Res.string.map_header_open_script_file)) }
+            NumberField(stringResource(Res.string.map_header_level_script), h.levelScript, 0..65535, { v -> model.update { it.copy(levelScript = v) } }, Modifier.width(110.dp))
+            NumberField(stringResource(Res.string.map_header_text_archive), h.textArchive, 0..65535, { v -> model.update { it.copy(textArchive = v) } }, Modifier.width(110.dp))
+            TextButton(onClick = { onOpen(EditorKind.TEXT, h.textArchive * 100000) }) { Text(stringResource(Res.string.map_header_open_text_archive)) }
+            NumberField(stringResource(Res.string.map_header_event_file), h.eventFile, 0..65535, { v -> model.update { it.copy(eventFile = v) } }, Modifier.width(110.dp))
+            TextButton(onClick = { onOpen(EditorKind.EVENTS, h.eventFile) }) { Text(stringResource(Res.string.map_header_open_event_file)) }
+            NumberField(stringResource(Res.string.map_header_wild_file_255_none), h.wildEncounterFile, 0..255, { v -> model.update { it.copy(wildEncounterFile = v) } }, Modifier.width(150.dp))
+            if (h.wildEncounterFile != MapHeader.NO_ENCOUNTERS) TextButton(onClick = { onOpen(EditorKind.ENCOUNTERS, h.wildEncounterFile) }) { Text(stringResource(Res.string.map_header_open_wild_file)) }
         }
     }
 
-    SectionCard("Music and look") {
+    SectionCard(stringResource(Res.string.map_header_music_and_look)) {
         FieldFlow {
-            NumberField("Day music", h.musicDay, 0..65535, { v -> model.update { it.copy(musicDay = v) } }, Modifier.width(100.dp))
+            NumberField(stringResource(Res.string.map_header_day_music), h.musicDay, 0..65535, { v -> model.update { it.copy(musicDay = v) } }, Modifier.width(100.dp))
             SoundButton(h.musicDay)
-            NumberField("Night music", h.musicNight, 0..65535, { v -> model.update { it.copy(musicNight = v) } }, Modifier.width(100.dp))
+            NumberField(stringResource(Res.string.map_header_night_music), h.musicNight, 0..65535, { v -> model.update { it.copy(musicNight = v) } }, Modifier.width(100.dp))
             SoundButton(h.musicNight)
-            NumberField("Weather", h.weather, 0..127, { v -> model.update { it.withWeather(v) } }, Modifier.width(90.dp))
-            NumberField("Camera", h.camera, 0..63, { v -> model.update { it.withCamera(v) } }, Modifier.width(90.dp))
-            NumberField("Battle background", h.battleBackground, 0..31, { v -> model.update { it.withBattleBackground(v) } }, Modifier.width(140.dp))
-            NumberField("Follower mode", h.followMode, 0..3, { v -> model.update { it.withFollowMode(v) } }, Modifier.width(120.dp))
+            NumberField(stringResource(Res.string.map_header_weather), h.weather, 0..127, { v -> model.update { it.withWeather(v) } }, Modifier.width(90.dp))
+            NumberField(stringResource(Res.string.map_header_camera), h.camera, 0..63, { v -> model.update { it.withCamera(v) } }, Modifier.width(90.dp))
+            NumberField(stringResource(Res.string.map_header_battle_background), h.battleBackground, 0..31, { v -> model.update { it.withBattleBackground(v) } }, Modifier.width(140.dp))
+            NumberField(stringResource(Res.string.map_header_follower_mode), h.followMode, 0..3, { v -> model.update { it.withFollowMode(v) } }, Modifier.width(120.dp))
         }
     }
 
-    SectionCard("Permissions", subtitle = "What the player may do on this map") {
+    SectionCard(stringResource(Res.string.map_header_permissions), subtitle = stringResource(Res.string.map_header_what_the_player_may_do_on_this_map)) {
         @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
         androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             MapHeader.Permission.entries.forEach { p ->

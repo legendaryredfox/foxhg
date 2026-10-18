@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -102,7 +104,7 @@ class FileTreeModel(private val project: RomProject, private val romPath: java.n
 fun FileTreeEditor(model: FileTreeModel, appModel: AppModel, modifier: Modifier = Modifier) {
     Row(modifier.fillMaxSize()) {
         Column(Modifier.width(340.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            SearchBox(model.search, { model.search = it }, "Search paths…", Modifier.fillMaxWidth())
+            SearchBox(model.search, { model.search = it }, stringResource(Res.string.file_tree_search_paths), Modifier.fillMaxWidth())
             val rows = model.rows()
             LazyColumn(Modifier.fillMaxSize().testTag("file-tree"), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 items(rows, key = { it.path }) { row -> TreeLine(model, row) }
@@ -112,17 +114,17 @@ fun FileTreeEditor(model: FileTreeModel, appModel: AppModel, modifier: Modifier 
         val file = path?.let(model::file)
         Column(Modifier.fillMaxSize().padding(start = 20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             if (file == null) {
-                Text("${model.fileCount} files in the ROM. Pick one to see its size and bytes.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(Res.string.file_tree_x_files_in_the_rom_pick_one_to_see, model.fileCount), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
-                EditorHeader(file.id.toString(), file.name, trailing = { if (model.isEdited(file.path)) Chip("edited", emphasis = true) })
-                SectionCard("File") {
+                EditorHeader(file.id.toString(), file.name, trailing = { if (model.isEdited(file.path)) Chip(stringResource(Res.string.map_edited), emphasis = true) })
+                SectionCard(stringResource(Res.string.file_tree_file)) {
                     Text(file.path, style = Fox.mono)
                     Text("Size ${file.size} bytes (0x%X)  ·  ROM offset 0x%X".format(file.size, file.start), style = MaterialTheme.typography.bodyMedium)
                     OutlinedButton(onClick = {
                         pickFile("Export ${file.name}", FileDialog.SAVE, "")?.let { target -> model.export(file.path, target)?.let { appModel.error = it } ?: run { appModel.status = "Exported ${file.path} to $target" } }
-                    }, modifier = Modifier.testTag("export-file")) { Text("Export file…") }
+                    }, modifier = Modifier.testTag("export-file")) { Text(stringResource(Res.string.file_tree_export_file)) }
                 }
-                SectionCard("Bytes", subtitle = "The first 512 bytes") {
+                SectionCard(stringResource(Res.string.file_tree_bytes), subtitle = stringResource(Res.string.file_tree_the_first_512_bytes)) {
                     Text(hexDump(model.bytes(file.path) ?: ByteArray(0)), style = Fox.mono, modifier = Modifier.testTag("hex-dump"))
                 }
             }

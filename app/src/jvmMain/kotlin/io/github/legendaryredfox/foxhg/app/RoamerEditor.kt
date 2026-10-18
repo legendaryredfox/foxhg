@@ -77,8 +77,7 @@ fun RoamerEditor(model: RoamerEditorModel, modifier: Modifier = Modifier) {
         Text(stringResource(Res.string.roamer_roaming_pok_mon), style = MaterialTheme.typography.headlineSmall)
         SectionCard(
             stringResource(Res.string.roamer_the_four_roamers),
-            subtitle = "The script command CreateRoamer only says which of the four starts (0 to 3); the species and level are in the game's code. " +
-                "Raikou and Entei take species 1 to 255, Latias a number that is a byte times a power of two (for example 380), Latios any species",
+            subtitle = stringResource(Res.string.roamer_the_script_command_createroamer_on),
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(24.dp), verticalAlignment = Alignment.Top) {
                 for (slot in 0 until Roamers.COUNT) {

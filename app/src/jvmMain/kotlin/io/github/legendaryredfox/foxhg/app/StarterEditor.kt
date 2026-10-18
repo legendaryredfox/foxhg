@@ -98,7 +98,7 @@ fun StarterEditor(model: StarterEditorModel, modifier: Modifier = Modifier) {
                 }
             }
         }
-        SectionCard(stringResource(Res.string.starter_given_with_the_pok_mon), subtitle = if (starters.level == null || starters.heldItem == null) "Part of this is not found in this ROM, so it can not be changed" else null) {
+        SectionCard(stringResource(Res.string.starter_given_with_the_pok_mon), subtitle = if (starters.level == null || starters.heldItem == null) stringResource(Res.string.starter_part_of_this_is_not_found_in_this) else null) {
             FieldFlow {
                 starters.level?.let { NumberField(stringResource(Res.string.learnset_level), it, 1..100, { v -> model.setLevel(v) }, Modifier.width(100.dp)) }
                 starters.heldItem?.let { PickerField(stringResource(Res.string.starter_held_item), it, model.names?.items?.take(256) ?: emptyList(), { v -> model.setHeldItem(v) }, Modifier.width(240.dp)) }
@@ -107,8 +107,7 @@ fun StarterEditor(model: StarterEditorModel, modifier: Modifier = Modifier) {
         }
         SectionCard(stringResource(Res.string.starter_what_follows), subtitle = stringResource(Res.string.starter_a_starter_is_not_data_in_a_table_i)) {
             Text(
-                "Changing a ball also updates the cries table of the chooser, the seven scripts in which the rival picks the Pokémon that is strong against yours, " +
-                    "and the species and type words in the professor's questions. Names the game shows elsewhere (the rival's lines, the Pokédex) are not touched.",
+                stringResource(Res.string.starter_changing_a_ball_also_updates_the_c),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             model.message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.testTag("starter-message")) }

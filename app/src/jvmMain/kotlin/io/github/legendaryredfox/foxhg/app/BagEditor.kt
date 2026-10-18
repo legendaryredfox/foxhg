@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -34,13 +36,13 @@ fun SaveBagScreen(model: SaveEditorModel, names: GameNames?, modifier: Modifier 
     DetailPane(modifier.padding(16.dp)) {
         EditorHeader("", model.path.fileName.toString(), trailing = { SaveStatus(model) })
         if (bag == null) {
-            Text("This save has no sound general block, or its bag does not read: there is no bag to show.", color = MaterialTheme.colorScheme.error)
+            Text(stringResource(Res.string.bag_this_save_has_no_sound_general_blo), color = MaterialTheme.colorScheme.error)
             return@DetailPane
         }
         var pocketIndex by remember { mutableStateOf(0) }
         val pocket = BagPocket.entries[pocketIndex]
         val itemNames = remember(names) { names?.items ?: List(BagData.MAX_ITEM + 1) { "#$it" } }
-        SectionCard("Pockets") {
+        SectionCard(stringResource(Res.string.bag_pockets)) {
             @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
             androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 BagPocket.entries.forEachIndexed { i, p ->
@@ -52,24 +54,24 @@ fun SaveBagScreen(model: SaveEditorModel, names: GameNames?, modifier: Modifier 
         }
         fun replace(list: List<BagSlot>) = model.updateBag { it.withItems(pocket, list) }
         val list = bag.items(pocket)
-        SectionCard(pocket.label, subtitle = "Each item once, 1 to ${pocket.maxQuantity} of it. The game lists them in this order.") {
-            if (list.isEmpty()) Text("Empty", style = MaterialTheme.typography.bodyMedium)
+        SectionCard(pocket.label, subtitle = stringResource(Res.string.bag_each_item_once_1_to_x_of_it_the_ga, pocket.maxQuantity)) {
+            if (list.isEmpty()) Text(stringResource(Res.string.pc_empty), style = MaterialTheme.typography.bodyMedium)
             list.forEachIndexed { i, slot ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    ItemPicker("Item", slot.id, itemNames, { v -> replace(list.toMutableList().also { it[i] = slot.copy(id = v) }) }, Modifier.width(240.dp))
-                    NumberField("Quantity", slot.quantity, 1..pocket.maxQuantity, { v -> replace(list.toMutableList().also { it[i] = slot.copy(quantity = v) }) }, Modifier.width(110.dp), tag = "Quantity $i")
-                    OutlinedButton(onClick = { replace(list.filterIndexed { j, _ -> j != i }) }, modifier = Modifier.testTag("bag-remove:$i")) { Text("Remove") }
+                    ItemPicker(stringResource(Res.string.evolution_item), slot.id, itemNames, { v -> replace(list.toMutableList().also { it[i] = slot.copy(id = v) }) }, Modifier.width(240.dp))
+                    NumberField(stringResource(Res.string.ground_item_quantity), slot.quantity, 1..pocket.maxQuantity, { v -> replace(list.toMutableList().also { it[i] = slot.copy(quantity = v) }) }, Modifier.width(110.dp), tag = "Quantity $i")
+                    OutlinedButton(onClick = { replace(list.filterIndexed { j, _ -> j != i }) }, modifier = Modifier.testTag("bag-remove:$i")) { Text(stringResource(Res.string.learnset_remove)) }
                 }
             }
         }
         var newItem by remember(pocketIndex) { mutableStateOf(1) }
         var newQuantity by remember(pocketIndex) { mutableStateOf(1) }
-        SectionCard("Add to ${pocket.label}", subtitle = "An item the pocket already has gets the quantity added to it. The game puts an item in the pocket its item data names; one in another pocket shows there only in the editor.") {
+        SectionCard(stringResource(Res.string.bag_add_to_x, pocket.label), subtitle = stringResource(Res.string.bag_an_item_the_pocket_already_has_get)) {
             FieldFlow {
-                ItemPicker("Item", newItem, itemNames, { newItem = it }, Modifier.width(240.dp))
-                NumberField("Quantity", newQuantity, 1..pocket.maxQuantity, { newQuantity = it }, Modifier.width(110.dp), tag = "New quantity")
+                ItemPicker(stringResource(Res.string.evolution_item), newItem, itemNames, { newItem = it }, Modifier.width(240.dp))
+                NumberField(stringResource(Res.string.ground_item_quantity), newQuantity, 1..pocket.maxQuantity, { newQuantity = it }, Modifier.width(110.dp), tag = "New quantity")
             }
-            Button(onClick = { model.updateBag { it.adding(pocket, newItem, newQuantity) } }, modifier = Modifier.testTag("bag-add")) { Text("Add") }
+            Button(onClick = { model.updateBag { it.adding(pocket, newItem, newQuantity) } }, modifier = Modifier.testTag("bag-add")) { Text(stringResource(Res.string.encounter_add)) }
         }
     }
 }

@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -88,7 +90,7 @@ fun FlyEditor(model: FlyEditorModel, modifier: Modifier = Modifier) {
             selected = model.selectedIndex,
             search = model.search,
             onSearch = { model.search = it },
-            placeholder = "Search towns…",
+            placeholder = stringResource(Res.string.fly_search_towns),
             label = model::label,
             onSelect = model::select,
             isEdited = model::isEdited,
@@ -98,36 +100,36 @@ fun FlyEditor(model: FlyEditorModel, modifier: Modifier = Modifier) {
         DetailPane {
             if (town != null) {
                 EditorHeader(model.selectedIndex.toString(), model.label(model.selectedIndex).drop(4))
-                SectionCard("Town", subtitle = "How the game treats this entry") {
+                SectionCard(stringResource(Res.string.fly_town), subtitle = stringResource(Res.string.fly_how_the_game_treats_this_entry)) {
                     FieldFlow {
-                        NumberField("Unlock flag index", town.flagIndex, 0..255, { v -> model.update { it.copy(flagIndex = v) } }, Modifier.width(150.dp))
-                        ToggleChip("Fly point", town.isFlyPoint, { v -> model.update { it.copy(isFlyPoint = v) } })
-                        ToggleChip("Blackout spawn", town.isBlackoutSpawn, { v -> model.update { it.copy(isBlackoutSpawn = v) } })
+                        NumberField(stringResource(Res.string.fly_unlock_flag_index), town.flagIndex, 0..255, { v -> model.update { it.copy(flagIndex = v) } }, Modifier.width(150.dp))
+                        ToggleChip(stringResource(Res.string.fly_fly_point), town.isFlyPoint, { v -> model.update { it.copy(isFlyPoint = v) } })
+                        ToggleChip(stringResource(Res.string.fly_blackout_spawn), town.isBlackoutSpawn, { v -> model.update { it.copy(isBlackoutSpawn = v) } })
                     }
                     Text(
-                        "The table has a fixed length of 30 towns, so towns can be changed but not added.",
+                        stringResource(Res.string.fly_the_table_has_a_fixed_length_of_30),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                SectionCard("Fly landing", subtitle = "Where the player appears after using Fly (global position)") {
+                SectionCard(stringResource(Res.string.fly_fly_landing), subtitle = stringResource(Res.string.fly_where_the_player_appears_after_usi)) {
                     FieldFlow {
-                        PickerField("Fly map", town.flyHeader, model.mapLabels, { v -> model.update { it.copy(flyHeader = v) } }, Modifier.width(260.dp))
-                        NumberField("Fly X", town.flyX, 0..65535, { v -> model.update { it.copy(flyX = v) } }, Modifier.width(100.dp))
-                        NumberField("Fly Y", town.flyY, 0..65535, { v -> model.update { it.copy(flyY = v) } }, Modifier.width(100.dp))
+                        PickerField(stringResource(Res.string.fly_fly_map), town.flyHeader, model.mapLabels, { v -> model.update { it.copy(flyHeader = v) } }, Modifier.width(260.dp))
+                        NumberField(stringResource(Res.string.fly_fly_x), town.flyX, 0..65535, { v -> model.update { it.copy(flyX = v) } }, Modifier.width(100.dp))
+                        NumberField(stringResource(Res.string.fly_fly_y), town.flyY, 0..65535, { v -> model.update { it.copy(flyY = v) } }, Modifier.width(100.dp))
                     }
                 }
-                SectionCard("Blackout", subtitle = "Where the player wakes up after losing a battle (tile position inside the map)") {
+                SectionCard(stringResource(Res.string.fly_blackout), subtitle = stringResource(Res.string.fly_where_the_player_wakes_up_after_lo)) {
                     FieldFlow {
-                        PickerField("Blackout map", town.blackoutHeader, model.mapLabels, { v -> model.update { it.copy(blackoutHeader = v) } }, Modifier.width(260.dp))
-                        NumberField("Blackout X", town.localX, 0..255, { v -> model.update { it.copy(localX = v) } }, Modifier.width(100.dp))
-                        NumberField("Blackout Y", town.localY, 0..255, { v -> model.update { it.copy(localY = v) } }, Modifier.width(100.dp))
+                        PickerField(stringResource(Res.string.fly_blackout_map), town.blackoutHeader, model.mapLabels, { v -> model.update { it.copy(blackoutHeader = v) } }, Modifier.width(260.dp))
+                        NumberField(stringResource(Res.string.fly_blackout_x), town.localX, 0..255, { v -> model.update { it.copy(localX = v) } }, Modifier.width(100.dp))
+                        NumberField(stringResource(Res.string.fly_blackout_y), town.localY, 0..255, { v -> model.update { it.copy(localY = v) } }, Modifier.width(100.dp))
                     }
                 }
-                SectionCard("Unlock spot", subtitle = "The place that adds the town to the Fly list (global position)") {
+                SectionCard(stringResource(Res.string.fly_unlock_spot), subtitle = stringResource(Res.string.fly_the_place_that_adds_the_town_to_th)) {
                     FieldFlow {
-                        PickerField("Unlock map", town.unlockHeader, model.mapLabels, { v -> model.update { it.copy(unlockHeader = v) } }, Modifier.width(260.dp))
-                        NumberField("Unlock X", town.unlockX, 0..65535, { v -> model.update { it.copy(unlockX = v) } }, Modifier.width(100.dp))
-                        NumberField("Unlock Y", town.unlockY, 0..65535, { v -> model.update { it.copy(unlockY = v) } }, Modifier.width(100.dp))
+                        PickerField(stringResource(Res.string.fly_unlock_map), town.unlockHeader, model.mapLabels, { v -> model.update { it.copy(unlockHeader = v) } }, Modifier.width(260.dp))
+                        NumberField(stringResource(Res.string.fly_unlock_x), town.unlockX, 0..65535, { v -> model.update { it.copy(unlockX = v) } }, Modifier.width(100.dp))
+                        NumberField(stringResource(Res.string.fly_unlock_y), town.unlockY, 0..65535, { v -> model.update { it.copy(unlockY = v) } }, Modifier.width(100.dp))
                     }
                 }
             }

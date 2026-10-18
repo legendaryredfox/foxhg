@@ -60,7 +60,7 @@ fun EggMoveEditor(model: RecordEditorModel<EggMoves>, modifier: Modifier = Modif
             EditorHeader(species.toString(), nameOf(label(species)), trailing = { PokemonPortraits(species) })
             SectionCard(
                 stringResource(Res.string.editor_egg_moves),
-                subtitle = if (eggs.overLimit) "Over the limit: the game only finds species whose header is within the first ${EggMoves.SCAN_LIMIT} words" else "Only moves the parents can pass down appear here",
+                subtitle = if (eggs.overLimit) stringResource(Res.string.egg_move_over_the_limit_the_game_only_finds, EggMoves.SCAN_LIMIT) else stringResource(Res.string.egg_move_only_moves_the_parents_can_pass_do),
                 actions = {
                     Chip("${list.size} / ${EggMoves.MAX_PER_SPECIES}", emphasis = list.size > EggMoves.MAX_PER_SPECIES || eggs.overLimit)
                     CsvFileButtons(

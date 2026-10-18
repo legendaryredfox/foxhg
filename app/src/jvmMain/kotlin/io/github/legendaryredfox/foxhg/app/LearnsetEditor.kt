@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
@@ -42,7 +43,7 @@ fun LearnsetEditor(model: RecordEditorModel<Learnset>, modifier: Modifier = Modi
         EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = { PokemonPortraits(model.selectedIndex) })
         SectionCard(
             stringResource(Res.string.learnset_level_up_moves),
-            subtitle = if (learnset.overLimit) "Over the limit: the game reads only the first ${Learnset.MAX_ENTRIES}" else "Learned in this order as the level is reached",
+            subtitle = if (learnset.overLimit) stringResource(Res.string.learnset_over_the_limit_the_game_reads_only, Learnset.MAX_ENTRIES) else stringResource(Res.string.learnset_learned_in_this_order_as_the_level),
             actions = {
                 Chip("${learnset.entries.size} / ${Learnset.MAX_ENTRIES}", emphasis = learnset.overLimit)
                 OutlinedButton(onClick = { model.update { it.sorted() } }) { Text(stringResource(Res.string.learnset_sort_by_level)) }
@@ -84,7 +85,7 @@ private fun BulkTools(model: RecordEditorModel<Learnset>) {
     }
     SectionCard(
         stringResource(Res.string.learnset_bulk_tools),
-        subtitle = "Apply to the ${plural(shown.size, "species")} shown in the list: search to narrow it. Teaching skips a species that knows the move or already has ${Learnset.MAX_ENTRIES} moves",
+        subtitle = stringResource(Res.string.learnset_apply_to_the_x_shown_in_the_list_s, pluralStringResource(Res.plurals.plural_species, shown.size, shown.size), Learnset.MAX_ENTRIES),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
             PickerField(stringResource(Res.string.learnset_bulk_move), move, moves, { move = it }, Modifier.width(240.dp))

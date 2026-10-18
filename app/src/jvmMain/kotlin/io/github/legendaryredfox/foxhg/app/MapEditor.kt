@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -250,26 +252,26 @@ fun MapEditor(model: MapEditorModel, modifier: Modifier = Modifier) {
         val usages = model.usagesOf(index)
         val usage = model.usage(index)
         if (usages.size > 1) {
-            PickerField("Used as", model.usageIndex.coerceAtMost(usages.size - 1), usages.map { "matrix ${it.matrix} cell ${it.x},${it.y} (${model.headerName(it.header)})" }, { model.usageIndex = it }, Modifier.width(420.dp))
+            PickerField(stringResource(Res.string.map_used_as), model.usageIndex.coerceAtMost(usages.size - 1), usages.map { "matrix ${it.matrix} cell ${it.x},${it.y} (${model.headerName(it.header)})" }, { model.usageIndex = it }, Modifier.width(420.dp))
         } else if (usage != null) {
-            Text("Matrix ${usage.matrix}, cell ${usage.x},${usage.y}, map header ${usage.header}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(Res.string.map_matrix_x_cell_x_x_map_header_x, usage.matrix, usage.x, usage.y, usage.header), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        SectionCard("Tiles", subtitle = "Left click paints, right click picks. The tile type is what the game calls the tile behaviour; collision 0x80 blocks.") {
-            ToolbarRow("Show") { MapLayer.entries.forEach { l -> ToggleChip(l.label, model.layer == l, { model.layer = l }) } }
-            ToolbarRow("Tool") { MapTool.entries.forEach { t -> ToggleChip(t.label, model.tool == t, { model.tool = t }) } }
-            ToolbarRow("Overlays") {
-                ToggleChip("Show events", model.showEvents, { model.showEvents = it })
-                ToggleChip("Show buildings", model.showBuildings, { model.showBuildings = it })
+        SectionCard(stringResource(Res.string.map_tiles), subtitle = stringResource(Res.string.map_left_click_paints_right_click_pick)) {
+            ToolbarRow(stringResource(Res.string.trainer_show)) { MapLayer.entries.forEach { l -> ToggleChip(l.label, model.layer == l, { model.layer = l }) } }
+            ToolbarRow(stringResource(Res.string.map_tool)) { MapTool.entries.forEach { t -> ToggleChip(t.label, model.tool == t, { model.tool = t }) } }
+            ToolbarRow(stringResource(Res.string.editor_overlays)) {
+                ToggleChip(stringResource(Res.string.map_show_events), model.showEvents, { model.showEvents = it })
+                ToggleChip(stringResource(Res.string.map_show_buildings), model.showBuildings, { model.showBuildings = it })
             }
-            ToolbarRow("Brush: tile type") {
-                ToggleChip("Paint type", model.paintType, { model.paintType = it })
-                PickerField("Type", model.brushType, TileTypes.all.map { "${it.id}  ${it.label}" }, { model.brushType = it }, Modifier.width(280.dp), leading = { Swatch(typeColor(it)) })
+            ToolbarRow(stringResource(Res.string.map_brush_tile_type)) {
+                ToggleChip(stringResource(Res.string.map_paint_type), model.paintType, { model.paintType = it })
+                PickerField(stringResource(Res.string.move_type), model.brushType, TileTypes.all.map { "${it.id}  ${it.label}" }, { model.brushType = it }, Modifier.width(280.dp), leading = { Swatch(typeColor(it)) })
             }
-            ToolbarRow("Brush: collision") {
-                ToggleChip("Paint collision", model.paintCollision, { model.paintCollision = it })
-                NumberField("Collision", model.brushCollision, 0..255, { model.brushCollision = it }, Modifier.width(110.dp))
-                ToggleChip("Walk", model.brushCollision == 0, { model.brushCollision = 0 })
-                ToggleChip("Block", model.brushCollision == Collision.BLOCKED, { model.brushCollision = Collision.BLOCKED })
+            ToolbarRow(stringResource(Res.string.map_brush_collision)) {
+                ToggleChip(stringResource(Res.string.map_paint_collision), model.paintCollision, { model.paintCollision = it })
+                NumberField(stringResource(Res.string.map_collision), model.brushCollision, 0..255, { model.brushCollision = it }, Modifier.width(110.dp))
+                ToggleChip(stringResource(Res.string.map_walk), model.brushCollision == 0, { model.brushCollision = 0 })
+                ToggleChip(stringResource(Res.string.map_block), model.brushCollision == Collision.BLOCKED, { model.brushCollision = Collision.BLOCKED })
             }
             MapCanvas(model, map, usage)
             MapLegend(model, map)
@@ -278,7 +280,7 @@ fun MapEditor(model: MapEditorModel, modifier: Modifier = Modifier) {
         // Whether the map has a scene is found out in the background: it decodes the terrain model the first time.
         val hasScene by androidx.compose.runtime.produceState(false, index) { value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { model.pictures.hasScene(index) } }
         if (hasScene) {
-            SectionCard("3D view", subtitle = "The map as the game draws it, without animation. Drag turns, right drag pans, Ctrl + wheel zooms, a click selects a building") { Map3dView(model, index) }
+            SectionCard(stringResource(Res.string.map_3d_view), subtitle = stringResource(Res.string.map_the_map_as_the_game_draws_it_witho)) { Map3dView(model, index) }
         }
         BuildingCard(model, map)
     }
@@ -400,23 +402,23 @@ private fun MapLegend(model: MapEditorModel, map: MapFile) {
         if (hover != null) {
             val (x, y) = hover
             val info = TileTypes.info(map.type(x, y))
-            Text("Tile $x, $y", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(Res.string.map_tile_x_x, x, y), style = MaterialTheme.typography.titleSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Swatch(typeColor(info.id))
-                Text("Type ${info.id}: ${info.label}", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(Res.string.map_type_x_x, info.id, info.label), style = MaterialTheme.typography.bodySmall)
             }
             Text("Collision 0x%02X%s".format(map.collision(x, y), if (Collision.isBlocked(map.collision(x, y))) " (blocked)" else ""), style = MaterialTheme.typography.bodySmall)
             if (info.surfable || info.encounters) Text(listOfNotNull("surfable".takeIf { info.surfable }, "wild encounters".takeIf { info.encounters }).joinToString(", "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        } else Text("Point at a tile.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else Text(stringResource(Res.string.map_point_at_a_tile), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         val used = (0 until MapFile.SIZE * MapFile.SIZE).map { map.type(it % MapFile.SIZE, it / MapFile.SIZE) }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.take(8)
-        Text("Most used types", style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(Res.string.map_most_used_types), style = MaterialTheme.typography.titleSmall)
         used.forEach { (t, n) ->
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Swatch(typeColor(t), 14.dp)
-                Text("$n × ${TileTypes.info(t).label}", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(Res.string.matrix_x_x, n, TileTypes.info(t).label), style = MaterialTheme.typography.bodySmall)
             }
         }
-        Text("Markers: blue NPC, red trainer, purple warp, green trigger, brown sign, orange building.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(Res.string.map_markers_blue_npc_red_trainer_purpl), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -426,26 +428,26 @@ private fun MapLegend(model: MapEditorModel, map: MapFile) {
 private fun EventPanel(model: MapEditorModel, usage: MapUsage?) {
     val file = model.eventsOf(usage)
     SectionCard(
-        "Events",
-        subtitle = if (file == null) "This map has no event file" else "Click a marker to select it and drag it to move it. Click the same tile again to reach events stacked on it.",
-        actions = { if (model.isEventFileEdited(usage)) Chip("edited", emphasis = true) },
+        stringResource(Res.string.editor_events),
+        subtitle = if (file == null) stringResource(Res.string.map_this_map_has_no_event_file) else stringResource(Res.string.map_click_a_marker_to_select_it_and_dr),
+        actions = { if (model.isEventFileEdited(usage)) Chip(stringResource(Res.string.map_edited), emphasis = true) },
     ) {
         if (file == null || usage == null) return@SectionCard
         FieldFlow {
-            EventKind.entries.forEach { kind -> OutlinedButton(onClick = { model.addEvent(usage, kind, model.hover) }) { Text("Add ${kind.label.lowercase()}") } }
+            EventKind.entries.forEach { kind -> OutlinedButton(onClick = { model.addEvent(usage, kind, model.hover) }) { Text(stringResource(Res.string.map_add_x, kind.label.lowercase())) } }
         }
         val selected = model.selectedEvent
         if (selected == null) {
-            Text("No event selected.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(Res.string.map_no_event_selected), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             return@SectionCard
         }
         val (kind, index) = selected
         val (gx, gy) = file.positionOf(kind, index) ?: return@SectionCard
         FieldFlow {
-            Chip("${kind.label} ${index + 1} of ${file.count(kind)}", emphasis = true)
-            Text("tile ${gx % MapFile.SIZE}, ${gy % MapFile.SIZE}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            OutlinedButton(onClick = { model.duplicateSelected(usage) }) { Text("Duplicate") }
-            OutlinedButton(onClick = { model.removeSelected(usage) }) { Text("Remove") }
+            Chip(stringResource(Res.string.map_x_x_of_x, kind.label, index + 1, file.count(kind)), emphasis = true)
+            Text(stringResource(Res.string.map_tile_x_x_2, gx % MapFile.SIZE, gy % MapFile.SIZE), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedButton(onClick = { model.duplicateSelected(usage) }) { Text(stringResource(Res.string.map_duplicate)) }
+            OutlinedButton(onClick = { model.removeSelected(usage) }) { Text(stringResource(Res.string.learnset_remove)) }
         }
         when (kind) {
             EventKind.OVERWORLD -> file.overworlds.getOrNull(index)?.let { OverworldForm(it) { o -> model.setObject(usage, o) } }

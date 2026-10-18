@@ -1,5 +1,8 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -65,11 +68,11 @@ private fun VersionCard(model: EncounterEditorModel) {
     var asking by remember { mutableStateOf(false) }
     val differing = model.differingAreas()
     SectionCard(
-        "Compare with ${model.otherName}",
-        subtitle = if (differing > 0) "${plural(differing, "area")} ${if (differing == 1) "has" else "have"} different wild Pokémon. Areas marked \"differs\" in the list are the ones." else "Every area matches ${model.otherName}.",
+        stringResource(Res.string.encounter_compare_with_x, model.otherName),
+        subtitle = if (differing > 0) "${plural(differing, "area")} ${if (differing == 1) "has" else "have"} different wild Pokémon. Areas marked \"differs\" in the list are the ones." else stringResource(Res.string.encounter_every_area_matches_x, model.otherName),
         actions = {
             message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary) }
-            OutlinedButton(onClick = { asking = true }, enabled = differing > 0, modifier = Modifier.testTag("copy-all-open")) { Text("Make every area match ${model.otherName}…") }
+            OutlinedButton(onClick = { asking = true }, enabled = differing > 0, modifier = Modifier.testTag("copy-all-open")) { Text(stringResource(Res.string.encounter_make_every_area_match_x, model.otherName)) }
         },
     ) {}
     if (asking) ConfirmDialog(
@@ -98,8 +101,8 @@ private fun Detail(model: EncounterEditorModel, d: EncounterData) {
         Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceVariant, border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f))) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("${plural(changes.size, "difference")} from ${model.otherName}", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.weight(1f))
-                    OutlinedButton(onClick = model::copySelectedFromOther) { Text("Use ${model.otherName}'s data here") }
+                    Text(stringResource(Res.string.encounter_x_from_x, pluralStringResource(Res.plurals.plural_difference, changes.size, changes.size), model.otherName), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.weight(1f))
+                    OutlinedButton(onClick = model::copySelectedFromOther) { Text(stringResource(Res.string.encounter_use_x_s_data_here, model.otherName)) }
                 }
                 changes.take(if (expanded) changes.size else 5).forEach { c ->
                     val isSpecies = listOf("species", "morning", "day", "night", "swarm", "sound", "fishing").any { c.what.contains(it) } && !c.what.contains("level")
@@ -107,54 +110,54 @@ private fun Detail(model: EncounterEditorModel, d: EncounterData) {
                     val to = if (isSpecies) species.getOrNull(c.to) ?: c.to else c.to
                     Text("${friendlyChange(c.what)}:  $from  →  $to", style = Fox.mono.copy(fontSize = 12.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                if (changes.size > 5) TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) "Show fewer" else "Show all ${changes.size}") }
+                if (changes.size > 5) TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) stringResource(Res.string.encounter_show_fewer) else stringResource(Res.string.encounter_show_all_x, changes.size)) }
             }
         }
     }
 
-    SectionCard("Encounter rates", subtitle = "Chance that a step or cast starts an encounter") {
+    SectionCard(stringResource(Res.string.encounter_encounter_rates), subtitle = stringResource(Res.string.encounter_chance_that_a_step_or_cast_starts)) {
         FieldFlow {
-            NumberField("Walking", d.rateWalking, 0..255, { v -> editor.update { it.copy(rateWalking = v) } }, Modifier.width(92.dp))
-            NumberField("Surfing", d.rateSurfing, 0..255, { v -> editor.update { it.copy(rateSurfing = v) } }, Modifier.width(92.dp))
-            NumberField("Rock smash", d.rateRockSmash, 0..255, { v -> editor.update { it.copy(rateRockSmash = v) } }, Modifier.width(100.dp))
-            NumberField("Old rod", d.rateOldRod, 0..255, { v -> editor.update { it.copy(rateOldRod = v) } }, Modifier.width(92.dp))
-            NumberField("Good rod", d.rateGoodRod, 0..255, { v -> editor.update { it.copy(rateGoodRod = v) } }, Modifier.width(92.dp))
-            NumberField("Super rod", d.rateSuperRod, 0..255, { v -> editor.update { it.copy(rateSuperRod = v) } }, Modifier.width(92.dp))
+            NumberField(stringResource(Res.string.encounter_walking), d.rateWalking, 0..255, { v -> editor.update { it.copy(rateWalking = v) } }, Modifier.width(92.dp))
+            NumberField(stringResource(Res.string.encounter_surfing), d.rateSurfing, 0..255, { v -> editor.update { it.copy(rateSurfing = v) } }, Modifier.width(92.dp))
+            NumberField(stringResource(Res.string.encounter_rock_smash), d.rateRockSmash, 0..255, { v -> editor.update { it.copy(rateRockSmash = v) } }, Modifier.width(100.dp))
+            NumberField(stringResource(Res.string.encounter_old_rod), d.rateOldRod, 0..255, { v -> editor.update { it.copy(rateOldRod = v) } }, Modifier.width(92.dp))
+            NumberField(stringResource(Res.string.encounter_good_rod), d.rateGoodRod, 0..255, { v -> editor.update { it.copy(rateGoodRod = v) } }, Modifier.width(92.dp))
+            NumberField(stringResource(Res.string.encounter_super_rod), d.rateSuperRod, 0..255, { v -> editor.update { it.copy(rateSuperRod = v) } }, Modifier.width(92.dp))
         }
     }
 
     RosterCard(model, d, species)
 
-    SectionCard("Grass", subtitle = "Each slot has one level and a species for morning, day and night") {
+    SectionCard(stringResource(Res.string.encounter_grass), subtitle = stringResource(Res.string.encounter_each_slot_has_one_level_and_a_spec)) {
         for (i in 0 until EncounterData.LAND) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Bottom) {
                 Text("%2d · %2d%%".format(i + 1, EncounterData.LAND_SLOT_PERCENT[i]), Modifier.width(62.dp).padding(bottom = 9.dp), style = Fox.mono, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                NumberField(if (i == 0) "Level" else "", d.landLevels[i], 1..100, { v -> editor.update { it.copy(landLevels = it.landLevels.set(i, v)) } }, Modifier.width(72.dp))
-                SpeciesPicker(if (i == 0) "Morning" else "", d.landMorning[i], species, { v -> editor.update { it.copy(landMorning = it.landMorning.set(i, v)) } }, Modifier.weight(1f))
-                SpeciesPicker(if (i == 0) "Day" else "", d.landDay[i], species, { v -> editor.update { it.copy(landDay = it.landDay.set(i, v)) } }, Modifier.weight(1f))
-                SpeciesPicker(if (i == 0) "Night" else "", d.landNight[i], species, { v -> editor.update { it.copy(landNight = it.landNight.set(i, v)) } }, Modifier.weight(1f))
+                NumberField(if (i == 0) stringResource(Res.string.learnset_level) else "", d.landLevels[i], 1..100, { v -> editor.update { it.copy(landLevels = it.landLevels.set(i, v)) } }, Modifier.width(72.dp))
+                SpeciesPicker(if (i == 0) stringResource(Res.string.encounter_morning) else "", d.landMorning[i], species, { v -> editor.update { it.copy(landMorning = it.landMorning.set(i, v)) } }, Modifier.weight(1f))
+                SpeciesPicker(if (i == 0) stringResource(Res.string.encounter_day) else "", d.landDay[i], species, { v -> editor.update { it.copy(landDay = it.landDay.set(i, v)) } }, Modifier.weight(1f))
+                SpeciesPicker(if (i == 0) stringResource(Res.string.encounter_night) else "", d.landNight[i], species, { v -> editor.update { it.copy(landNight = it.landNight.set(i, v)) } }, Modifier.weight(1f))
             }
         }
     }
 
-    SlotCard("Surfing", d.surf, species) { slots -> editor.update { it.copy(surf = slots) } }
-    SlotCard("Rock smash", d.rockSmash, species) { slots -> editor.update { it.copy(rockSmash = slots) } }
-    SlotCard("Old rod", d.oldRod, species) { slots -> editor.update { it.copy(oldRod = slots) } }
-    SlotCard("Good rod", d.goodRod, species) { slots -> editor.update { it.copy(goodRod = slots) } }
-    SlotCard("Super rod", d.superRod, species) { slots -> editor.update { it.copy(superRod = slots) } }
+    SlotCard(stringResource(Res.string.encounter_surfing), d.surf, species) { slots -> editor.update { it.copy(surf = slots) } }
+    SlotCard(stringResource(Res.string.encounter_rock_smash), d.rockSmash, species) { slots -> editor.update { it.copy(rockSmash = slots) } }
+    SlotCard(stringResource(Res.string.encounter_old_rod), d.oldRod, species) { slots -> editor.update { it.copy(oldRod = slots) } }
+    SlotCard(stringResource(Res.string.encounter_good_rod), d.goodRod, species) { slots -> editor.update { it.copy(goodRod = slots) } }
+    SlotCard(stringResource(Res.string.encounter_super_rod), d.superRod, species) { slots -> editor.update { it.copy(superRod = slots) } }
 
-    SectionCard("Swarms and special", subtitle = "Species id 0 means none") {
+    SectionCard(stringResource(Res.string.encounter_swarms_and_special), subtitle = stringResource(Res.string.encounter_species_id_0_means_none)) {
         FieldFlow {
-            SpeciesPicker("Grass swarm", d.swarmLand, species, { v -> editor.update { it.copy(swarmLand = v) } }, Modifier.width(200.dp))
-            SpeciesPicker("Surf swarm", d.swarmSurf, species, { v -> editor.update { it.copy(swarmSurf = v) } }, Modifier.width(200.dp))
-            SpeciesPicker("Night fishing", d.nightFish, species, { v -> editor.update { it.copy(nightFish = v) } }, Modifier.width(200.dp))
-            SpeciesPicker("Fishing swarm", d.swarmFish, species, { v -> editor.update { it.copy(swarmFish = v) } }, Modifier.width(200.dp))
+            SpeciesPicker(stringResource(Res.string.encounter_grass_swarm), d.swarmLand, species, { v -> editor.update { it.copy(swarmLand = v) } }, Modifier.width(200.dp))
+            SpeciesPicker(stringResource(Res.string.encounter_surf_swarm), d.swarmSurf, species, { v -> editor.update { it.copy(swarmSurf = v) } }, Modifier.width(200.dp))
+            SpeciesPicker(stringResource(Res.string.encounter_night_fishing), d.nightFish, species, { v -> editor.update { it.copy(nightFish = v) } }, Modifier.width(200.dp))
+            SpeciesPicker(stringResource(Res.string.encounter_fishing_swarm), d.swarmFish, species, { v -> editor.update { it.copy(swarmFish = v) } }, Modifier.width(200.dp))
         }
     }
-    SectionCard("Radio", subtitle = "Pokémon cries heard when tuning the Pokégear radio") {
+    SectionCard(stringResource(Res.string.encounter_radio), subtitle = stringResource(Res.string.encounter_pok_mon_cries_heard_when_tuning_th)) {
         FieldFlow {
-            for (i in 0 until 2) SpeciesPicker("Hoenn ${i + 1}", d.hoennSounds[i], species, { v -> editor.update { it.copy(hoennSounds = it.hoennSounds.set(i, v)) } }, Modifier.width(200.dp))
-            for (i in 0 until 2) SpeciesPicker("Sinnoh ${i + 1}", d.sinnohSounds[i], species, { v -> editor.update { it.copy(sinnohSounds = it.sinnohSounds.set(i, v)) } }, Modifier.width(200.dp))
+            for (i in 0 until 2) SpeciesPicker(stringResource(Res.string.encounter_hoenn_x, i + 1), d.hoennSounds[i], species, { v -> editor.update { it.copy(hoennSounds = it.hoennSounds.set(i, v)) } }, Modifier.width(200.dp))
+            for (i in 0 until 2) SpeciesPicker(stringResource(Res.string.encounter_sinnoh_x, i + 1), d.sinnohSounds[i], species, { v -> editor.update { it.copy(sinnohSounds = it.sinnohSounds.set(i, v)) } }, Modifier.width(200.dp))
         }
     }
 }
@@ -165,9 +168,9 @@ private fun SlotCard(title: String, slots: List<EncounterSlot>, species: List<St
         slots.forEachIndexed { i, s ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Bottom) {
                 Text("${i + 1}", Modifier.width(22.dp).padding(bottom = 9.dp), style = Fox.mono, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                NumberField(if (i == 0) "Min" else "", s.levelMin, 1..100, { v -> onChange(slots.set(i, s.copy(levelMin = v))) }, Modifier.width(72.dp))
-                NumberField(if (i == 0) "Max" else "", s.levelMax, 1..100, { v -> onChange(slots.set(i, s.copy(levelMax = v))) }, Modifier.width(72.dp))
-                SpeciesPicker(if (i == 0) "Species" else "", s.species, species, { v -> onChange(slots.set(i, s.copy(species = v))) }, Modifier.width(260.dp))
+                NumberField(if (i == 0) stringResource(Res.string.encounter_min) else "", s.levelMin, 1..100, { v -> onChange(slots.set(i, s.copy(levelMin = v))) }, Modifier.width(72.dp))
+                NumberField(if (i == 0) stringResource(Res.string.encounter_max) else "", s.levelMax, 1..100, { v -> onChange(slots.set(i, s.copy(levelMax = v))) }, Modifier.width(72.dp))
+                SpeciesPicker(if (i == 0) stringResource(Res.string.evolution_species) else "", s.species, species, { v -> onChange(slots.set(i, s.copy(species = v))) }, Modifier.width(260.dp))
             }
         }
     }
@@ -184,16 +187,16 @@ private fun <T> List<T>.set(index: Int, value: T): List<T> = toMutableList().als
 private fun RosterCard(model: EncounterEditorModel, d: EncounterData, species: List<String>) {
     var adding by remember { mutableStateOf<EncounterGroup?>(null) }
     var message by remember(model.editor.selectedIndex) { mutableStateOf<String?>(null) }
-    SectionCard("Pokémon in this area", subtitle = "Each group has fixed slots with fixed chances: adding takes slots from the others, removing gives its slots away") {
+    SectionCard(stringResource(Res.string.encounter_pok_mon_in_this_area), subtitle = stringResource(Res.string.encounter_each_group_has_fixed_slots_with_fi)) {
         EncounterGroup.entries.forEach { group ->
             val roster = group.roster(d)
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(group.label, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
-                    OutlinedButton(onClick = { adding = group }, modifier = Modifier.testTag("add:${group.name}")) { Text("Add Pokémon…") }
+                    OutlinedButton(onClick = { adding = group }, modifier = Modifier.testTag("add:${group.name}")) { Text(stringResource(Res.string.encounter_add_pok_mon)) }
                 }
                 FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp), itemVerticalAlignment = Alignment.CenterVertically) {
-                    if (roster.isEmpty()) Text("none", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (roster.isEmpty()) Text(stringResource(Res.string.encounter_none), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     roster.forEach { e ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Chip("${species.getOrNull(e.species) ?: e.species}  ${e.percent}%")
@@ -201,7 +204,7 @@ private fun RosterCard(model: EncounterEditorModel, d: EncounterData, species: L
                                 onClick = { message = if (model.removeSpecies(group, e.species)) null else "Cannot remove the last Pokémon of ${group.label.lowercase()}" },
                                 enabled = roster.size > 1,
                                 modifier = Modifier.testTag("remove:${group.name}:${e.species}"),
-                            ) { Text("Remove") }
+                            ) { Text(stringResource(Res.string.learnset_remove)) }
                         }
                     }
                 }
@@ -224,15 +227,15 @@ private fun AddDialog(group: EncounterGroup, species: List<String>, onAdd: (Int,
     var percent by remember { mutableStateOf(10) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add a Pokémon to ${group.label.lowercase()}") },
+        title = { Text(stringResource(Res.string.encounter_add_a_pok_mon_to_x, group.label.lowercase())) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                SpeciesPicker("Species", chosen, species, { chosen = it }, Modifier.fillMaxWidth())
-                NumberField("Chance, percent", percent, 1..99, { percent = it }, Modifier.width(140.dp), tag = "add-percent")
+                SpeciesPicker(stringResource(Res.string.evolution_species), chosen, species, { chosen = it }, Modifier.fillMaxWidth())
+                NumberField(stringResource(Res.string.encounter_chance_percent), percent, 1..99, { percent = it }, Modifier.width(140.dp), tag = "add-percent")
                 Text("Slots come from the Pokémon with the biggest chance, in steps of the slot chances (${group.percents.joinToString(", ")}%), so the result can be a little off.", style = MaterialTheme.typography.bodySmall)
             }
         },
-        confirmButton = { Button(onClick = { onAdd(chosen, percent) }, enabled = chosen != 0, modifier = Modifier.testTag("confirm")) { Text("Add") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { Button(onClick = { onAdd(chosen, percent) }, enabled = chosen != 0, modifier = Modifier.testTag("confirm")) { Text(stringResource(Res.string.encounter_add)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }

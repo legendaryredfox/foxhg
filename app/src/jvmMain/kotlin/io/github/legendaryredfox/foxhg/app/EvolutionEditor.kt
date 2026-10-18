@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
@@ -46,7 +47,7 @@ private fun TradeConversionCard(model: RecordEditorModel<EvolutionData>) {
     val remaining = model.records.sumOf { r -> r.slots.count { it.known?.isTrade == true } }
     SectionCard(
         stringResource(Res.string.evolution_remove_trade_evolutions),
-        subtitle = if (remaining > 0) "${plural(remaining, "trade evolution")} left. Trade becomes a level-up; trade with an item becomes using that item." else "No trade evolutions left.",
+        subtitle = if (remaining > 0) stringResource(Res.string.evolution_x_left_trade_becomes_a_level_up_tr, pluralStringResource(Res.plurals.plural_trade_evolution, remaining, remaining)) else stringResource(Res.string.evolution_no_trade_evolutions_left),
     ) {
         FieldFlow {
             NumberField(stringResource(Res.string.evolution_trade_becomes_level), level, 2..100, { level = it }, Modifier.width(150.dp))

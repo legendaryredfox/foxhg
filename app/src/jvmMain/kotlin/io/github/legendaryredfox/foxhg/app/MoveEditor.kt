@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
@@ -42,35 +44,35 @@ fun MoveEditor(model: RecordEditorModel<MoveData>, modifier: Modifier = Modifier
     RecordListDetail(model, modifier) { m ->
         val types = model.names?.types ?: emptyList()
         EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = { CsvButtons(model, MoveData.CSV, "moves") })
-        SectionCard("Battle") {
+        SectionCard(stringResource(Res.string.move_battle)) {
             FieldFlow {
-                PickerField("Type", m.type, types, { v -> model.update { it.copy(type = v) } })
-                PickerField("Category", m.category, MoveData.CATEGORIES, { v -> model.update { it.copy(category = v) } }, Modifier.width(160.dp))
-                NumberField("Power", m.power, 0..255, { v -> model.update { it.copy(power = v) } })
-                NumberField("Accuracy (0 = always hits)", m.accuracy, 0..255, { v -> model.update { it.copy(accuracy = v) } }, Modifier.width(190.dp))
-                NumberField("PP", m.pp, 0..255, { v -> model.update { it.copy(pp = v) } })
-                NumberField("Priority", m.priority, -128..127, { v -> model.update { it.copy(priority = v) } })
+                PickerField(stringResource(Res.string.move_type), m.type, types, { v -> model.update { it.copy(type = v) } })
+                PickerField(stringResource(Res.string.move_category), m.category, MoveData.CATEGORIES, { v -> model.update { it.copy(category = v) } }, Modifier.width(160.dp))
+                NumberField(stringResource(Res.string.move_power), m.power, 0..255, { v -> model.update { it.copy(power = v) } })
+                NumberField(stringResource(Res.string.move_accuracy_0_always_hits), m.accuracy, 0..255, { v -> model.update { it.copy(accuracy = v) } }, Modifier.width(190.dp))
+                NumberField(stringResource(Res.string.move_pp), m.pp, 0..255, { v -> model.update { it.copy(pp = v) } })
+                NumberField(stringResource(Res.string.move_priority), m.priority, -128..127, { v -> model.update { it.copy(priority = v) } })
             }
         }
-        SectionCard("Effect") {
+        SectionCard(stringResource(Res.string.move_effect)) {
             FieldFlow {
-                NumberField("Effect sequence", m.effect, 0..65535, { v -> model.update { it.copy(effect = v) } }, Modifier.width(140.dp))
+                NumberField(stringResource(Res.string.move_effect_sequence), m.effect, 0..65535, { v -> model.update { it.copy(effect = v) } }, Modifier.width(140.dp))
                 NumberField("Effect chance %", m.effectChance, 0..255, { v -> model.update { it.copy(effectChance = v) } }, Modifier.width(140.dp))
-                NumberField("Range", m.range, 0..65535, { v -> model.update { it.copy(range = v) } })
+                NumberField(stringResource(Res.string.move_range), m.range, 0..65535, { v -> model.update { it.copy(range = v) } })
                 Text(rangeName(m.range), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
             }
         }
-        SectionCard("Flags", subtitle = "Interactions with abilities, items and other moves; the animation flags change how the move is drawn") {
+        SectionCard(stringResource(Res.string.move_flags), subtitle = stringResource(Res.string.move_interactions_with_abilities_items)) {
             FieldFlow {
                 FLAG_NAMES.forEachIndexed { bit, name ->
                     ToggleChip(name, m.flags and (1 shl bit) != 0, { on -> model.update { it.copy(flags = if (on) it.flags or (1 shl bit) else it.flags and (1 shl bit).inv()) } })
                 }
             }
         }
-        SectionCard("Contest data", subtitle = "Super Contest condition and appeal, a Diamond, Pearl and Platinum feature") {
+        SectionCard(stringResource(Res.string.move_contest_data), subtitle = stringResource(Res.string.move_super_contest_condition_and_appeal)) {
             FieldFlow {
-                PickerField("Contest condition", m.contestType, CONTEST_TYPES, { v -> model.update { it.copy(contestType = v) } }, Modifier.width(180.dp))
-                NumberField("Contest appeal", m.contestEffect, 0..255, { v -> model.update { it.copy(contestEffect = v) } }, Modifier.width(130.dp))
+                PickerField(stringResource(Res.string.move_contest_condition), m.contestType, CONTEST_TYPES, { v -> model.update { it.copy(contestType = v) } }, Modifier.width(180.dp))
+                NumberField(stringResource(Res.string.move_contest_appeal), m.contestEffect, 0..255, { v -> model.update { it.copy(contestEffect = v) } }, Modifier.width(130.dp))
             }
         }
     }

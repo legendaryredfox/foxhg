@@ -22,7 +22,7 @@ fun TradeEditor(model: RecordEditorModel<NpcTrade>, modifier: Modifier = Modifie
         val items = model.names?.items ?: emptyList()
         val abilities = model.names?.abilities ?: emptyList()
         EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)))
-        SectionCard(stringResource(Res.string.trade_trade), subtitle = if (m.giveSpecies == m.askSpecies) "A loan: the NPC lends this Pokémon and takes the same species back (vanilla Rusty, Shuckie, Kenya and Volty)" else "The NPC gives the first Pokémon for the second") {
+        SectionCard(stringResource(Res.string.trade_trade), subtitle = if (m.giveSpecies == m.askSpecies) stringResource(Res.string.trade_a_loan_the_npc_lends_this_pok_mon) else stringResource(Res.string.trade_the_npc_gives_the_first_pok_mon_fo)) {
             FieldFlow {
                 SpeciesPicker(stringResource(Res.string.trade_npc_gives), m.giveSpecies, species, { v -> model.update { it.copy(giveSpecies = v) } })
                 SpeciesPicker(stringResource(Res.string.trade_player_offers), m.askSpecies, species, { v -> model.update { it.copy(askSpecies = v) } })

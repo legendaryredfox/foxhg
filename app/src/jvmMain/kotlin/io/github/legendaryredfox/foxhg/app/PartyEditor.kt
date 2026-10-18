@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -79,7 +81,7 @@ fun SavePartyScreen(model: SaveEditorModel, names: GameNames?, loadRules: () -> 
     DetailPane(modifier.padding(16.dp)) {
         EditorHeader("", model.path.fileName.toString(), trailing = { SaveStatus(model) })
         if (party == null) {
-            Text("This save has no sound general block, or its party does not read: there is no party to show.", color = MaterialTheme.colorScheme.error)
+            Text(stringResource(Res.string.party_this_save_has_no_sound_general_blo), color = MaterialTheme.colorScheme.error)
             return@DetailPane
         }
         var selected by remember { mutableStateOf(0) }
@@ -87,7 +89,7 @@ fun SavePartyScreen(model: SaveEditorModel, names: GameNames?, loadRules: () -> 
         val speciesNames = remember(names) { names?.species ?: List(494) { "#$it" } }
         val moveNames = remember(names) { names?.moves ?: List(468) { "#$it" } }
         val itemNames = remember(names) { names?.items ?: List(540) { "#$it" } }
-        SectionCard("Party", subtitle = if (party.count == 0) "The party is empty" else "${party.count} of ${party.maxCount} Pokémon") {
+        SectionCard(stringResource(Res.string.editor_save_party), subtitle = if (party.count == 0) stringResource(Res.string.party_the_party_is_empty) else stringResource(Res.string.party_x_of_x_pok_mon, party.count, party.maxCount)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 party.members.forEachIndexed { i, mon ->
                     val label = "${i + 1}. ${mon.nickname.ifBlank { speciesNames.getOrElse(mon.species) { "#${mon.species}" } }} Lv${mon.level}"
@@ -99,52 +101,52 @@ fun SavePartyScreen(model: SaveEditorModel, names: GameNames?, loadRules: () -> 
         val mon = party.members.getOrNull(slot) ?: return@DetailPane
         fun edit(change: (Pokemon) -> Pokemon) = model.updateParty { it.with(slot, change(it.members[slot])) }
 
-        SectionCard("Pokémon", subtitle = "The personality value, which sets the nature and whether the Pokémon is shiny, is left alone. ${if (rules == null) "Without a ROM the stats are not recalculated: use the stat fields below." else "Changing the species, level, IVs or EVs recalculates the stats."}") {
+        SectionCard(stringResource(Res.string.group_pokemon), subtitle = "The personality value, which sets the nature and whether the Pokémon is shiny, is left alone. ${if (rules == null) "Without a ROM the stats are not recalculated: use the stat fields below." else "Changing the species, level, IVs or EVs recalculates the stats."}") {
             FieldFlow {
-                SpeciesPicker("Species", mon.species, speciesNames, { v -> edit { it.withSpecies(v).settled(rules) } }, Modifier.width(220.dp))
+                SpeciesPicker(stringResource(Res.string.evolution_species), mon.species, speciesNames, { v -> edit { it.withSpecies(v).settled(rules) } }, Modifier.width(220.dp))
                 var nickname by remember(slot, mon.nickname) { mutableStateOf(mon.nickname) }
-                LabeledText("Nickname (up to 10 characters, empty for none)", nickname) { text ->
+                LabeledText(stringResource(Res.string.party_nickname_up_to_10_characters_empty), nickname) { text ->
                     nickname = text
                     mon.withNickname(text).let { r -> if (r is FoxResult.Ok) edit { r.value } }
                 }
-                ItemPicker("Held item", mon.heldItem, itemNames, { v -> edit { it.withHeldItem(v) } }, Modifier.width(220.dp))
+                ItemPicker(stringResource(Res.string.starter_held_item), mon.heldItem, itemNames, { v -> edit { it.withHeldItem(v) } }, Modifier.width(220.dp))
             }
             FieldFlow {
-                NumberField("Level", mon.level, 1..100, { v ->
+                NumberField(stringResource(Res.string.learnset_level), mon.level, 1..100, { v ->
                     edit { m -> m.withLevel(v).let { l -> rules?.experience(l.species, v)?.let { l.withExperience(it) } ?: l }.settled(rules) }
                 }, Modifier.width(90.dp))
-                NumberField("Experience", mon.experience.toInt(), 0..2_000_000, { v -> edit { it.withExperience(v.toLong()) } }, Modifier.width(130.dp))
-                NumberField("Friendship", mon.friendship, 0..255, { v -> edit { it.withFriendship(v) } }, Modifier.width(100.dp))
+                NumberField(stringResource(Res.string.party_experience), mon.experience.toInt(), 0..2_000_000, { v -> edit { it.withExperience(v.toLong()) } }, Modifier.width(130.dp))
+                NumberField(stringResource(Res.string.personal_friendship), mon.friendship, 0..255, { v -> edit { it.withFriendship(v) } }, Modifier.width(100.dp))
                 Chip("Nature ${BattleTowerSet.NATURES.getOrElse(mon.nature) { "?" }}")
-                Chip("OT ${mon.otName}")
-                if (mon.isEgg) Chip("Egg", emphasis = true)
+                Chip(stringResource(Res.string.party_ot_x, mon.otName))
+                if (mon.isEgg) Chip(stringResource(Res.string.party_egg), emphasis = true)
             }
         }
-        SectionCard("Moves") {
+        SectionCard(stringResource(Res.string.editor_moves)) {
             for (i in 0 until 4) {
                 FieldFlow {
-                    PickerField("Move ${i + 1}", mon.moves[i], moveNames, { v -> edit { it.withMove(i, v, if (v == 0) 0 else if (it.moves[i] == 0 || it.pp[i] == 0) 5 else it.pp[i]) } }, Modifier.width(220.dp))
-                    NumberField("PP", mon.pp[i], 0..99, { v -> edit { it.withMove(i, it.moves[i], v) } }, Modifier.width(80.dp), tag = "PP ${i + 1}")
+                    PickerField(stringResource(Res.string.trainer_move_x, i + 1), mon.moves[i], moveNames, { v -> edit { it.withMove(i, v, if (v == 0) 0 else if (it.moves[i] == 0 || it.pp[i] == 0) 5 else it.pp[i]) } }, Modifier.width(220.dp))
+                    NumberField(stringResource(Res.string.move_pp), mon.pp[i], 0..99, { v -> edit { it.withMove(i, it.moves[i], v) } }, Modifier.width(80.dp), tag = "PP ${i + 1}")
                 }
             }
         }
-        SectionCard("IVs and EVs", subtitle = "IVs 0 to 31. EVs 0 to 255 each; the game counts at most 510 in total, and only the first 252 of one stat show in its stat.") {
+        SectionCard(stringResource(Res.string.party_ivs_and_evs), subtitle = stringResource(Res.string.party_ivs_0_to_31_evs_0_to_255_each_the)) {
             FieldFlow {
                 STAT_NAMES.forEachIndexed { i, name ->
-                    NumberField("IV $name", mon.ivs[i], 0..31, { v -> edit { it.withIv(i, v).settled(rules) } }, Modifier.width(100.dp), tag = "IV $i")
+                    NumberField(stringResource(Res.string.party_iv_x, name), mon.ivs[i], 0..31, { v -> edit { it.withIv(i, v).settled(rules) } }, Modifier.width(100.dp), tag = "IV $i")
                 }
             }
             FieldFlow {
                 STAT_NAMES.forEachIndexed { i, name ->
-                    NumberField("EV $name", mon.evs[i], 0..255, { v -> edit { it.withEv(i, v).settled(rules) } }, Modifier.width(100.dp), tag = "EV $i")
+                    NumberField(stringResource(Res.string.party_ev_x, name), mon.evs[i], 0..255, { v -> edit { it.withEv(i, v).settled(rules) } }, Modifier.width(100.dp), tag = "EV $i")
                 }
             }
-            if (mon.evs.sum() > 510) Text("EVs total ${mon.evs.sum()}, more than the game's 510.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            if (mon.evs.sum() > 510) Text(stringResource(Res.string.party_evs_total_x_more_than_the_game_s_5, mon.evs.sum()), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
-        SectionCard("Stats", subtitle = "As stored in the save. The game shows these, so they have to agree with the level, IVs and EVs") {
+        SectionCard(stringResource(Res.string.party_stats), subtitle = stringResource(Res.string.party_as_stored_in_the_save_the_game_sho)) {
             FieldFlow {
-                NumberField("HP now", mon.currentHp, 0..999, { v -> edit { it.withHp(v.coerceAtMost(it.maxHp), it.maxHp) } }, Modifier.width(100.dp))
-                NumberField("HP max", mon.maxHp, 1..999, { v -> edit { it.withHp(minOf(it.currentHp, v), v) } }, Modifier.width(100.dp))
+                NumberField(stringResource(Res.string.party_hp_now), mon.currentHp, 0..999, { v -> edit { it.withHp(v.coerceAtMost(it.maxHp), it.maxHp) } }, Modifier.width(100.dp))
+                NumberField(stringResource(Res.string.party_hp_max), mon.maxHp, 1..999, { v -> edit { it.withHp(minOf(it.currentHp, v), v) } }, Modifier.width(100.dp))
                 listOf("Attack", "Defense", "Speed", "Sp. Atk", "Sp. Def").forEachIndexed { i, name ->
                     NumberField(name, mon.stats[i], 1..999, { v -> edit { m -> m.withStats(m.stats.toMutableList().also { it[i] = v }) } }, Modifier.width(100.dp), tag = "Stat $i")
                 }
@@ -154,9 +156,9 @@ fun SavePartyScreen(model: SaveEditorModel, names: GameNames?, loadRules: () -> 
                     onClick = { rules?.baseStats(mon.species)?.let { base -> edit { it.recalculated(base) } } },
                     enabled = rules != null,
                     modifier = Modifier.testTag("party-recalculate"),
-                ) { Text("Recalculate from the ROM's base stats") }
-                OutlinedButton(onClick = { model.updateParty { it.without(slot) } }, modifier = Modifier.testTag("party-remove")) { Text("Remove from the party") }
-                OutlinedButton(onClick = { model.depositToPc(slot) }, enabled = model.pc?.let { pc -> (0 until PcStorageData.BOXES).any { pc.firstEmpty(it) != null } } == true, modifier = Modifier.testTag("party-deposit")) { Text("Move to the PC") }
+                ) { Text(stringResource(Res.string.party_recalculate_from_the_rom_s_base_st)) }
+                OutlinedButton(onClick = { model.updateParty { it.without(slot) } }, modifier = Modifier.testTag("party-remove")) { Text(stringResource(Res.string.party_remove_from_the_party)) }
+                OutlinedButton(onClick = { model.depositToPc(slot) }, enabled = model.pc?.let { pc -> (0 until PcStorageData.BOXES).any { pc.firstEmpty(it) != null } } == true, modifier = Modifier.testTag("party-deposit")) { Text(stringResource(Res.string.party_move_to_the_pc)) }
             }
         }
     }

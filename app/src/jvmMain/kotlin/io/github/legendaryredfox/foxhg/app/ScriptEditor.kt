@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -136,15 +138,15 @@ fun ScriptEditor(model: ScriptEditorModel, labels: ScriptLabels, modifier: Modif
         if (entry is ScriptEntry.Script) ScriptSounds(model.draft)
         when (entry) {
             is ScriptEntry.Script -> SectionCard(
-                "Script",
-                subtitle = "Commands as in the script command database; a jump takes a label. Flag and variable names can be used instead of numbers. Applied as you type once it is valid.",
-                actions = { Chip("${entry.file.scriptCount} scripts") },
+                stringResource(Res.string.event_script),
+                subtitle = stringResource(Res.string.script_commands_as_in_the_script_command),
+                actions = { Chip(stringResource(Res.string.script_x_scripts, entry.file.scriptCount)) },
             ) {
                 TextArea(model.draft, model::edit, invalid = model.draftError != null, modifier = Modifier.fillMaxWidth(), minHeight = androidx.compose.ui.unit.Dp(480f), transformation = highlight)
-                model.draftError?.let { Text("Not applied: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+                model.draftError?.let { Text(stringResource(Res.string.script_not_applied_x, it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
             }
             is ScriptEntry.Level -> LevelScriptForm(entry.file, labels.scriptFilesOfLevel(index)) { changed -> model.files.update { ScriptEntry.Level(changed.aligned()) } }
-            is ScriptEntry.Raw -> SectionCard("Not editable yet", subtitle = entry.reason, actions = { Chip("${entry.bytes.size} bytes") }) {
+            is ScriptEntry.Raw -> SectionCard(stringResource(Res.string.script_not_editable_yet), subtitle = entry.reason, actions = { Chip(stringResource(Res.string.script_x_bytes, entry.bytes.size)) }) {
                 Text(
                     entry.bytes.take(512).chunked(16).joinToString("\n") { row -> row.joinToString(" ") { "%02X".format(it) } } + if (entry.bytes.size > 512) "\n…" else "",
                     style = io.github.legendaryredfox.foxhg.app.ui.Fox.mono,
@@ -193,33 +195,33 @@ internal class ScriptHighlight(dark: Boolean) : VisualTransformation {
 @Composable
 private fun LevelScriptForm(file: LevelScript, scriptFiles: List<Int>, set: (LevelScript) -> Unit) {
     val targets = if (scriptFiles.isEmpty()) "No map uses this level script." else "The script numbers are scripts of script file " + scriptFiles.joinToString(", ")
-    SectionCard("Level script", subtitle = targets) {
-        Text("Runs when the map is entered (map change), when its screen is reset, or when the game is loaded on it.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    SectionCard(stringResource(Res.string.map_header_level_script), subtitle = targets) {
+        Text(stringResource(Res.string.script_runs_when_the_map_is_entered_map_c), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
-    SectionCard("Triggers", actions = { Chip(file.triggers.count { it.type != LevelScript.VARIABLE_VALUE }.toString()) }) {
+    SectionCard(stringResource(Res.string.script_triggers), actions = { Chip(file.triggers.count { it.type != LevelScript.VARIABLE_VALUE }.toString()) }) {
         file.triggers.forEachIndexed { i, t ->
             if (t.type == LevelScript.VARIABLE_VALUE) {
-                Text("Variable triggers (below) are listed after this point.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(Res.string.script_variable_triggers_below_are_listed), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
                 val types = LevelScript.TYPES.keys.sorted()
-                PickerField("When", types.indexOf(t.type).coerceAtLeast(0), types.map { LevelScript.TYPES.getValue(it) }, { v -> set(file.copy(triggers = file.triggers.toMutableList().also { it[i] = t.copy(type = types[v]) })) }, Modifier.width(180.dp))
-                NumberField("Script", t.script, 0..65535, { v -> set(file.copy(triggers = file.triggers.toMutableList().also { it[i] = t.copy(script = v) })) }, Modifier.width(110.dp))
-                TextButton(onClick = { set(file.copy(triggers = file.triggers.filterIndexed { k, _ -> k != i })) }) { Text("Remove") }
+                PickerField(stringResource(Res.string.script_when), types.indexOf(t.type).coerceAtLeast(0), types.map { LevelScript.TYPES.getValue(it) }, { v -> set(file.copy(triggers = file.triggers.toMutableList().also { it[i] = t.copy(type = types[v]) })) }, Modifier.width(180.dp))
+                NumberField(stringResource(Res.string.event_script), t.script, 0..65535, { v -> set(file.copy(triggers = file.triggers.toMutableList().also { it[i] = t.copy(script = v) })) }, Modifier.width(110.dp))
+                TextButton(onClick = { set(file.copy(triggers = file.triggers.filterIndexed { k, _ -> k != i })) }) { Text(stringResource(Res.string.learnset_remove)) }
             }
         }
-        Button(onClick = { set(file.copy(triggers = file.triggers + LevelTrigger(2, 1))) }) { Text("Add trigger") }
+        Button(onClick = { set(file.copy(triggers = file.triggers + LevelTrigger(2, 1))) }) { Text(stringResource(Res.string.script_add_trigger)) }
     }
-    SectionCard("Variable triggers", subtitle = "Run a script on map load while a variable has a value", actions = { Chip(file.variableTriggers.size.toString()) }) {
+    SectionCard(stringResource(Res.string.script_variable_triggers), subtitle = stringResource(Res.string.script_run_a_script_on_map_load_while_a_v), actions = { Chip(file.variableTriggers.size.toString()) }) {
         file.variableTriggers.forEachIndexed { i, v ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
                 fun put(n: VariableTrigger) = set(file.withVariableTriggers(file.variableTriggers.toMutableList().also { it[i] = n }))
-                NumberField("Variable", v.variable, 1..65535, { n -> put(v.copy(variable = n)) }, Modifier.width(110.dp))
-                NumberField("Equals", v.value, 0..65535, { n -> put(v.copy(value = n)) }, Modifier.width(110.dp))
-                NumberField("Script", v.script, 0..65535, { n -> put(v.copy(script = n)) }, Modifier.width(110.dp))
-                TextButton(onClick = { set(file.withVariableTriggers(file.variableTriggers.filterIndexed { k, _ -> k != i })) }) { Text("Remove") }
+                NumberField(stringResource(Res.string.script_variable), v.variable, 1..65535, { n -> put(v.copy(variable = n)) }, Modifier.width(110.dp))
+                NumberField(stringResource(Res.string.script_equals), v.value, 0..65535, { n -> put(v.copy(value = n)) }, Modifier.width(110.dp))
+                NumberField(stringResource(Res.string.event_script), v.script, 0..65535, { n -> put(v.copy(script = n)) }, Modifier.width(110.dp))
+                TextButton(onClick = { set(file.withVariableTriggers(file.variableTriggers.filterIndexed { k, _ -> k != i })) }) { Text(stringResource(Res.string.learnset_remove)) }
             }
         }
-        Button(onClick = { set(file.withVariableTriggers(file.variableTriggers + VariableTrigger(0x4000, 0, 1))) }) { Text("Add variable trigger") }
+        Button(onClick = { set(file.withVariableTriggers(file.variableTriggers + VariableTrigger(0x4000, 0, 1))) }) { Text(stringResource(Res.string.script_add_variable_trigger)) }
     }
 }
 
@@ -235,7 +237,7 @@ private fun ScriptSounds(text: String) {
         }.distinct().toList()
     }
     if (found.isEmpty()) return
-    SectionCard("Sounds in this script", subtitle = "Press play to hear what the commands play") {
+    SectionCard(stringResource(Res.string.script_sounds_in_this_script), subtitle = stringResource(Res.string.script_press_play_to_hear_what_the_comman)) {
         found.forEach { (command, id) ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("$command $id", style = io.github.legendaryredfox.foxhg.app.ui.Fox.mono, modifier = Modifier.width(160.dp))

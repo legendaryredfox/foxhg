@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -119,7 +121,7 @@ fun MessageEditor(model: MessageEditorModel, modifier: Modifier = Modifier) {
             selected = model.banks.selectedIndex,
             search = model.banks.search,
             onSearch = { model.banks.search = it },
-            placeholder = "Search banks and messages…",
+            placeholder = stringResource(Res.string.message_search_banks_and_messages),
             label = model.banks::label,
             onSelect = model::selectBank,
             isEdited = model::isBankEdited,
@@ -134,7 +136,7 @@ fun MessageEditor(model: MessageEditorModel, modifier: Modifier = Modifier) {
             selected = model.messageIndex,
             search = model.messageSearch,
             onSearch = { model.messageSearch = it },
-            placeholder = "Search messages…",
+            placeholder = stringResource(Res.string.message_search_messages),
             label = { "%03d  %s".format(it, texts[it]) },
             onSelect = model::selectMessage,
             isEdited = model::isMessageEdited,
@@ -144,17 +146,17 @@ fun MessageEditor(model: MessageEditorModel, modifier: Modifier = Modifier) {
             val entry = archive.entries.getOrNull(model.messageIndex)
             EditorHeader(model.banks.selectedIndex.toString(), TextBanks.describe(model.banks.selectedIndex) ?: "Bank ${model.banks.selectedIndex}")
             SectionCard(
-                "Message ${model.messageIndex} of ${archive.entries.size}",
+                stringResource(Res.string.message_message_x_of_x, model.messageIndex, archive.entries.size),
                 subtitle = "Commands are written {NAME args}, for example {STRVAR_1 3, 0, 0}, {PAUSE 30}, {COLOR 1}. Line breaks: \\n next line, \\r new box, \\f clear.",
                 actions = {
-                    if (entry?.compressed == true) Chip("packed")
-                    if (model.isMessageEdited(model.messageIndex)) OutlinedButton(onClick = model::revertMessage) { Text("Revert") }
+                    if (entry?.compressed == true) Chip(stringResource(Res.string.message_packed))
+                    if (model.isMessageEdited(model.messageIndex)) OutlinedButton(onClick = model::revertMessage) { Text(stringResource(Res.string.message_revert)) }
                 },
             ) {
                 TextArea(model.draft, model::edit, invalid = model.draftError != null, modifier = Modifier.fillMaxWidth())
                 val lines = model.draft.split("\\n", "\\r", "\\f", "\n").size
                 Text("${plural(model.draft.length, "character")}, ${plural(lines, "line")}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                model.draftError?.let { Text("Not applied: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+                model.draftError?.let { Text(stringResource(Res.string.script_not_applied_x, it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
             }
         }
     }

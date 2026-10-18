@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -59,26 +61,26 @@ class ResearchEditorModel(private val project: RomProject) {
 @Composable
 fun ResearchEditor(model: ResearchEditorModel, onOpen: (EditorKind, Int) -> Unit, modifier: Modifier = Modifier) {
     DetailPane(modifier) {
-        Text("Research", style = MaterialTheme.typography.headlineSmall)
-        SectionCard("Find uses", subtitle = "Every script command and event that uses a flag, variable, item, trainer or overworld sprite entry") {
+        Text(stringResource(Res.string.editor_research), style = MaterialTheme.typography.headlineSmall)
+        SectionCard(stringResource(Res.string.research_find_uses), subtitle = stringResource(Res.string.research_every_script_command_and_event_tha)) {
             FieldFlow {
                 for (k in UsageKind.entries) ToggleChip(k.label, model.kind == k, { model.kind = k }, Modifier.testTag("research-kind:${k.name}"))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                NumberField("Number", model.id, 0..65535, { model.id = it }, Modifier.width(130.dp), tag = "Research number")
-                Button(onClick = model::search, modifier = Modifier.testTag("research-find")) { Text("Find") }
+                NumberField(stringResource(Res.string.research_number), model.id, 0..65535, { model.id = it }, Modifier.width(130.dp), tag = "Research number")
+                Button(onClick = model::search, modifier = Modifier.testTag("research-find")) { Text(stringResource(Res.string.research_find)) }
             }
             model.nameOf(model.kind, model.id)?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
             Text(
-                "Scripts are matched by the type of the command's parameter, so a plain number that equals a variable is not told apart. Trainers on a map are found by the script number of their object (3000 + trainer - 1 or 5000 + trainer - 1).",
+                stringResource(Res.string.research_scripts_are_matched_by_the_type_of),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         model.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         val results = model.results
         if (results != null) {
-            SectionCard("${model.searched}: ${results.size} ${if (results.size == 1) "use" else "uses"}", subtitle = if (results.size > ResearchEditorModel.LIMIT) "The first ${ResearchEditorModel.LIMIT} are listed." else "Click one to open it.") {
-                if (results.isEmpty()) Text("Nothing uses it.", style = MaterialTheme.typography.bodySmall)
+            SectionCard("${model.searched}: ${results.size} ${if (results.size == 1) "use" else "uses"}", subtitle = if (results.size > ResearchEditorModel.LIMIT) stringResource(Res.string.research_the_first_x_are_listed, ResearchEditorModel.LIMIT) else stringResource(Res.string.research_click_one_to_open_it)) {
+                if (results.isEmpty()) Text(stringResource(Res.string.research_nothing_uses_it), style = MaterialTheme.typography.bodySmall)
                 results.take(ResearchEditorModel.LIMIT).forEachIndexed { i, u ->
                     val where = if (u.place == Usage.Place.SCRIPT) "Script ${u.file}, item ${u.index}" else "Events ${u.file}, #${u.index}"
                     TextButton(onClick = { onOpen(if (u.place == Usage.Place.SCRIPT) EditorKind.SCRIPTS else EditorKind.EVENTS, u.file) }, modifier = Modifier.testTag("research-result:$i")) {

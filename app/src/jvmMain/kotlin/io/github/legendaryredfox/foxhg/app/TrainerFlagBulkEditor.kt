@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -98,16 +100,16 @@ fun TrainerFlagBulkEditor(model: TrainerFlagBulkEditorModel, modifier: Modifier 
     }
     val rows = model.rows()
     Column(modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Trainer battle flags", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(Res.string.trainer_flag_bulk_trainer_battle_flags), style = MaterialTheme.typography.headlineSmall)
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
-            PickerField("Flag", model.flag, TrainerFlagBulk.NAMES, { model.flag = it }, Modifier.width(240.dp))
-            SearchBox(model.search, { model.search = it }, "Search trainers or classes…", Modifier.width(280.dp))
-            Chip("${model.count()} trainers have it")
+            PickerField(stringResource(Res.string.trainer_flag_bulk_flag), model.flag, TrainerFlagBulk.NAMES, { model.flag = it }, Modifier.width(240.dp))
+            SearchBox(model.search, { model.search = it }, stringResource(Res.string.trainer_flag_bulk_search_trainers_or_classes), Modifier.width(280.dp))
+            Chip(stringResource(Res.string.trainer_flag_bulk_x_trainers_have_it, model.count()))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("${rows.size} shown:", style = MaterialTheme.typography.bodyMedium)
-            OutlinedButton(onClick = { model.set(rows, true) }, modifier = Modifier.testTag("flags-all")) { Text("Set on all shown") }
-            OutlinedButton(onClick = { model.set(rows, false) }, modifier = Modifier.testTag("flags-none")) { Text("Clear on all shown") }
+            Text(stringResource(Res.string.tm_hm_bulk_x_shown, rows.size), style = MaterialTheme.typography.bodyMedium)
+            OutlinedButton(onClick = { model.set(rows, true) }, modifier = Modifier.testTag("flags-all")) { Text(stringResource(Res.string.trainer_flag_bulk_set_on_all_shown)) }
+            OutlinedButton(onClick = { model.set(rows, false) }, modifier = Modifier.testTag("flags-none")) { Text(stringResource(Res.string.trainer_flag_bulk_clear_on_all_shown)) }
         }
         LazyColumn(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             items(rows, key = { it }) { trainer ->
@@ -115,11 +117,11 @@ fun TrainerFlagBulkEditor(model: TrainerFlagBulkEditorModel, modifier: Modifier 
                     Text(model.label(trainer), Modifier.width(220.dp), style = MaterialTheme.typography.bodyMedium, maxLines = 1)
                     Text(model.className(trainer), Modifier.width(180.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                     val on = model.has(trainer)
-                    ToggleChip(if (on) "On" else "Off", on, { v -> model.set(listOf(trainer), v) }, Modifier.testTag("flag:$trainer"))
+                    ToggleChip(if (on) stringResource(Res.string.trainer_flag_bulk_on) else stringResource(Res.string.trainer_flag_bulk_off), on, { v -> model.set(listOf(trainer), v) }, Modifier.testTag("flag:$trainer"))
                     val classmates = model.classmates(trainer)
                     if (classmates.size > 1) {
                         OutlinedButton(onClick = { model.set(classmates, !on) }, modifier = Modifier.testTag("flag-class:$trainer")) {
-                            Text(if (on) "Clear whole class" else "Set whole class")
+                            Text(if (on) stringResource(Res.string.trainer_flag_bulk_clear_whole_class) else stringResource(Res.string.trainer_flag_bulk_set_whole_class))
                         }
                     }
                 }

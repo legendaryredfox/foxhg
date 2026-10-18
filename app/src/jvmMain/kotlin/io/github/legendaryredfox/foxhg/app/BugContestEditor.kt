@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -64,26 +66,25 @@ fun BugContestEditor(model: BugContestEditorModel, modifier: Modifier = Modifier
     val chances = BugContestTable.effectiveRates(entries)
     val problems = BugContestTable.problems(entries)
     DetailPane(modifier.padding(16.dp)) {
-        Text("Bug Catching Contest", style = MaterialTheme.typography.headlineSmall)
-        SectionCard("Set", subtitle = "Which set the National Park uses: the first without the National Dex, then by the day of the week on the DS clock") {
+        Text(stringResource(Res.string.bug_contest_bug_catching_contest), style = MaterialTheme.typography.headlineSmall)
+        SectionCard(stringResource(Res.string.bug_contest_set), subtitle = stringResource(Res.string.bug_contest_which_set_the_national_park_uses_t)) {
             @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
             FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                BugContestTable.SET_NAMES.forEachIndexed { s, name -> ToggleChip("Set $s", model.set == s, { model.set = s }) }
+                BugContestTable.SET_NAMES.forEachIndexed { s, name -> ToggleChip(stringResource(Res.string.bug_contest_set_x, s), model.set == s, { model.set = s }) }
             }
             Text(BugContestTable.SET_NAMES[model.set], style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         SectionCard(
-            "Pokémon",
-            subtitle = "The game rolls 0 to 99 and takes the first slot whose rate is at or below the roll, so rates must fall from top to bottom and end at 0. " +
-                "Chance = the gap to the rate above (100 for the first slot). Score is the rarity part of the judge's score",
+            stringResource(Res.string.group_pokemon),
+            subtitle = stringResource(Res.string.bug_contest_the_game_rolls_0_to_99_and_takes_t),
         ) {
             entries.forEachIndexed { slot, e ->
                 FieldFlow {
-                    SpeciesPicker("Slot ${slot + 1}", e.species, species, { v -> model.update(slot) { it.copy(species = v) } }, Modifier.width(240.dp))
-                    NumberField("Min level", e.minLevel, 1..100, { v -> model.update(slot) { it.copy(minLevel = v, maxLevel = maxOf(it.maxLevel, v)) } }, Modifier.width(90.dp), tag = "Slot ${slot + 1} min")
-                    NumberField("Max level", e.maxLevel, 1..100, { v -> model.update(slot) { it.copy(maxLevel = v, minLevel = minOf(it.minLevel, v)) } }, Modifier.width(90.dp), tag = "Slot ${slot + 1} max")
-                    NumberField("Rate", e.rate, 0..99, { v -> model.update(slot) { it.copy(rate = v) } }, Modifier.width(80.dp), tag = "Slot ${slot + 1} rate")
-                    NumberField("Score", e.score, 0..255, { v -> model.update(slot) { it.copy(score = v) } }, Modifier.width(80.dp), tag = "Slot ${slot + 1} score")
+                    SpeciesPicker(stringResource(Res.string.bug_contest_slot_x, slot + 1), e.species, species, { v -> model.update(slot) { it.copy(species = v) } }, Modifier.width(240.dp))
+                    NumberField(stringResource(Res.string.headbutt_min_level), e.minLevel, 1..100, { v -> model.update(slot) { it.copy(minLevel = v, maxLevel = maxOf(it.maxLevel, v)) } }, Modifier.width(90.dp), tag = "Slot ${slot + 1} min")
+                    NumberField(stringResource(Res.string.headbutt_max_level), e.maxLevel, 1..100, { v -> model.update(slot) { it.copy(maxLevel = v, minLevel = minOf(it.minLevel, v)) } }, Modifier.width(90.dp), tag = "Slot ${slot + 1} max")
+                    NumberField(stringResource(Res.string.bug_contest_rate), e.rate, 0..99, { v -> model.update(slot) { it.copy(rate = v) } }, Modifier.width(80.dp), tag = "Slot ${slot + 1} rate")
+                    NumberField(stringResource(Res.string.bug_contest_score), e.score, 0..255, { v -> model.update(slot) { it.copy(score = v) } }, Modifier.width(80.dp), tag = "Slot ${slot + 1} score")
                     Chip("${chances[slot]}%", emphasis = chances[slot] == 0)
                 }
             }

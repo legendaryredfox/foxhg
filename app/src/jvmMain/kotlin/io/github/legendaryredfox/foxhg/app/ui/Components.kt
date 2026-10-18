@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app.ui
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -248,9 +250,9 @@ private fun PickerPopup(selected: Int, options: List<String>, onSelect: (Int) ->
             },
         ) {
             Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                SearchBox(query, { query = it }, "Search…", Modifier.fillMaxWidth().focusRequester(focus))
+                SearchBox(query, { query = it }, stringResource(Res.string.egg_move_search), Modifier.fillMaxWidth().focusRequester(focus))
                 if (matches.isEmpty()) {
-                    Text("No match", Modifier.padding(8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(Res.string.record_list_no_match), Modifier.padding(8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 } else {
                     LazyColumn(Modifier.heightIn(max = 320.dp), state = list) {
                         itemsIndexed(matches) { _, id ->
@@ -332,7 +334,7 @@ fun ListRow(
             )
         }
         if (detail != null) Text(detail, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant, maxLines = 1)
-        if (flagged) Text("differs", style = MaterialTheme.typography.labelSmall, color = scheme.tertiary)
+        if (flagged) Text(stringResource(Res.string.components_differs), style = MaterialTheme.typography.labelSmall, color = scheme.tertiary)
         if (edited) Box(Modifier.width(7.dp).height(7.dp).background(scheme.primary, MaterialTheme.shapes.extraSmall))
     }
 }
@@ -465,7 +467,7 @@ fun ConfirmDialog(title: String, text: String, confirmLabel: String, onConfirm: 
         title = { Text(title) },
         text = { Text(text, style = MaterialTheme.typography.bodyMedium) },
         confirmButton = { Button(onClick = onConfirm, modifier = Modifier.testTag("confirm")) { Text(confirmLabel) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }
 

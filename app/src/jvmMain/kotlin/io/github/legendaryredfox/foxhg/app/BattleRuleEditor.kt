@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -72,7 +74,7 @@ fun BattleRuleEditor(model: BattleRuleEditorModel, modifier: Modifier = Modifier
             selected = model.selectedIndex,
             search = model.search,
             onSearch = { model.search = it },
-            placeholder = "Search battle rules…",
+            placeholder = stringResource(Res.string.battle_rule_search_battle_rules),
             label = model::label,
             onSelect = model::select,
             isEdited = model::isEdited,
@@ -85,16 +87,16 @@ fun BattleRuleEditor(model: BattleRuleEditorModel, modifier: Modifier = Modifier
             EditorHeader(rule.group, rule.name)
             SectionCard(rule.name, subtitle = rule.description) {
                 FieldFlow {
-                    NumberField("Value", model.value(index), rule.range, { v -> model.set(index, v) }, Modifier.width(110.dp), tag = "Battle rule")
+                    NumberField(stringResource(Res.string.battle_rule_value), model.value(index), rule.range, { v -> model.set(index, v) }, Modifier.width(110.dp), tag = "Battle rule")
                     Chip("${rule.explain(model.value(index))}")
-                    Chip("game: ${rule.vanilla} (${rule.explain(rule.vanilla)})")
+                    Chip(stringResource(Res.string.battle_rule_game_x_x, rule.vanilla, rule.explain(rule.vanilla)))
                 }
                 model.disagreement(index)?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                 Text(
                     "${rule.sites.size} ${if (rule.sites.size == 1) "place" else "places"} in the game's code or battle scripts hold this number; all are written together. Edits are not checked in game unless noted in the plan.",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                OutlinedButton(onClick = { model.set(index, rule.vanilla) }, modifier = Modifier.testTag("battle-rule-restore")) { Text("Restore the game's value") }
+                OutlinedButton(onClick = { model.set(index, rule.vanilla) }, modifier = Modifier.testTag("battle-rule-restore")) { Text(stringResource(Res.string.battle_rule_restore_the_game_s_value)) }
             }
         }
     }

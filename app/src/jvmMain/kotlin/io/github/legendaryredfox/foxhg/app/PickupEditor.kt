@@ -66,8 +66,7 @@ fun PickupEditor(model: PickupEditorModel, modifier: Modifier = Modifier) {
         Text(stringResource(Res.string.editor_pickup), style = MaterialTheme.typography.headlineSmall)
         SectionCard(
             stringResource(Res.string.pickup_activation),
-            subtitle = "After a battle, a Pokémon with Pickup and no held item activates with a 1 in divisor chance, then rolls 0 to 99. " +
-                "The first slot whose weight is above the roll gives a common item; a roll of 98 or 99 that no weight catches gives a rare one",
+            subtitle = stringResource(Res.string.pickup_after_a_battle_a_pok_mon_with_pick),
         ) {
             FieldFlow {
                 NumberField(stringResource(Res.string.pickup_divisor), table.divisor, 1..255, { v -> model.update { it.copy(divisor = v) } }, Modifier.width(100.dp))

@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -103,7 +105,7 @@ fun TownMapEditor(model: TownMapEditorModel, modifier: Modifier = Modifier) {
             selected = model.selectedIndex,
             search = model.search,
             onSearch = { model.search = it },
-            placeholder = "Search towns and spots…",
+            placeholder = stringResource(Res.string.town_map_search_towns_and_spots),
             label = model::label,
             onSelect = model::select,
             isEdited = model::isEdited,
@@ -115,56 +117,56 @@ fun TownMapEditor(model: TownMapEditorModel, modifier: Modifier = Modifier) {
             if (position < model.townCount) {
                 val s = table.spots[position]
                 EditorHeader("T$position", model.label(position).drop(9))
-                SectionCard("Town", subtitle = "Drawn red once visited, replaced by a gray block before. Positions are 8x8 tiles in the map picture") {
+                SectionCard(stringResource(Res.string.fly_town), subtitle = stringResource(Res.string.town_map_drawn_red_once_visited_replaced_by)) {
                     FieldFlow {
-                        PickerField("Map", s.mapHeader, model.mapLabels, { v -> model.updateSpot { it.copy(mapHeader = v) } }, Modifier.width(260.dp))
-                        PickerField("Gate map", s.gateHeader, model.mapLabels, { v -> model.updateSpot { it.copy(gateHeader = v) } }, Modifier.width(260.dp))
-                        NumberField("Entry", s.entry, 0..255, { v -> model.updateSpot { it.copy(entry = v) } }, Modifier.width(90.dp))
-                        NumberField("Visited entry", s.visitedEntry, 0..255, { v -> model.updateSpot { it.copy(visitedEntry = v) } }, Modifier.width(120.dp))
+                        PickerField(stringResource(Res.string.new_save_map), s.mapHeader, model.mapLabels, { v -> model.updateSpot { it.copy(mapHeader = v) } }, Modifier.width(260.dp))
+                        PickerField(stringResource(Res.string.town_map_gate_map), s.gateHeader, model.mapLabels, { v -> model.updateSpot { it.copy(gateHeader = v) } }, Modifier.width(260.dp))
+                        NumberField(stringResource(Res.string.town_map_entry), s.entry, 0..255, { v -> model.updateSpot { it.copy(entry = v) } }, Modifier.width(90.dp))
+                        NumberField(stringResource(Res.string.town_map_visited_entry), s.visitedEntry, 0..255, { v -> model.updateSpot { it.copy(visitedEntry = v) } }, Modifier.width(120.dp))
                     }
                     FieldFlow {
-                        NumberField("Red X", s.redX, 0..255, { v -> model.updateSpot { it.copy(redX = v) } }, Modifier.width(90.dp))
-                        NumberField("Red Y", s.redY, 0..255, { v -> model.updateSpot { it.copy(redY = v) } }, Modifier.width(90.dp))
-                        NumberField("Gray X", s.grayX, 0..255, { v -> model.updateSpot { it.copy(grayX = v) } }, Modifier.width(90.dp))
-                        NumberField("Gray Y", s.grayY, 0..255, { v -> model.updateSpot { it.copy(grayY = v) } }, Modifier.width(90.dp))
+                        NumberField(stringResource(Res.string.town_map_red_x), s.redX, 0..255, { v -> model.updateSpot { it.copy(redX = v) } }, Modifier.width(90.dp))
+                        NumberField(stringResource(Res.string.town_map_red_y), s.redY, 0..255, { v -> model.updateSpot { it.copy(redY = v) } }, Modifier.width(90.dp))
+                        NumberField(stringResource(Res.string.town_map_gray_x), s.grayX, 0..255, { v -> model.updateSpot { it.copy(grayX = v) } }, Modifier.width(90.dp))
+                        NumberField(stringResource(Res.string.town_map_gray_y), s.grayY, 0..255, { v -> model.updateSpot { it.copy(grayY = v) } }, Modifier.width(90.dp))
                     }
                     FieldFlow {
-                        NumberField("Town width", s.townDimX, 0..15, { v -> model.updateSpot { it.copy(townDimX = v) } }, Modifier.width(110.dp))
-                        NumberField("Town height", s.townDimY, 0..15, { v -> model.updateSpot { it.copy(townDimY = v) } }, Modifier.width(110.dp))
-                        NumberField("Gray block width", s.replacementDimX, 0..15, { v -> model.updateSpot { it.copy(replacementDimX = v) } }, Modifier.width(140.dp))
-                        NumberField("Gray block height", s.replacementDimY, 0..15, { v -> model.updateSpot { it.copy(replacementDimY = v) } }, Modifier.width(140.dp))
-                        NumberField("Town offset X", s.offsetX, 0..15, { v -> model.updateSpot { it.copy(offsetX = v) } }, Modifier.width(120.dp))
-                        NumberField("Town offset Y", s.offsetY, 0..15, { v -> model.updateSpot { it.copy(offsetY = v) } }, Modifier.width(120.dp))
+                        NumberField(stringResource(Res.string.town_map_town_width), s.townDimX, 0..15, { v -> model.updateSpot { it.copy(townDimX = v) } }, Modifier.width(110.dp))
+                        NumberField(stringResource(Res.string.town_map_town_height), s.townDimY, 0..15, { v -> model.updateSpot { it.copy(townDimY = v) } }, Modifier.width(110.dp))
+                        NumberField(stringResource(Res.string.town_map_gray_block_width), s.replacementDimX, 0..15, { v -> model.updateSpot { it.copy(replacementDimX = v) } }, Modifier.width(140.dp))
+                        NumberField(stringResource(Res.string.town_map_gray_block_height), s.replacementDimY, 0..15, { v -> model.updateSpot { it.copy(replacementDimY = v) } }, Modifier.width(140.dp))
+                        NumberField(stringResource(Res.string.town_map_town_offset_x), s.offsetX, 0..15, { v -> model.updateSpot { it.copy(offsetX = v) } }, Modifier.width(120.dp))
+                        NumberField(stringResource(Res.string.town_map_town_offset_y), s.offsetY, 0..15, { v -> model.updateSpot { it.copy(offsetY = v) } }, Modifier.width(120.dp))
                     }
                     Text(
-                        "The red position is stored one tile off: the picture position is X - 1 and Y + 1. The table has a fixed length of ${model.townCount} entries.",
+                        stringResource(Res.string.town_map_the_red_position_is_stored_one_til, model.townCount),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             } else {
                 val s = table.selections[position - model.townCount]
                 EditorHeader("S${position - model.townCount}", model.label(position).drop(9))
-                SectionCard("Selection block", subtitle = "The orange block shown when the cursor is on a town or route") {
+                SectionCard(stringResource(Res.string.town_map_selection_block), subtitle = stringResource(Res.string.town_map_the_orange_block_shown_when_the_cu)) {
                     FieldFlow {
-                        PickerField("Map", s.mapHeader, model.mapLabels, { v -> model.updateSelection { it.copy(mapHeader = v) } }, Modifier.width(260.dp))
-                        NumberField("Text entry", s.textEntry, 0..255, { v -> model.updateSelection { it.copy(textEntry = v) } }, Modifier.width(110.dp))
-                        NumberField("Fly spot", s.flySpot, 0..255, { v -> model.updateSelection { it.copy(flySpot = v) } }, Modifier.width(100.dp))
-                        NumberField("Flags", s.flags, 0..255, { v -> model.updateSelection { it.copy(flags = v) } }, Modifier.width(90.dp))
+                        PickerField(stringResource(Res.string.new_save_map), s.mapHeader, model.mapLabels, { v -> model.updateSelection { it.copy(mapHeader = v) } }, Modifier.width(260.dp))
+                        NumberField(stringResource(Res.string.town_map_text_entry), s.textEntry, 0..255, { v -> model.updateSelection { it.copy(textEntry = v) } }, Modifier.width(110.dp))
+                        NumberField(stringResource(Res.string.town_map_fly_spot), s.flySpot, 0..255, { v -> model.updateSelection { it.copy(flySpot = v) } }, Modifier.width(100.dp))
+                        NumberField(stringResource(Res.string.move_flags), s.flags, 0..255, { v -> model.updateSelection { it.copy(flags = v) } }, Modifier.width(90.dp))
                     }
                     FieldFlow {
-                        NumberField("PokéGear X", s.baseX, 0..255, { v -> model.updateSelection { it.copy(baseX = v) } }, Modifier.width(110.dp))
-                        NumberField("PokéGear Y", s.baseY, 0..255, { v -> model.updateSelection { it.copy(baseY = v) } }, Modifier.width(110.dp))
-                        NumberField("Width", s.dimX, 0..15, { v -> model.updateSelection { it.copy(dimX = v) } }, Modifier.width(90.dp))
-                        NumberField("Height", s.dimY, 0..15, { v -> model.updateSelection { it.copy(dimY = v) } }, Modifier.width(90.dp))
+                        NumberField(stringResource(Res.string.town_map_pok_gear_x), s.baseX, 0..255, { v -> model.updateSelection { it.copy(baseX = v) } }, Modifier.width(110.dp))
+                        NumberField(stringResource(Res.string.town_map_pok_gear_y), s.baseY, 0..255, { v -> model.updateSelection { it.copy(baseY = v) } }, Modifier.width(110.dp))
+                        NumberField(stringResource(Res.string.town_map_width), s.dimX, 0..15, { v -> model.updateSelection { it.copy(dimX = v) } }, Modifier.width(90.dp))
+                        NumberField(stringResource(Res.string.town_map_height), s.dimY, 0..15, { v -> model.updateSelection { it.copy(dimY = v) } }, Modifier.width(90.dp))
                     }
                     FieldFlow {
-                        NumberField("Picture X", s.orangeX, 0..255, { v -> model.updateSelection { it.copy(orangeX = v) } }, Modifier.width(100.dp))
-                        NumberField("Picture Y", s.orangeY, 0..255, { v -> model.updateSelection { it.copy(orangeY = v) } }, Modifier.width(100.dp))
-                        NumberField("Picture width", s.orangeDimX, 0..255, { v -> model.updateSelection { it.copy(orangeDimX = v) } }, Modifier.width(120.dp))
-                        NumberField("Picture height", s.orangeDimY, 0..255, { v -> model.updateSelection { it.copy(orangeDimY = v) } }, Modifier.width(120.dp))
+                        NumberField(stringResource(Res.string.town_map_picture_x), s.orangeX, 0..255, { v -> model.updateSelection { it.copy(orangeX = v) } }, Modifier.width(100.dp))
+                        NumberField(stringResource(Res.string.town_map_picture_y), s.orangeY, 0..255, { v -> model.updateSelection { it.copy(orangeY = v) } }, Modifier.width(100.dp))
+                        NumberField(stringResource(Res.string.town_map_picture_width), s.orangeDimX, 0..255, { v -> model.updateSelection { it.copy(orangeDimX = v) } }, Modifier.width(120.dp))
+                        NumberField(stringResource(Res.string.town_map_picture_height), s.orangeDimY, 0..255, { v -> model.updateSelection { it.copy(orangeDimY = v) } }, Modifier.width(120.dp))
                     }
                     Text(
-                        "The text entry is the blurb in text bank 273. A non-zero fly spot marks a town the player can fly to. What the flags do is not documented, so they are kept as they are unless you change them. The table has a fixed length of ${table.selections.size} entries.",
+                        stringResource(Res.string.town_map_the_text_entry_is_the_blurb_in_tex, table.selections.size),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

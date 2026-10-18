@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,29 +37,29 @@ fun photoLabel(project: RomProject): (Int) -> String {
 fun PhotoEditor(model: RecordEditorModel<PhotoLocation>, mapLabels: List<String>, modifier: Modifier = Modifier) {
     RecordListDetail(model, modifier) { p ->
         EditorHeader(model.selectedIndex.toString(), model.label(model.selectedIndex).drop(4))
-        SectionCard("Place", subtitle = "Where the player stands in the picture, as the TakePhoto script command uses it") {
+        SectionCard(stringResource(Res.string.photo_place), subtitle = stringResource(Res.string.photo_where_the_player_stands_in_the_pic)) {
             FieldFlow {
-                PickerField("Map", p.header, mapLabels, { v -> model.update { it.copy(header = v) } }, Modifier.width(260.dp))
-                NumberField("Player X", p.x, 0..65535, { v -> model.update { it.copy(x = v) } }, Modifier.width(100.dp))
-                NumberField("Player Y", p.y, 0..65535, { v -> model.update { it.copy(y = v) } }, Modifier.width(100.dp))
+                PickerField(stringResource(Res.string.new_save_map), p.header, mapLabels, { v -> model.update { it.copy(header = v) } }, Modifier.width(260.dp))
+                NumberField(stringResource(Res.string.photo_player_x), p.x, 0..65535, { v -> model.update { it.copy(x = v) } }, Modifier.width(100.dp))
+                NumberField(stringResource(Res.string.photo_player_y), p.y, 0..65535, { v -> model.update { it.copy(y = v) } }, Modifier.width(100.dp))
             }
-            Text("X and Y are global positions (the whole matrix, as in the Events editor).", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(Res.string.photo_x_and_y_are_global_positions_the_w), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        SectionCard("Picture", subtitle = "The icon in the Photo Album and who is next to the player") {
+        SectionCard(stringResource(Res.string.photo_picture), subtitle = stringResource(Res.string.photo_the_icon_in_the_photo_album_and_wh)) {
             FieldFlow {
-                PickerField("Album icon", p.icon, PhotoLocation.ICONS, { v -> model.update { it.copy(icon = v) } }, Modifier.width(220.dp))
-                NumberField("Overworld entry (0 = party)", p.npc, 0..65535, { v -> model.update { it.copy(npc = v) } }, Modifier.width(210.dp))
+                PickerField(stringResource(Res.string.photo_album_icon), p.icon, PhotoLocation.ICONS, { v -> model.update { it.copy(icon = v) } }, Modifier.width(220.dp))
+                NumberField(stringResource(Res.string.photo_overworld_entry_0_party), p.npc, 0..65535, { v -> model.update { it.copy(npc = v) } }, Modifier.width(210.dp))
             }
             Text(
-                "With an overworld entry of 0 the picture is a group photo of the party; otherwise it shows the player, the first Pokémon and that overworld NPC, whether or not it is on the map.",
+                stringResource(Res.string.photo_with_an_overworld_entry_of_0_the_p),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        SectionCard("Unknown", subtitle = "Kept as they are in the game: the constant is 0xFF01 everywhere, the parameters are used by some places and their meaning is not known") {
+        SectionCard(stringResource(Res.string.photo_unknown), subtitle = stringResource(Res.string.photo_kept_as_they_are_in_the_game_the_c)) {
             FieldFlow {
-                NumberField("Constant", p.unknown, 0..65535, { v -> model.update { it.copy(unknown = v) } }, Modifier.width(110.dp))
-                NumberField("Parameter 1", p.param1, 0..65535, { v -> model.update { it.copy(param1 = v) } }, Modifier.width(110.dp))
-                NumberField("Parameter 2", p.param2, 0..65535, { v -> model.update { it.copy(param2 = v) } }, Modifier.width(110.dp))
+                NumberField(stringResource(Res.string.photo_constant), p.unknown, 0..65535, { v -> model.update { it.copy(unknown = v) } }, Modifier.width(110.dp))
+                NumberField(stringResource(Res.string.photo_parameter_1), p.param1, 0..65535, { v -> model.update { it.copy(param1 = v) } }, Modifier.width(110.dp))
+                NumberField(stringResource(Res.string.photo_parameter_2), p.param2, 0..65535, { v -> model.update { it.copy(param2 = v) } }, Modifier.width(110.dp))
             }
         }
     }

@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -72,9 +74,9 @@ fun TrainerClassEditor(model: TrainerClassEditorModel, modifier: Modifier = Modi
     }
     val table = model.table ?: return
     Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SearchBox(model.search, { model.search = it }, "Search classes…", Modifier.width(272.dp))
+        SearchBox(model.search, { model.search = it }, stringResource(Res.string.trainer_class_search_classes), Modifier.width(272.dp))
         DetailPane {
-            SectionCard("Trainer class gender", subtitle = "Used for battle text and sprites. Class names are not editable yet") {
+            SectionCard(stringResource(Res.string.trainer_class_trainer_class_gender), subtitle = stringResource(Res.string.trainer_class_used_for_battle_text_and_sprites_c)) {
                 val rows = table.genders.indices.filter { model.search.isBlank() || model.label(it).contains(model.search.trim(), ignoreCase = true) }
                 rows.chunked(2).forEach { pair ->
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -84,7 +86,7 @@ fun TrainerClassEditor(model: TrainerClassEditorModel, modifier: Modifier = Modi
             }
             val prizes = model.prizes
             if (prizes != null) {
-                SectionCard("Prize money multiplier", subtitle = "Money won = multiplier x level of the trainer's last Pokémon x a base amount") {
+                SectionCard(stringResource(Res.string.trainer_class_prize_money_multiplier), subtitle = stringResource(Res.string.trainer_class_money_won_multiplier_x_level_of_th)) {
                     val rows = prizes.entries.indices.filter { model.search.isBlank() || model.label(prizes.entries[it].trainerClass).contains(model.search.trim(), ignoreCase = true) }
                     rows.chunked(3).forEach { triple ->
                         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {

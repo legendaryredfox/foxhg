@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,19 +41,19 @@ fun SaveFlagsScreen(model: SaveEditorModel, modifier: Modifier = Modifier) {
     DetailPane(modifier.padding(16.dp)) {
         EditorHeader("", model.path.fileName.toString(), trailing = { SaveStatus(model) })
         if (chunk == null) {
-            Text("This save has no sound general block, so there are no flags to show.", color = MaterialTheme.colorScheme.error)
+            Text(stringResource(Res.string.flags_this_save_has_no_sound_general_blo), color = MaterialTheme.colorScheme.error)
             return@DetailPane
         }
         var query by remember { mutableStateOf("") }
         var onlySet by remember { mutableStateOf(false) }
-        SectionCard("Search", subtitle = "A flag or variable by number (12, or 0x6A for hex) or by part of its name. Flags are events the game remembers (a badge won, an item picked up, a door opened); variables are numbers scripts keep. Changing them can break the story: the game does not check.") {
-            LabeledText("Number or name", query) { query = it }
+        SectionCard(stringResource(Res.string.flags_search), subtitle = stringResource(Res.string.flags_a_flag_or_variable_by_number_12_or)) {
+            LabeledText(stringResource(Res.string.pokedex_number_or_name), query) { query = it }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ToggleChip("Only flags that are set / variables that are not 0", onlySet, { onlySet = it })
+                ToggleChip(stringResource(Res.string.flags_only_flags_that_are_set_variables), onlySet, { onlySet = it })
             }
         }
         val flags = (1 until SaveVarsFlags.FLAG_COUNT).filter { matches(query, it, ScriptSymbols.flagName(it)) && (!onlySet || SaveVarsFlags.isSet(chunk, it)) }
-        SectionCard("Flags", subtitle = "${SaveVarsFlags.setFlags(chunk).size} of ${SaveVarsFlags.FLAG_COUNT - 1} set; ${flags.size} match${if (flags.size > SHOWN) ", the first $SHOWN shown" else ""}") {
+        SectionCard(stringResource(Res.string.move_flags), subtitle = "${SaveVarsFlags.setFlags(chunk).size} of ${SaveVarsFlags.FLAG_COUNT - 1} set; ${flags.size} match${if (flags.size > SHOWN) ", the first $SHOWN shown" else ""}") {
             @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
             androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 flags.take(SHOWN).forEach { id ->
@@ -60,10 +62,10 @@ fun SaveFlagsScreen(model: SaveEditorModel, modifier: Modifier = Modifier) {
             }
         }
         val variables = (0 until SaveVarsFlags.VARS).filter { matches(query, it, ScriptSymbols.variableName(ScriptSymbols.FIRST_VARIABLE + it)) && (!onlySet || SaveVarsFlags.variable(chunk, it) != 0) }
-        SectionCard("Variables", subtitle = "${SaveVarsFlags.usedVariables(chunk).size} of ${SaveVarsFlags.VARS} not 0; ${variables.size} match${if (variables.size > SHOWN) ", the first $SHOWN shown" else ""}") {
+        SectionCard(stringResource(Res.string.flags_variables), subtitle = "${SaveVarsFlags.usedVariables(chunk).size} of ${SaveVarsFlags.VARS} not 0; ${variables.size} match${if (variables.size > SHOWN) ", the first $SHOWN shown" else ""}") {
             variables.take(SHOWN).forEach { n ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    NumberField("Value", SaveVarsFlags.variable(chunk, n), 0..65535, { v -> model.updateFlags { SaveVarsFlags.withVariable(it, n, v) } }, Modifier.width(110.dp), tag = "Variable $n")
+                    NumberField(stringResource(Res.string.battle_rule_value), SaveVarsFlags.variable(chunk, n), 0..65535, { v -> model.updateFlags { SaveVarsFlags.withVariable(it, n, v) } }, Modifier.width(110.dp), tag = "Variable $n")
                     Text("0x%X %s".format(ScriptSymbols.FIRST_VARIABLE + n, ScriptSymbols.variableName(ScriptSymbols.FIRST_VARIABLE + n)?.removePrefix("VAR_") ?: ""), style = MaterialTheme.typography.bodyMedium)
                 }
             }

@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -223,18 +225,18 @@ fun SaveFileScreen(model: SaveEditorModel, modifier: Modifier = Modifier) {
     val file = model.file
     DetailPane(modifier.padding(16.dp)) {
         EditorHeader("", model.path.fileName.toString(), trailing = { SaveStatus(model) })
-        SectionCard("Blocks", subtitle = "The save is kept twice (slot 0 and slot 1); the game loads the newest sound copy of each block and writes the other slot next time") {
+        SectionCard(stringResource(Res.string.save_blocks), subtitle = stringResource(Res.string.save_the_save_is_kept_twice_slot_0_and)) {
             file.blocks.forEach { b ->
                 val current = file.current(b.kind)?.slot == b.slot
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Slot ${b.slot} ${b.kind.name.lowercase()}", Modifier.width(150.dp), style = MaterialTheme.typography.bodyMedium)
-                    Chip(if (b.valid) "sound" else "not a save (blank or damaged)", emphasis = !b.valid)
-                    if (b.valid) Chip("saved ${b.footer.count} times")
-                    if (current) Chip("loaded by the game", emphasis = true)
+                    Text(stringResource(Res.string.save_slot_x_x, b.slot, b.kind.name.lowercase()), Modifier.width(150.dp), style = MaterialTheme.typography.bodyMedium)
+                    Chip(if (b.valid) stringResource(Res.string.save_sound) else stringResource(Res.string.save_not_a_save_blank_or_damaged), emphasis = !b.valid)
+                    if (b.valid) Chip(stringResource(Res.string.save_saved_x_times, b.footer.count))
+                    if (current) Chip(stringResource(Res.string.save_loaded_by_the_game), emphasis = true)
                 }
             }
         }
-        SectionCard("General block chunks", subtitle = "What the 41 chunks of the general block are, from the game's own table (the fields inside are decoded one editor at a time)") {
+        SectionCard(stringResource(Res.string.save_general_block_chunks), subtitle = stringResource(Res.string.save_what_the_41_chunks_of_the_general)) {
             SaveChunks.of(BlockKind.GENERAL).forEach { c ->
                 Text("%02d  %-32s offset 0x%04X, %d bytes".format(c.id, c.name, c.offset, c.size), style = MaterialTheme.typography.bodySmall)
             }
@@ -244,9 +246,9 @@ fun SaveFileScreen(model: SaveEditorModel, modifier: Modifier = Modifier) {
 
 @Composable
 internal fun SaveStatus(model: SaveEditorModel) {
-    if (model.dirty) Chip("● Not written", emphasis = true, modifier = Modifier.testTag("save-dirty"))
+    if (model.dirty) Chip(stringResource(Res.string.save_not_written), emphasis = true, modifier = Modifier.testTag("save-dirty"))
     else model.status?.let { Chip(it) }
-    Button(onClick = { model.write() }, enabled = model.dirty, modifier = Modifier.testTag("save-write")) { Text("Write save file") }
+    Button(onClick = { model.write() }, enabled = model.dirty, modifier = Modifier.testTag("save-write")) { Text(stringResource(Res.string.save_write_save_file)) }
     model.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
 }
 
@@ -257,45 +259,45 @@ fun SavePlayerScreen(model: SaveEditorModel, modifier: Modifier = Modifier) {
     DetailPane(modifier.padding(16.dp)) {
         EditorHeader("", model.path.fileName.toString(), trailing = { SaveStatus(model) })
         if (player == null) {
-            Text("This save has no sound general block, so there is no player to show.", color = MaterialTheme.colorScheme.error)
+            Text(stringResource(Res.string.save_this_save_has_no_sound_general_blo), color = MaterialTheme.colorScheme.error)
             return@DetailPane
         }
-        SectionCard("Trainer", subtitle = "${if (player.version == 7) "HeartGold" else if (player.version == 8) "SoulSilver" else "Game ${player.version}"}, language ${player.language}. The ID is shown as the Trainer Card shows it; it is not edited here") {
+        SectionCard(stringResource(Res.string.trainer_trainer), subtitle = "${if (player.version == 7) "HeartGold" else if (player.version == 8) "SoulSilver" else "Game ${player.version}"}, language ${player.language}. The ID is shown as the Trainer Card shows it; it is not edited here") {
             FieldFlow {
                 var name by remember(player.name) { mutableStateOf(player.name) }
-                LabeledText("Name (up to ${PlayerData.MAX_NAME} characters)", name) { text ->
+                LabeledText(stringResource(Res.string.save_name_up_to_x_characters, PlayerData.MAX_NAME), name) { text ->
                     name = text
                     player.withName(text).let { r -> if (r is FoxResult.Ok) model.updatePlayer { r.value } }
                 }
-                PickerField("Gender", player.gender.coerceIn(0, 1), PlayerData.GENDERS, { v -> model.updatePlayer { it.copy(gender = v) } }, Modifier.width(140.dp))
+                PickerField(stringResource(Res.string.new_save_gender), player.gender.coerceIn(0, 1), PlayerData.GENDERS, { v -> model.updatePlayer { it.copy(gender = v) } }, Modifier.width(140.dp))
                 Chip("ID %05d".format(player.visibleId))
             }
             FieldFlow {
-                NumberField("Money", player.money.toInt(), 0..PlayerData.MAX_MONEY.toInt(), { v -> model.updatePlayer { it.copy(money = v.toLong()) } }, Modifier.width(130.dp))
-                NumberField("Coins", player.coins, 0..50_000, { v -> model.updatePlayer { it.copy(coins = v) } }, Modifier.width(110.dp))
+                NumberField(stringResource(Res.string.save_money), player.money.toInt(), 0..PlayerData.MAX_MONEY.toInt(), { v -> model.updatePlayer { it.copy(money = v.toLong()) } }, Modifier.width(130.dp))
+                NumberField(stringResource(Res.string.save_coins), player.coins, 0..50_000, { v -> model.updatePlayer { it.copy(coins = v) } }, Modifier.width(110.dp))
             }
         }
-        SectionCard("Badges") {
-            Text("Johto", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        SectionCard(stringResource(Res.string.save_badges)) {
+            Text(stringResource(Res.string.save_johto), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
             androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 JOHTO_BADGES.forEachIndexed { i, name -> ToggleChip(name, player.johtoBadges and (1 shl i) != 0, { on -> model.updatePlayer { it.copy(johtoBadges = if (on) it.johtoBadges or (1 shl i) else it.johtoBadges and (1 shl i).inv()) } }) }
             }
-            Text("Kanto", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(Res.string.map_header_kanto), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
             androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 KANTO_BADGES.forEachIndexed { i, name -> ToggleChip(name, player.kantoBadges and (1 shl i) != 0, { on -> model.updatePlayer { it.copy(kantoBadges = if (on) it.kantoBadges or (1 shl i) else it.kantoBadges and (1 shl i).inv()) } }) }
             }
         }
-        SectionCard("Play time and progress") {
+        SectionCard(stringResource(Res.string.save_play_time_and_progress)) {
             FieldFlow {
-                NumberField("Hours", player.hours, 0..999, { v -> model.updatePlayer { it.copy(hours = v) } }, Modifier.width(90.dp))
-                NumberField("Minutes", player.minutes, 0..59, { v -> model.updatePlayer { it.copy(minutes = v) } }, Modifier.width(90.dp))
-                NumberField("Seconds", player.seconds, 0..59, { v -> model.updatePlayer { it.copy(seconds = v) } }, Modifier.width(90.dp))
+                NumberField(stringResource(Res.string.save_hours), player.hours, 0..999, { v -> model.updatePlayer { it.copy(hours = v) } }, Modifier.width(90.dp))
+                NumberField(stringResource(Res.string.save_minutes), player.minutes, 0..59, { v -> model.updatePlayer { it.copy(minutes = v) } }, Modifier.width(90.dp))
+                NumberField(stringResource(Res.string.save_seconds), player.seconds, 0..59, { v -> model.updatePlayer { it.copy(seconds = v) } }, Modifier.width(90.dp))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ToggleChip("National Dex", player.nationalDex, { on -> model.updatePlayer { it.copy(flags = if (on) it.flags or 2 else it.flags and 2.inv()) } })
-                ToggleChip("Game cleared", player.gameClear, { on -> model.updatePlayer { it.copy(flags = if (on) it.flags or 1 else it.flags and 1.inv()) } })
+                ToggleChip(stringResource(Res.string.save_national_dex), player.nationalDex, { on -> model.updatePlayer { it.copy(flags = if (on) it.flags or 2 else it.flags and 2.inv()) } })
+                ToggleChip(stringResource(Res.string.save_game_cleared), player.gameClear, { on -> model.updatePlayer { it.copy(flags = if (on) it.flags or 1 else it.flags and 1.inv()) } })
             }
         }
     }
@@ -316,14 +318,14 @@ fun SavePositionScreen(model: SaveEditorModel, mapName: (Int) -> String?, modifi
     DetailPane(modifier.padding(16.dp)) {
         EditorHeader("", model.path.fileName.toString(), trailing = { SaveStatus(model) })
         if (field == null) {
-            Text("This save has no sound general block, so there is no position to show.", color = MaterialTheme.colorScheme.error)
+            Text(stringResource(Res.string.save_this_save_has_no_sound_general_blo_2), color = MaterialTheme.colorScheme.error)
             return@DetailPane
         }
         val here = field.current
-        SectionCard("Where the player is") {
+        SectionCard(stringResource(Res.string.save_where_the_player_is)) {
             FieldFlow {
                 Chip("Map ${here.map}" + (mapName(here.map)?.let { " - $it" } ?: ""))
-                Chip("Tile ${here.x}, ${here.y}")
+                Chip(stringResource(Res.string.map_tile_x_x, here.x, here.y))
                 Chip("Facing ${Location.DIRECTIONS.getOrElse(here.direction) { "?" }.lowercase()}")
             }
         }
@@ -332,18 +334,18 @@ fun SavePositionScreen(model: SaveEditorModel, mapName: (Int) -> String?, modifi
         var y by remember(here) { mutableStateOf(here.y) }
         var direction by remember(here) { mutableStateOf(here.direction.coerceIn(0, 3)) }
         SectionCard(
-            "Move the player",
-            subtitle = "Continue then starts on this tile, with the map's own NPCs. The map and tile must exist and be walkable: the game does not check, and a wall or a tile outside the map leaves the player where nothing works. Use a tile the player can stand on, as the ones below.",
+            stringResource(Res.string.save_move_the_player),
+            subtitle = stringResource(Res.string.save_continue_then_starts_on_this_tile),
         ) {
             FieldFlow {
-                NumberField("Map", map, 0..65535, { map = it }, Modifier.width(100.dp), tag = "Map")
-                NumberField("Tile X", x, 0..1023, { x = it }, Modifier.width(100.dp), tag = "Tile X")
-                NumberField("Tile Y", y, 0..1023, { y = it }, Modifier.width(100.dp), tag = "Tile Y")
-                PickerField("Facing", direction, Location.DIRECTIONS, { direction = it }, Modifier.width(140.dp))
+                NumberField(stringResource(Res.string.new_save_map), map, 0..65535, { map = it }, Modifier.width(100.dp), tag = "Map")
+                NumberField(stringResource(Res.string.new_save_tile_x), x, 0..1023, { x = it }, Modifier.width(100.dp), tag = "Tile X")
+                NumberField(stringResource(Res.string.new_save_tile_y), y, 0..1023, { y = it }, Modifier.width(100.dp), tag = "Tile Y")
+                PickerField(stringResource(Res.string.new_save_facing), direction, Location.DIRECTIONS, { direction = it }, Modifier.width(140.dp))
             }
-            mapName(map)?.let { Text("Map $map: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-            Button(onClick = { model.moveTo(Location(map, -1, x, y, direction)) }, modifier = Modifier.testTag("save-move")) { Text("Move the player here") }
-            Text("Places the game was seen to continue at:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            mapName(map)?.let { Text(stringResource(Res.string.save_map_x_x, map, it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            Button(onClick = { model.moveTo(Location(map, -1, x, y, direction)) }, modifier = Modifier.testTag("save-move")) { Text(stringResource(Res.string.save_move_the_player_here)) }
+            Text(stringResource(Res.string.save_places_the_game_was_seen_to_contin), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             PRESETS.forEach { p ->
                 OutlinedButton(onClick = { map = p.place.map; x = p.place.x; y = p.place.y; direction = p.place.direction }, modifier = Modifier.testTag("preset:${p.place.map}")) { Text(p.label) }
             }

@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -104,16 +106,16 @@ fun TmHmBulkEditor(model: TmHmBulkEditorModel, modifier: Modifier = Modifier) {
     }
     val rows = model.rows()
     Column(modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("TM/HM compatibility", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(Res.string.editor_tmhm_bulk), style = MaterialTheme.typography.headlineSmall)
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
-            PickerField("Machine", model.machine, model.machineNames, { model.machine = it }, Modifier.width(280.dp))
-            SearchBox(model.search, { model.search = it }, "Search species…", Modifier.width(240.dp))
-            Chip("${model.learnerCount()} species can learn it")
+            PickerField(stringResource(Res.string.tm_hm_bulk_machine), model.machine, model.machineNames, { model.machine = it }, Modifier.width(280.dp))
+            SearchBox(model.search, { model.search = it }, stringResource(Res.string.personal_search_species), Modifier.width(240.dp))
+            Chip(stringResource(Res.string.tm_hm_bulk_x_species_can_learn_it, model.learnerCount()))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("${rows.size} shown:", style = MaterialTheme.typography.bodyMedium)
-            OutlinedButton(onClick = { model.set(rows, true) }, modifier = Modifier.testTag("tmhm-all")) { Text("Teach to all shown") }
-            OutlinedButton(onClick = { model.set(rows, false) }, modifier = Modifier.testTag("tmhm-none")) { Text("Remove from all shown") }
+            Text(stringResource(Res.string.tm_hm_bulk_x_shown, rows.size), style = MaterialTheme.typography.bodyMedium)
+            OutlinedButton(onClick = { model.set(rows, true) }, modifier = Modifier.testTag("tmhm-all")) { Text(stringResource(Res.string.tm_hm_bulk_teach_to_all_shown)) }
+            OutlinedButton(onClick = { model.set(rows, false) }, modifier = Modifier.testTag("tmhm-none")) { Text(stringResource(Res.string.tm_hm_bulk_remove_from_all_shown)) }
         }
         LazyColumn(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             items(rows, key = { it }) { species ->
@@ -121,11 +123,11 @@ fun TmHmBulkEditor(model: TmHmBulkEditorModel, modifier: Modifier = Modifier) {
                     PokemonIcon(species)
                     Text(model.label(species), Modifier.width(200.dp), style = MaterialTheme.typography.bodyMedium)
                     val learns = model.learns(species)
-                    ToggleChip(if (learns) "Learns" else "Cannot", learns, { on -> model.set(listOf(species), on) }, Modifier.testTag("tmhm:$species"))
+                    ToggleChip(if (learns) stringResource(Res.string.tm_hm_bulk_learns) else stringResource(Res.string.tm_hm_bulk_cannot), learns, { on -> model.set(listOf(species), on) }, Modifier.testTag("tmhm:$species"))
                     val family = model.familyOf(species)
                     if (family.size > 1) {
                         OutlinedButton(onClick = { model.set(family, !learns) }, modifier = Modifier.testTag("tmhm-family:$species")) {
-                            Text(if (learns) "Remove from family" else "Teach to family")
+                            Text(if (learns) stringResource(Res.string.tm_hm_bulk_remove_from_family) else stringResource(Res.string.tm_hm_bulk_teach_to_family))
                         }
                     }
                 }

@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -130,7 +132,7 @@ fun HiddenItemEditor(model: HiddenItemEditorModel, modifier: Modifier = Modifier
             selected = model.selectedIndex,
             search = model.search,
             onSearch = { model.search = it },
-            placeholder = "Search items or an index…",
+            placeholder = stringResource(Res.string.hidden_item_search_items_or_an_index),
             label = model::label,
             onSelect = model::select,
             isEdited = { false },
@@ -139,28 +141,27 @@ fun HiddenItemEditor(model: HiddenItemEditorModel, modifier: Modifier = Modifier
         val spot = model.selected
         DetailPane {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Chip("${table.entries.size} of ${table.capacity} spots")
-                if (!model.canAdd) Text("The game reserves room for ${table.capacity} spots, so a new one needs a removed one first.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Chip(stringResource(Res.string.hidden_item_x_of_x_spots, table.entries.size, table.capacity))
+                if (!model.canAdd) Text(stringResource(Res.string.hidden_item_the_game_reserves_room_for_x_spots, table.capacity), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (spot != null) {
                 EditorHeader(model.selectedIndex.toString(), model.itemName(spot.item), trailing = {
-                    OutlinedButton(onClick = model::remove, modifier = Modifier.testTag("hidden-remove")) { Text("Remove") }
+                    OutlinedButton(onClick = model::remove, modifier = Modifier.testTag("hidden-remove")) { Text(stringResource(Res.string.learnset_remove)) }
                 })
-                SectionCard("Spot", subtitle = "What the Itemfinder points at") {
+                SectionCard(stringResource(Res.string.hidden_item_spot), subtitle = stringResource(Res.string.hidden_item_what_the_itemfinder_points_at)) {
                     FieldFlow {
-                        ItemPicker("Item", spot.item, model.names?.items ?: emptyList(), { v -> model.update { it.copy(item = v) } }, Modifier.width(240.dp))
-                        NumberField("Quantity", spot.quantity, 1..255, { v -> model.update { it.copy(quantity = v) } }, Modifier.width(100.dp))
-                        NumberField("Index", spot.index, 0..65535, model::setIndex, Modifier.width(100.dp))
+                        ItemPicker(stringResource(Res.string.evolution_item), spot.item, model.names?.items ?: emptyList(), { v -> model.update { it.copy(item = v) } }, Modifier.width(240.dp))
+                        NumberField(stringResource(Res.string.ground_item_quantity), spot.quantity, 1..255, { v -> model.update { it.copy(quantity = v) } }, Modifier.width(100.dp))
+                        NumberField(stringResource(Res.string.hidden_item_index), spot.index, 0..65535, model::setIndex, Modifier.width(100.dp))
                     }
                     model.indexNotice?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("hidden-index-notice")) }
                     Text(
-                        "Script ${spot.script} and flag ${spot.flag} (picked up) follow from the index. Put script ${spot.script} on an overworld object of the map " +
-                            "to place the spot; removing or renumbering a spot leaves objects that use its script pointing at nothing.",
+                        stringResource(Res.string.hidden_item_script_x_and_flag_x_picked_up_foll, spot.script, spot.flag, spot.script),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-            Button(onClick = model::add, enabled = model.canAdd, modifier = Modifier.testTag("hidden-add")) { Text("Add a spot") }
+            Button(onClick = model::add, enabled = model.canAdd, modifier = Modifier.testTag("hidden-add")) { Text(stringResource(Res.string.hidden_item_add_a_spot)) }
         }
     }
 }

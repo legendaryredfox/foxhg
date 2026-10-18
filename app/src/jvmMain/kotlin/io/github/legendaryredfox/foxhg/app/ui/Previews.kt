@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app.ui
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -94,7 +96,7 @@ fun PokemonPortraits(species: Int, size: Dp = 88.dp) {
     Row(Modifier.testTag("portraits"), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         Picture(front, size, "Front picture")
         Picture(back, size, "Back picture")
-        ToggleChip("Shiny", shiny, { shiny = it })
+        ToggleChip(stringResource(Res.string.previews_shiny), shiny, { shiny = it })
     }
 }
 

@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.stringResource
+import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
@@ -52,10 +54,10 @@ fun TmHmEditor(model: TmHmEditorModel, modifier: Modifier = Modifier) {
     val table = model.table ?: return
     val moves = model.names?.moves ?: emptyList()
     DetailPane(modifier) {
-        SectionCard("TMs", subtitle = "Which species can learn each one is set in the personal data editor") {
+        SectionCard(stringResource(Res.string.tm_hm_tms), subtitle = stringResource(Res.string.tm_hm_which_species_can_learn_each_one_i)) {
             FieldFlow { for (i in 0 until TmHmTable.TM_COUNT) TmPicker(model, table, i, moves) }
         }
-        SectionCard("HMs") {
+        SectionCard(stringResource(Res.string.tm_hm_hms)) {
             FieldFlow { for (i in TmHmTable.TM_COUNT until TmHmTable.COUNT) TmPicker(model, table, i, moves) }
         }
     }
