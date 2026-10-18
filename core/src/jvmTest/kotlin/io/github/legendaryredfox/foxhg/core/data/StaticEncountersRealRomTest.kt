@@ -48,8 +48,9 @@ class StaticEncountersRealRomTest {
 
             // species that a script puts in a variable first: Ho-Oh and Lugia, Latias and Latios, the Game Corner prizes, the gift starters
             fun viaVariable(file: Int) = found.filter { it.file == file && it.viaVariable }
-            assertEquals(listOf(250), viaVariable(21).map { it.species }, "Ho-Oh")
-            assertEquals(listOf(249), viaVariable(104).map { it.species }, "Lugia")
+            assertEquals(listOf(250 to 45, 250 to 70), viaVariable(21).map { it.species to it.level }, "Ho-Oh, a level for each game version")
+            assertEquals(listOf(249 to 70, 249 to 45), viaVariable(104).map { it.species to it.level }, "Lugia, a level for each game version")
+            assertTrue(viaVariable(21).all { it.levelViaVariable && !it.levelIsVariable && it.levelIndex != it.commandIndex })
             assertEquals(listOf(381, 380), viaVariable(750).map { it.species }, "Latios and Latias")
             assertEquals(listOf(122, 133, 137), viaVariable(804).map { it.species }, "Game Corner prizes")
             assertEquals(listOf(1, 7, 4), viaVariable(740).map { it.species }, "Kanto starters")
@@ -60,6 +61,11 @@ class StaticEncountersRealRomTest {
             val moved = (StaticEncounters.find(project) as FoxResult.Ok).value
             assertEquals(listOf(245 to 41, 380 to 41), moved.filter { it.file == 750 && it.viaVariable }.map { it.species to it.level }, "the level is the command's, so both rows change")
             assertEquals(moved.size, after.size, "no encounter appears or goes")
+            val hooh = viaVariable(21)
+            assertTrue(StaticEncounters.change(project, hooh[1], 250, 75) is FoxResult.Ok)
+            val levelled = (StaticEncounters.find(project) as FoxResult.Ok).value
+            assertEquals(listOf(250 to 45, 250 to 75), levelled.filter { it.file == 21 && it.viaVariable }.map { it.species to it.level }, "only the assignment of that row changes")
+            assertEquals(after.size, levelled.size, "editing a level adds no row and removes none")
             val egg = found.first { it.kind == StaticKind.EGG }
             assertTrue(StaticEncounters.change(project, egg, 25, null) is FoxResult.Ok)
             assertEquals(25, (StaticEncounters.find(project) as FoxResult.Ok).value.first { it.file == egg.file && it.index == egg.index }.species)

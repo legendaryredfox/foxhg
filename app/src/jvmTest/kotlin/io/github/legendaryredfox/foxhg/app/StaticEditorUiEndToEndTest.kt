@@ -39,5 +39,9 @@ class StaticEditorUiEndToEndTest {
         waitForIdle()
         assertEquals(listOf(44, 44), all().filter { it.file == latias.file && it.viaVariable }.map { it.level }, "both numbers share the command's level")
         assertTrue(project.isDirty)
+        val level = all().first { it.file == hooh.file && it.levelViaVariable && it.level == 70 }
+        onNodeWithTag("number:Level ${level.file}:${level.index}:${level.levelIndex}").typeNumber(72)
+        waitForIdle()
+        assertEquals(listOf(45, 72), all().filter { it.file == hooh.file && it.viaVariable }.map { it.level }, "a level from a variable edits its own assignment")
     }
 }

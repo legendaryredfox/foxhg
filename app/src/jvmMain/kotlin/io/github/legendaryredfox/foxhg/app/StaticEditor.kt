@@ -68,7 +68,7 @@ fun StaticEditor(model: StaticEditorModel, modifier: Modifier = Modifier) {
         model.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         val species = model.names?.species?.take(StaticEncounters.MAX_SPECIES + 1) ?: List(StaticEncounters.MAX_SPECIES + 1) { "#$it" }
         Text(
-            "Found by reading every script: a fixed battle, a gift or an egg. When a script puts the species in a variable first (Ho-Oh and Lugia, Latias and Latios, the Game Corner prizes, the starters), each number it can use is listed, and a change edits that number. A species that no script sets with a number, and a level that comes from a variable, are listed but not edited here: change the script in the Scripts editor. Roaming Pokémon are in the Roamers editor and the revived fossils in the Fossils editor; neither is a script command with a species, so they are not listed here.",
+            "Found by reading every script: a fixed battle, a gift or an egg. When a script puts the species in a variable first (Ho-Oh and Lugia, Latias and Latios, the Game Corner prizes, the starters), each number it can use is listed, and a change edits that number; a level that a script puts in a variable first (Ho-Oh and Lugia, one for each game version) is listed the same way. A species or a level that no script sets with a number are listed but not edited here: change the script in the Scripts editor. Roaming Pokémon are in the Roamers editor and the revived fossils in the Fossils editor; neither is a script command with a species, so they are not listed here.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         for (kind in StaticKind.entries) {
@@ -84,9 +84,10 @@ fun StaticEditor(model: StaticEditorModel, modifier: Modifier = Modifier) {
                         else SpeciesPicker("Species", e.species, species, { v -> if (v in 1..StaticEncounters.MAX_SPECIES) model.change(e, v, e.level) }, Modifier.width(220.dp))
                         if (kind.hasLevel) {
                             if (e.levelIsVariable || e.level == null) Chip("level from a variable")
-                            else NumberField("Level", e.level!!, 1..100, { v -> model.change(e, e.species, v) }, Modifier.width(90.dp), tag = "Level ${e.file}:${e.index}")
+                            else NumberField("Level", e.level!!, 1..100, { v -> model.change(e, e.species, v) }, Modifier.width(90.dp), tag = "Level ${e.file}:${e.index}" + if (e.levelViaVariable) ":${e.levelIndex}" else "")
                         }
                         if (e.viaVariable) Chip("set at item ${e.index}, used at ${e.commandIndex}")
+                        if (e.levelViaVariable) Chip("level set at item ${e.levelIndex}")
                         Text(model.where(e), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
