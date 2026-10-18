@@ -26,6 +26,21 @@ class LeftoversInGameEmulatorTest {
         }
     }
 
+    /** True when the bottom screen shows the red FIGHT button of the command menu: the turn is over (during it the screen shows only the Poké Ball). */
+    private fun EmulatorDriver.atCommandMenu(): Boolean {
+        val c = (screenshot() ?: error("no frame yet")).getRGB(60, 252)
+        return ((c shr 16) and 255) > 180 && ((c shr 8) and 255) < 110 && (c and 255) < 110
+    }
+
+    /** The bar once the turn is over: the end of the turn comes at a different frame from run to run, and the bars are hidden during move animations. */
+    private fun EmulatorDriver.settled(read: EmulatorDriver.() -> Int): Int {
+        repeat(120) {
+            step(30)
+            if (atCommandMenu()) { step(60); read().let { if (it > 0) return it } }
+        }
+        error("the turn did not end")
+    }
+
     @Test
     fun theEditedLeftoversRuleHealsMoreEachTurn() {
         if (!available() || !EmulatorSaves.available("party")) return
@@ -51,8 +66,8 @@ class LeftoversInGameEmulatorTest {
             EmulatorDriver(rom, saves).use { emu ->
                 emu.run(EmulatorSaves.OPEN_BUY_LIST_SCRIPT + ",s1200")
                 val before = emu.playerBarPixels()
-                emu.run("A,s120,A,s120,A,s1500")
-                val after = emu.playerBarPixels()
+                emu.run("A,s120,A,s120,A,s400")
+                val after = emu.settled { playerBarPixels() }
                 Files.createDirectories(MartInGame.shotDir)
                 emu.savePicture(MartInGame.shotDir.resolve("leftovers.png"))
                 println("LEFTOVERS player HP bar pixels before the turn: $before, after: $after")

@@ -18,14 +18,8 @@ import kotlin.test.assertTrue
  * 1 (one pixel every frame) at 16 times. Each class boots once, at one speed, and prints `HPBAR shift n: ...`.
  */
 /** A drain of an HP bar: how many frames it changed in, over how many frames, and by how many pixels. */
-internal class Drain(val steps: Int, val span: Int, val pixels: Int) {
+internal class Drain(val steps: Int, val span: Int, val pixels: Int, val start: Int = 0) {
     val framesPerStep: Double get() = if (steps > 1) span.toDouble() / (steps - 1) else 0.0
-}
-
-private inline fun <T> List<T>.takeWhileIndexed(keep: (Int, T) -> Boolean): List<T> {
-    val out = ArrayList<T>()
-    for ((i, v) in withIndex()) { if (!keep(i, v)) break; out += v }
-    return out
 }
 
 internal object HpBarInGame {
@@ -53,18 +47,23 @@ internal object HpBarInGame {
                 emu.run(EmulatorSaves.OPEN_BUY_LIST_SCRIPT + ",s1200,A,s120,A,s120,A")
                 val seen = ArrayList<List<Int>>().also { it += fills(emu) }
                 val moves = ArrayList<Int>()
-                for (frame in 1..1500) {
+                for (frame in 1..3000) {
                     emu.step(1)
                     seen += fills(emu)
                     if (seen.last() != seen[seen.size - 2]) moves += frame
                     if (frame == 60) { Files.createDirectories(MartInGame.shotDir); emu.savePicture(MartInGame.shotDir.resolve("hpbar-shift$shift.png")) }
                 }
-                // a drain: changes that follow each other less than 12 frames apart; the first one
-                val first = moves.firstOrNull() ?: return null.also { println("HPBAR shift $shift: no bar moved") }
-                val burst = moves.takeWhileIndexed { i, m -> i == 0 || m - moves[i - 1] < 12 }
-                val pixels = seen[first - 1].indices.sumOf { abs(seen[burst.last()][it] - seen[first - 1][it]) }
-                val drain = Drain(burst.size, burst.last() - burst.first(), pixels)
-                println("HPBAR shift $shift: first drain at frame $first: ${drain.steps} steps over ${drain.span} frames, $pixels pixels (${drain.framesPerStep} frames per step); all changes $moves")
+                // a drain: changes that follow each other less than 12 frames apart; the first one that moved a bar by 3 pixels or more
+                // (a miss or a tiny hit would not tell the speed)
+                val bursts = ArrayList<List<Int>>()
+                var current = ArrayList<Int>()
+                for (m in moves) { if (current.isNotEmpty() && m - current.last() >= 12) { bursts += current; current = ArrayList() }; current += m }
+                if (current.isNotEmpty()) bursts += current
+                val drains = bursts.map { burst ->
+                    Drain(burst.size, burst.last() - burst.first(), seen[burst.first() - 1].indices.sumOf { abs(seen[burst.last()][it] - seen[burst.first() - 1][it]) }, burst.first())
+                }
+                val drain = drains.firstOrNull { it.pixels >= 3 }
+                println("HPBAR shift $shift: first drain ${drain?.let { "at frame ${it.start}: ${it.steps} steps over ${it.span} frames, ${it.pixels} pixels (${it.framesPerStep} frames per step)" }}; all changes $moves")
                 return drain
             }
         } finally {

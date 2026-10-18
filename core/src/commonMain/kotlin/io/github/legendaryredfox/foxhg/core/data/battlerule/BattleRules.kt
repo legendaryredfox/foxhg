@@ -30,8 +30,8 @@ class BattleRule(
 
 /**
  * The simple battle tweaks of the guide for HeartGold English: each is one byte in an overlay (an immediate of a Thumb instruction of the battle
- * code) or in a battle script (a NARC file), so a rule is read and written byte by byte. Tweaks that need a table or several bytes that change together
- * in another way (paralysis shifts, Magnitude, Flail, Disable, Taunt, hail, critical hits, the bug fixes) are not here.
+ * code) or in a battle script (a NARC file), so a rule is read and written byte by byte; the critical hit table is five rules, one byte each. Tweaks that
+ * need several bytes that change together in another way (paralysis shifts, Magnitude, Flail, Disable, Taunt, no hail damage, the bug fixes) are not here.
  */
 object BattleRules {
     const val SUB_SEQ = "a/0/0/1"
@@ -91,6 +91,13 @@ object BattleRules {
             listOf(BattleSite.NarcFile(SUB_SEQ, 58, 0x3C)), 3, 0..255) { "${turns(it)} at least" },
         BattleRule("grip-claw", "Move effects", "Grip Claw duration", "Turns a binding move lasts when the user holds a Grip Claw (the game does not take more than 7).",
             listOf(BattleSite.NarcFile(SUB_SEQ, 58, 0x60)), 6, 1..7) { turns(it) },
+        BattleRule("hail-damage", "Weather", "Hail damage", "HP lost each turn in hail by a Pokémon that is not an Ice type and has no Snow Cloak.", ov(0xA42C), 16, 1..255) { share(it) },
+        BattleRule("crit-stage-0", "Critical hits", "Critical hit chance, stage 0", "A random number is divided by this, and a remainder of 0 is a critical hit (the table holds one number for each critical hit stage, 0 to +4).",
+            ov(0x35288), 16, 1..255) { chance(it) },
+        BattleRule("crit-stage-1", "Critical hits", "Critical hit chance, stage +1", "See stage 0 (the game has 8 here).", ov(0x35289), 8, 1..255) { chance(it) },
+        BattleRule("crit-stage-2", "Critical hits", "Critical hit chance, stage +2", "See stage 0 (the game has 4 here).", ov(0x3528A), 4, 1..255) { chance(it) },
+        BattleRule("crit-stage-3", "Critical hits", "Critical hit chance, stage +3", "See stage 0 (the game has 3 here).", ov(0x3528B), 3, 1..255) { chance(it) },
+        BattleRule("crit-stage-4", "Critical hits", "Critical hit chance, stage +4", "See stage 0 (the game has 2 here).", ov(0x3528C), 2, 1..255) { chance(it) },
         BattleRule("encore", "Move effects", "Encore duration (base)", "Turns Encore lasts, before the extra random part the code adds.", ov(0x939A), 5, 1..255) { turns(it) },
     )
 
