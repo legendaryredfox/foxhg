@@ -85,6 +85,7 @@ Record every address, offset or quirk you confirm in `docs/formats.md`.
 - keep `core` free of Compose, AWT and `java.*` outside `jvmMain`
 - write the test (round trip against the ROM) together with the parser
 - follow the style of the surrounding code; one class per file type; immutable data classes for parsed records
+- put every new piece of UI text in `app/src/jvmMain/composeResources` in all four languages (English, pt-BR, es, zh-CN; `stringResource` in a composable, `tr()` / `trPlural()` elsewhere, `plural_*` for counts); `AppLanguageTest` fails on a missing key. Test tags keep the English label, tests run in English
 - mark any step that was not built or run as **[UNVERIFIED]**
 - keep `docs/plan.md` ticked as work lands and `docs/formats.md` updated with what you confirm
 
