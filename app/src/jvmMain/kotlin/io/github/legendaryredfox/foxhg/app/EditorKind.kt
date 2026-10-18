@@ -43,6 +43,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     MAPS("World", "Maps", implemented = true),
     EVENTS("World", "Events", implemented = true),
     SCRIPTS("Scripts and text", "Scripts", implemented = true),
+    RESEARCH("Scripts and text", "Research", implemented = true),
     TEXT("Scripts and text", "Text archives", implemented = true),
     SOUNDS("Audio", "Sounds", implemented = true),
     TOOLBOX("Tools", "ROM toolbox", implemented = true),

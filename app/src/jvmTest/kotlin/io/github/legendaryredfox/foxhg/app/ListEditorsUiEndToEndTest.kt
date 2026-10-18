@@ -248,6 +248,20 @@ class ListEditorsUiEndToEndTest {
     }
 
     @Test
+    fun theResearchScreenFindsTheUsesOfAFlagAndOpensTheScript() = withHeartGoldApp { model, _ ->
+        open("Research")
+        onNodeWithTag("number:Research number").typeNumber(579)
+        waitForIdle()
+        tap(onNodeWithTag("research-find"), inScrollPane = false)
+        waitForIdle()
+        onNodeWithTag("research-result:0").assertIsDisplayed()
+        tap(onNodeWithTag("research-result:0"), inScrollPane = false)
+        waitForIdle()
+        assertEquals(EditorKind.SCRIPTS, model.selected, "a script use opens the Scripts editor")
+        assertEquals(104, model.selectionMemory[EditorKind.SCRIPTS], "on the file of the Lugia script, the first use of flag 579")
+    }
+
+    @Test
     fun applyingToolboxPatchesOnTheirScreen() = withHeartGoldApp { model, project ->
         open("ROM toolbox")
         onNodeWithTag("apply:dynamic-camera").assertIsNotEnabled()

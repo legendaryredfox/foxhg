@@ -315,6 +315,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.BATTLE_RULES -> Loading(project, "battle rules", { BattleRuleEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             BattleRuleEditor(editor, modifier.padding(16.dp))
         }
+        selected == EditorKind.RESEARCH -> Loading(project, "research", { ResearchEditorModel(project) }) { editor ->
+            ResearchEditor(editor, onOpen = model::openAt, modifier = modifier.padding(16.dp))
+        }
         selected == EditorKind.GROUND_ITEMS -> Loading(project, "ground items", { GroundItemEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             GroundItemEditor(editor, modifier.padding(16.dp))
         }
