@@ -49,7 +49,7 @@ internal fun plural(n: Int, word: String): String = "$n ${if (n == 1) word else 
 internal fun summarize(items: List<String>, limit: Int = 4): String =
     if (items.size <= limit) items.joinToString(", ") else items.take(limit).joinToString(", ") + " and ${items.size - limit} more"
 
-/** Where Ctrl+F goes: the search box of the list on screen. Set by [ListPane], used by the window's key handler. */
+/** The search box of the list on screen: what Ctrl+F focuses when no ROM is open. Set by [ListPane], used by [Actions.findUses]. */
 object SearchFocus {
     internal var requester: FocusRequester? = null
 

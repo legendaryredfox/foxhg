@@ -25,13 +25,20 @@ object Actions {
             key == Key.S -> { save(model); true }
             key == Key.B -> { build(model); true }
             key == Key.R -> { run(model); true }
-            key == Key.F -> SearchFocus.request()
+            key == Key.F -> findUses(model)
             // In a script or message box Ctrl+Z belongs to the box (it undoes the typing); elsewhere it undoes the project,
             // and a key with nothing to undo or redo is left alone.
             (key == Key.Z && shift) || key == Key.Y -> if (TextFocus.active || !model.canRedo) false else { model.redo(); true }
             key == Key.Z -> if (TextFocus.active || !model.canUndo) false else { model.undo(); true }
             else -> false
         }
+    }
+
+    /** Ctrl+F: switches to the Research tab when a ROM is open; with none open it focuses the search box of the list on screen, if any. */
+    fun findUses(model: AppModel): Boolean {
+        if (model.project == null) return SearchFocus.request()
+        model.selected = EditorKind.RESEARCH
+        return true
     }
 
     fun newProject(model: AppModel) = model.guard { model.dialog = AppDialog.NewProject }

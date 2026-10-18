@@ -74,11 +74,20 @@ class ShortcutsAndGesturesUiEndToEndTest {
     }
 
     @Test
-    fun ctrlFFocusesTheSearchAndTheArrowKeysMoveThroughTheList() = withHeartGoldApp { model, project ->
+    fun ctrlFSwitchesToTheResearchTab() = withHeartGoldApp { model, _ ->
+        open("Items")
+        runOnUiThread { assertTrue(Actions.shortcut(model, Key.F, ctrl = true, shift = false)) }
+        waitForIdle()
+        assertEquals(EditorKind.RESEARCH, model.selected)
+        onNodeWithTag("research-find").assertExists()
+    }
+
+    @Test
+    fun theListSearchTakesFocusAndTheArrowKeysMoveThroughTheList() = withHeartGoldApp { _, project ->
         open("Items")
         clickFirstText("Poké Ball")
         assertEquals(price(project, 4).toString(), onNodeWithTag("number:Price").editableText())
-        runOnUiThread { assertTrue(Actions.shortcut(model, Key.F, ctrl = true, shift = false)) }
+        runOnUiThread { assertTrue(SearchFocus.request()) }
         waitForIdle()
         onNodeWithTag("search:Search…").assertIsFocused()
         onNodeWithTag("search:Search…").performKeyInput { pressKey(Key.DirectionDown) }

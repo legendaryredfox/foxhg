@@ -19,7 +19,7 @@ import java.nio.file.Path
 /**
  * `foxhg [project-folder | rom.nds | save.sav] [--save=save.sav] [--editor=PERSONAL|LEARNSET|EVOLUTIONS|MOVES|TRAINERS|ENCOUNTERS|...]`
  *
- * Shortcuts: Ctrl+N new project, Ctrl+O open project, Ctrl+Shift+O open a ROM only, Ctrl+S save, Ctrl+B build ROM, Ctrl+Z undo, Ctrl+Shift+Z or Ctrl+Y redo, Ctrl+F focus the list search; Up/Down/PageUp/PageDown move through a list.
+ * Shortcuts: Ctrl+N new project, Ctrl+O open project, Ctrl+Shift+O open a ROM only, Ctrl+S save, Ctrl+B build ROM, Ctrl+Z undo, Ctrl+Shift+Z or Ctrl+Y redo, Ctrl+F open the Research tab; Up/Down/PageUp/PageDown move through a list.
  */
 fun main(args: Array<String>) = application {
     val model = remember(args) { AppModel().also { applyLaunchArguments(it, args) } }

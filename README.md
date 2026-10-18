@@ -79,7 +79,7 @@ NPC sprites, map thumbnails and sound playback show up next to the ids wherever 
 - **Projects:** a project is a folder with *only your changes*. The ROM is never copied or modified. Autosave, recents, relink a moved ROM.
 - **Undo and redo** (Ctrl+Z, Ctrl+Shift+Z) across all editors, kept when you close and reopen a project.
 - **Build ROM** writes a new `.nds` (the previous file is kept as `.bak`); **Run** builds and starts your emulator.
-- **Files screen, progress bars and a loading screen**, light and dark themes, keyboard navigation in every list (arrows, Ctrl+F), a confirmation before tools that change many records at once.
+- **Files screen, progress bars and a loading screen**, light and dark themes, keyboard navigation in every list (arrows), Ctrl+F opens the Research tab, a confirmation before tools that change many records at once.
 
 ### Under the hood
 
@@ -140,7 +140,7 @@ An emulator on your `PATH` is detected the first time. Settings live in `~/.conf
 | Ctrl+S | Save (and write the undo history) |
 | Ctrl+B / Ctrl+R | Build ROM / Run |
 | Ctrl+Z / Ctrl+Shift+Z or Ctrl+Y | Undo / redo |
-| Ctrl+F | Focus the search box of the list on screen |
+| Ctrl+F | Switch to the Research tab (find where a flag, variable, item or trainer is used) |
 | ↑ ↓ PgUp PgDn | Move through a list |
 | 3D view: drag / right drag / Ctrl+wheel | Turn and tilt / pan / zoom |
 
