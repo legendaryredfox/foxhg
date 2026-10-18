@@ -306,6 +306,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.TOWN_MAP -> Loading(project, "town map", { TownMapEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             TownMapEditor(editor, modifier)
         }
+        selected == EditorKind.HP_BAR -> Loading(project, "HP bar speed", { HpBarSpeedEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+            HpBarSpeedEditor(editor, modifier.padding(16.dp))
+        }
         selected == EditorKind.GROUND_ITEMS -> Loading(project, "ground items", { GroundItemEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             GroundItemEditor(editor, modifier.padding(16.dp))
         }

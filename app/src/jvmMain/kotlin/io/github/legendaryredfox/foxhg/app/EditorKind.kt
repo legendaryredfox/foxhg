@@ -16,6 +16,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     FOSSILS("Pokémon", "Fossils", implemented = true),
     SHINY_RATES("Pokémon", "Shiny rates", implemented = true),
     TRADES("Pokémon", "In-game trades", implemented = true),
+    HP_BAR("Moves and items", "HP bar speed", implemented = true),
     TMHM("Moves and items", "TMs and HMs", implemented = true),
     MARTS("Moves and items", "Poké Marts", implemented = true),
     TMHM_BULK("Moves and items", "TM/HM compatibility", implemented = true),

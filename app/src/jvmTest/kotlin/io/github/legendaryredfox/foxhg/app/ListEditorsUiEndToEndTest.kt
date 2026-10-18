@@ -210,6 +210,17 @@ class ListEditorsUiEndToEndTest {
     }
 
     @Test
+    fun restoringTheHpBarSpeedOnItsScreenWritesOverlay12() = withHeartGoldApp { _, project ->
+        val speed = { (io.github.legendaryredfox.foxhg.core.data.hpbar.HpBarSpeed.load(project) as FoxResult.Ok).value }
+        assertEquals(io.github.legendaryredfox.foxhg.core.data.hpbar.HpBarSpeed.VANILLA, speed())
+        assertTrue(io.github.legendaryredfox.foxhg.core.data.hpbar.HpBarSpeed.save(project, io.github.legendaryredfox.foxhg.core.data.hpbar.HpBarSpeed(10)) is FoxResult.Ok)
+        open("HP bar speed")
+        tap(onNodeWithTag("hpbar-restore"), inScrollPane = false)
+        waitForIdle()
+        assertEquals(io.github.legendaryredfox.foxhg.core.data.hpbar.HpBarSpeed.VANILLA, speed(), "the restore button put the game's speed back")
+    }
+
+    @Test
     fun applyingToolboxPatchesOnTheirScreen() = withHeartGoldApp { model, project ->
         open("ROM toolbox")
         onNodeWithTag("apply:dynamic-camera").assertIsNotEnabled()
