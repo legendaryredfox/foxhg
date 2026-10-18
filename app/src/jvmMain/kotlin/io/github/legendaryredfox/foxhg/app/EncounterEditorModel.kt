@@ -10,6 +10,7 @@ import io.github.legendaryredfox.foxhg.core.data.encounter.EncounterChange
 import io.github.legendaryredfox.foxhg.core.data.encounter.EncounterData
 import io.github.legendaryredfox.foxhg.core.data.encounter.EncounterDiff
 import io.github.legendaryredfox.foxhg.core.data.encounter.EncounterGroup
+import io.github.legendaryredfox.foxhg.core.data.encounter.EncounterJson
 import io.github.legendaryredfox.foxhg.core.nds.Game
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
@@ -35,6 +36,12 @@ class EncounterEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
     private val other: List<EncounterData> = (NarcRecords.load(project, otherSpec) as? FoxResult.Ok)?.value?.records ?: emptyList()
 
     val names get() = editor.names
+
+    /** The wild Pokémon of every area as JSON, as they are now (edits included). */
+    fun exportJson(): String {
+        val species = names?.species ?: emptyList()
+        return EncounterJson.export(editor.records, { areas.label(it) }, { species.getOrElse(it) { "?" } })
+    }
 
     /** Differences between the selected area and the other version's. */
     fun changesFromOther(index: Int = editor.selectedIndex): List<EncounterChange> {

@@ -93,7 +93,10 @@ private fun Detail(model: EncounterEditorModel, d: EncounterData) {
     val editor = model.editor
     val species = model.names?.species ?: emptyList()
     val maps = model.areas.maps(editor.selectedIndex)
-    EditorHeader(editor.selectedIndex.toString(), nameOf(editor.label(editor.selectedIndex)), trailing = { Chip(plural(maps.size, "map")) })
+    EditorHeader(editor.selectedIndex.toString(), nameOf(editor.label(editor.selectedIndex)), trailing = {
+        JsonExportButton(tr(Res.string.encounter_wild_pokemon_json_name)) { model.exportJson() }
+        Chip(plural(maps.size, "map"))
+    })
 
     val changes = model.changesFromOther()
     if (changes.isNotEmpty()) {

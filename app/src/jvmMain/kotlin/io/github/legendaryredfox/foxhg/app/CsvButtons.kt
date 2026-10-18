@@ -63,3 +63,17 @@ fun CsvFileButtons(fileName: String, export: () -> String, import: (String) -> S
     }) { Text(stringResource(Res.string.learnset_import_csv)) }
     message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant) }
 }
+
+/** An Export JSON button for a file that is only written out, never read back: [export] gives the text, the outcome shows beside the button. */
+@Composable
+fun JsonExportButton(fileName: String, export: () -> String) {
+    var message by remember { mutableStateOf<String?>(null) }
+    var failed by remember { mutableStateOf(false) }
+    OutlinedButton(onClick = {
+        val path = pickFile(tr(Res.string.csv_buttons_export_x, fileName), FileDialog.SAVE, ".json") ?: return@OutlinedButton
+        runCatching { Files.writeString(path, export()) }
+            .onSuccess { failed = false; message = tr(Res.string.csv_buttons_exported_to_x, path.fileName) }
+            .onFailure { failed = true; message = tr(Res.string.csv_buttons_export_failed_x, it.message) }
+    }) { Text(stringResource(Res.string.encounter_export_json)) }
+    message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant) }
+}

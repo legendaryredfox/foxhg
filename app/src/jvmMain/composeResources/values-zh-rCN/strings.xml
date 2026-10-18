@@ -202,6 +202,8 @@
     <string name="learnset_replace_with">替换为</string>
     <string name="learnset_replace_the_move_above">替换上方的招式</string>
     <string name="learnset_export_csv">导出CSV</string>
+    <string name="encounter_export_json">导出JSON</string>
+    <string name="encounter_wild_pokemon_json_name">野生宝可梦</string>
     <string name="learnset_import_csv">导入CSV</string>
     <string name="evolution_remove_trade_evolutions">移除通信进化</string>
     <string name="evolution_trade_becomes_level">通信变为等级</string>
