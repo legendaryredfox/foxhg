@@ -186,6 +186,18 @@ class ListEditorsUiEndToEndTest {
     }
 
     @Test
+    fun editingAnItemBallQuantityOnItsScreenWritesTheItemScript() = withHeartGoldApp { _, project ->
+        val balls = { (io.github.legendaryredfox.foxhg.core.data.grounditem.GroundItems.load(project) as FoxResult.Ok).value }
+        assertEquals(listOf(17, 1), balls().first().let { listOf(it.item, it.quantity) })
+        open("Ground items")
+        onNodeWithTag("number:Quantity").typeNumber(4)
+        waitForIdle()
+        assertEquals(listOf(17, 4), balls().first().let { listOf(it.item, it.quantity) }, "the quantity went into the SetVar of script_1")
+        assertEquals(255, balls().size)
+        assertTrue(project.isDirty)
+    }
+
+    @Test
     fun applyingToolboxPatchesOnTheirScreen() = withHeartGoldApp { model, project ->
         open("ROM toolbox")
         onNodeWithTag("apply:dynamic-camera").assertIsNotEnabled()

@@ -21,6 +21,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     TMHM_BULK("Moves and items", "TM/HM compatibility", implemented = true),
     MOVES("Moves and items", "Moves", implemented = true),
     ITEMS("Moves and items", "Items", implemented = true),
+    GROUND_ITEMS("Moves and items", "Ground items", implemented = true),
     HIDDEN_ITEMS("Moves and items", "Hidden items", implemented = true),
     TRAINERS("Trainers", "Trainers", implemented = true),
     BATTLE_TOWER_TRAINERS("Trainers", "Battle Tower trainers", implemented = true),

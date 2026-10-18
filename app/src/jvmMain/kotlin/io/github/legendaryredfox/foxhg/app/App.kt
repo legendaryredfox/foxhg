@@ -303,6 +303,9 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.ITEMS -> Loading(project, "items", { model.recordEditor(EditorKind.ITEMS, project, ItemData.SPEC, RecordEditorModel.itemLabel(project.names), 1) }) { editor ->
             ItemEditor(editor, modifier.padding(16.dp))
         }
+        selected == EditorKind.GROUND_ITEMS -> Loading(project, "ground items", { GroundItemEditorModel(project, onChanged = model::projectChanged) }) { editor ->
+            GroundItemEditor(editor, modifier.padding(16.dp))
+        }
         selected == EditorKind.HIDDEN_ITEMS -> Loading(project, "hidden items", { HiddenItemEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.HIDDEN_ITEMS]?.let(m::select) } }) { editor ->
             KeepSelection(model, EditorKind.HIDDEN_ITEMS, editor.selectedIndex)
             HiddenItemEditor(editor, modifier.padding(16.dp))
