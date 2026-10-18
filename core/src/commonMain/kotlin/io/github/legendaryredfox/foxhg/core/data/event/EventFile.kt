@@ -3,6 +3,8 @@ package io.github.legendaryredfox.foxhg.core.data.event
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
+import io.github.legendaryredfox.foxhg.core.data.csv.CsvColumn
+import io.github.legendaryredfox.foxhg.core.data.csv.RecordCsv
 import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
@@ -37,6 +39,22 @@ data class Spawnable(
 
     companion object {
         const val SIZE = 20
+
+        /** CSV columns of the signs of one map (the `id` column is the position in the list); `z` is the signed 16.16 height. */
+        val CSV = RecordCsv(
+            listOf(
+                CsvColumn<Spawnable>("script", 0..0xFFFF, { it.script }, { r, v -> r.copy(script = v) }),
+                CsvColumn("type", 0..0xFFFF, { it.type }, { r, v -> r.copy(type = v) }),
+                CsvColumn("x", 0..0xFFFF, { it.x }, { r, v -> r.copy(x = v) }),
+                CsvColumn("unknown2", 0..0xFFFF, { it.unknown2 }, { r, v -> r.copy(unknown2 = v) }),
+                CsvColumn("y", 0..0xFFFF, { it.y }, { r, v -> r.copy(y = v) }),
+                CsvColumn("z", Int.MIN_VALUE..Int.MAX_VALUE, { it.z }, { r, v -> r.copy(z = v) }),
+                CsvColumn("unknown4", 0..0xFFFF, { it.unknown4 }, { r, v -> r.copy(unknown4 = v) }),
+                CsvColumn("direction", 0..0xFFFF, { it.direction }, { r, v -> r.copy(direction = v) }),
+                CsvColumn("unknown5", 0..0xFFFF, { it.unknown5 }, { r, v -> r.copy(unknown5 = v) }),
+            ),
+        )
+
         val TYPES = listOf("Miscellaneous", "Board", "Hidden item")
         fun read(b: ByteArray, p: Int) = Spawnable(
             b.u16(p), b.u16(p + 2), b.u16(p + 4), b.u16(p + 6), b.u16(p + 8), b.u32(p + 10).toInt(),
@@ -76,6 +94,27 @@ data class OverworldEvent(
     companion object {
         const val SIZE = 32
         const val ALIAS_SCRIPT = 0xFFFF
+
+        /** CSV columns of the objects of one map (the `id` column is the position in the list, `object_id` the game's own id). */
+        val CSV = RecordCsv(
+            listOf(
+                CsvColumn<OverworldEvent>("object_id", 0..0xFFFF, { it.id }, { r, v -> r.copy(id = v) }),
+                CsvColumn("sprite_entry", 0..0xFFFF, { it.spriteEntry }, { r, v -> r.copy(spriteEntry = v) }),
+                CsvColumn("movement", 0..0xFFFF, { it.movement }, { r, v -> r.copy(movement = v) }),
+                CsvColumn("type", 0..0xFFFF, { it.type }, { r, v -> r.copy(type = v) }),
+                CsvColumn("flag", 0..0xFFFF, { it.flag }, { r, v -> r.copy(flag = v) }),
+                CsvColumn("script", 0..0xFFFF, { it.script }, { r, v -> r.copy(script = v) }),
+                CsvColumn("orientation", 0..0xFFFF, { it.orientation }, { r, v -> r.copy(orientation = v) }),
+                CsvColumn("sight_range", 0..0xFFFF, { it.sightRange }, { r, v -> r.copy(sightRange = v) }),
+                CsvColumn("unknown1", 0..0xFFFF, { it.unknown1 }, { r, v -> r.copy(unknown1 = v) }),
+                CsvColumn("unknown2", 0..0xFFFF, { it.unknown2 }, { r, v -> r.copy(unknown2 = v) }),
+                CsvColumn("x_range", 0..0xFFFF, { it.xRange }, { r, v -> r.copy(xRange = v) }),
+                CsvColumn("y_range", 0..0xFFFF, { it.yRange }, { r, v -> r.copy(yRange = v) }),
+                CsvColumn("x", 0..0xFFFF, { it.x }, { r, v -> r.copy(x = v) }),
+                CsvColumn("y", 0..0xFFFF, { it.y }, { r, v -> r.copy(y = v) }),
+                CsvColumn("z", Int.MIN_VALUE..Int.MAX_VALUE, { it.z }, { r, v -> r.copy(z = v) }),
+            ),
+        )
         val TYPES = mapOf(0 to "Normal", 1 to "Trainer", 3 to "Item")
         fun read(b: ByteArray, p: Int): OverworldEvent {
             val w = IntArray(14) { b.u16(p + it * 2) }
@@ -92,6 +131,17 @@ data class Warp(val x: Int, val y: Int, val header: Int, val anchor: Int, val he
 
     companion object {
         const val SIZE = 12
+
+        /** CSV columns of the warps of one map; `height` is the 32 bit word shown as a signed number. */
+        val CSV = RecordCsv(
+            listOf(
+                CsvColumn<Warp>("x", 0..0xFFFF, { it.x }, { r, v -> r.copy(x = v) }),
+                CsvColumn("y", 0..0xFFFF, { it.y }, { r, v -> r.copy(y = v) }),
+                CsvColumn("header", 0..0xFFFF, { it.header }, { r, v -> r.copy(header = v) }),
+                CsvColumn("anchor", 0..0xFFFF, { it.anchor }, { r, v -> r.copy(anchor = v) }),
+                CsvColumn("height", Int.MIN_VALUE..Int.MAX_VALUE, { it.height.toInt() }, { r, v -> r.copy(height = v.toLong() and 0xFFFFFFFFL) }),
+            ),
+        )
         fun read(b: ByteArray, p: Int) = Warp(b.u16(p), b.u16(p + 2), b.u16(p + 4), b.u16(p + 6), b.u32(p + 8))
     }
 }
@@ -114,6 +164,20 @@ data class Trigger(
 
     companion object {
         const val SIZE = 16
+
+        /** CSV columns of the triggers of one map. */
+        val CSV = RecordCsv(
+            listOf(
+                CsvColumn<Trigger>("script", 0..0xFFFF, { it.script }, { r, v -> r.copy(script = v) }),
+                CsvColumn("x", 0..0xFFFF, { it.x }, { r, v -> r.copy(x = v) }),
+                CsvColumn("y", 0..0xFFFF, { it.y }, { r, v -> r.copy(y = v) }),
+                CsvColumn("width", 0..0xFFFF, { it.width }, { r, v -> r.copy(width = v) }),
+                CsvColumn("height", 0..0xFFFF, { it.height }, { r, v -> r.copy(height = v) }),
+                CsvColumn("z", 0..0xFFFF, { it.z }, { r, v -> r.copy(z = v) }),
+                CsvColumn("expected_value", 0..0xFFFF, { it.expectedValue }, { r, v -> r.copy(expectedValue = v) }),
+                CsvColumn("variable", 0..0xFFFF, { it.variable }, { r, v -> r.copy(variable = v) }),
+            ),
+        )
         fun read(b: ByteArray, p: Int): Trigger {
             val w = IntArray(8) { b.u16(p + it * 2) }
             return Trigger(w[0], w[1], w[2], w[3], w[4], w[5], w[6], w[7])

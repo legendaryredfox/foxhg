@@ -4,7 +4,11 @@ import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.eggmove.EggMoveGroup
 import io.github.legendaryredfox.foxhg.core.data.eggmove.EggMoves
 import io.github.legendaryredfox.foxhg.core.data.event.EventFile
+import io.github.legendaryredfox.foxhg.core.data.event.OverworldEvent
 import io.github.legendaryredfox.foxhg.core.data.event.OverworldSprites
+import io.github.legendaryredfox.foxhg.core.data.event.Spawnable
+import io.github.legendaryredfox.foxhg.core.data.event.Trigger
+import io.github.legendaryredfox.foxhg.core.data.event.Warp
 import io.github.legendaryredfox.foxhg.core.data.evolution.EvolutionData
 import io.github.legendaryredfox.foxhg.core.data.evolution.EvolutionMethod
 import io.github.legendaryredfox.foxhg.core.data.evolution.TradeEvolutions
@@ -791,6 +795,34 @@ class RealRomRecordsTest {
         assertEquals(listOf(1034, 2667, 1317, 195), listOf(files.sumOf { it.spawnables.size }, files.sumOf { it.overworlds.size }, files.sumOf { it.warps.size }, files.sumOf { it.triggers.size }))
         assertTrue(files.all { it.trailing.isEmpty() }, "no bytes after the last record in vanilla")
         assertEquals(10, files.flatMap { it.overworlds }.count { it.isAlias })
+    }
+
+    @Test
+    fun eventListsExportToCsvAndImportBackToTheSameBytes() = withProject { project ->
+        val files = EventFile.load(project).ok().records
+        fun <T> check(csv: io.github.legendaryredfox.foxhg.core.data.csv.RecordCsv<T>, of: (EventFile) -> List<T>, with: (EventFile, List<T>) -> EventFile) {
+            for (file in files) {
+                val list = of(file)
+                val back = csv.import(csv.export(list) { "" }, list).ok()
+                assertEquals(list, back)
+                assertContentEquals(file.toBytes(), with(file, back).toBytes())
+            }
+        }
+        check(OverworldEvent.CSV, { it.overworlds }) { f, l -> f.copy(overworlds = l) }
+        check(Warp.CSV, { it.warps }) { f, l -> f.copy(warps = l) }
+        check(Trigger.CSV, { it.triggers }) { f, l -> f.copy(triggers = l) }
+        check(Spawnable.CSV, { it.spawnables }) { f, l -> f.copy(spawnables = l) }
+
+        // An edited cell changes only that field of that row; a value out of range rejects the file.
+        val warps = files.first { it.warps.size > 1 }.warps
+        val lines = Warp.CSV.export(warps) { "" }.lines().toMutableList()
+        val cells = lines[2].split(",").toMutableList()
+        cells[2] = "7" // "x" is the third column after id and name
+        lines[2] = cells.joinToString(",")
+        val edited = Warp.CSV.import(lines.joinToString("\r\n"), warps).ok()
+        assertEquals(warps.mapIndexed { i, w -> if (i == 1) w.copy(x = 7) else w }, edited)
+        lines[2] = cells.also { it[2] = "70000" }.joinToString(",")
+        assertTrue(Warp.CSV.import(lines.joinToString("\r\n"), warps) is FoxResult.Err)
     }
 
     @Test

@@ -30,6 +30,7 @@ import io.github.legendaryredfox.foxhg.app.ui.OverworldIcon
 import io.github.legendaryredfox.foxhg.app.ui.PickerField
 import io.github.legendaryredfox.foxhg.app.ui.SectionCard
 import io.github.legendaryredfox.foxhg.core.FoxResult
+import io.github.legendaryredfox.foxhg.core.data.csv.RecordCsv
 import io.github.legendaryredfox.foxhg.core.data.event.EventFile
 import io.github.legendaryredfox.foxhg.core.data.event.MAP_SIZE
 import io.github.legendaryredfox.foxhg.core.data.event.OverworldEvent
@@ -76,19 +77,20 @@ fun EventEditor(model: RecordEditorModel<EventFile>, labels: EventLabels, modifi
         }
         key(model.selectedIndex) {
             EventSection(tr(Res.string.event_overworld_objects), tr(Res.string.event_npcs_trainers_and_item_balls), file.overworlds, { model.update { f -> f.copy(overworlds = it) } },
+                csv = OverworldEvent.CSV,
                 summary = { "${if (it.isAlias) "Alias of" else "Object"} ${it.id}, sprite ${it.spriteEntry}, script ${it.script}" },
                 create = { file.overworlds.lastOrNull()?.copy(id = (file.overworlds.maxOfOrNull { o -> o.id } ?: 0) + 1) ?: OverworldEvent(1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0) },
                 leading = { OverworldIcon(it.spriteEntry, it.orientation, 32.dp) },
             ) { o, set -> OverworldForm(o, set) }
-            EventSection("Warps", tr(Res.string.event_doors_and_exits_to_another_map_hea), file.warps, { model.update { f -> f.copy(warps = it) } },
+            EventSection("Warps", tr(Res.string.event_doors_and_exits_to_another_map_hea), file.warps, { model.update { f -> f.copy(warps = it) } }, csv = Warp.CSV,
                 summary = { tr(Res.string.event_to_header_x_x_anchor_x, it.header, labels.mapName(it.header), it.anchor) },
                 create = { file.warps.lastOrNull() ?: Warp(0, 0, 0, 0, 0) },
             ) { w, set -> WarpForm(w, labels, set) }
-            EventSection(tr(Res.string.script_triggers), tr(Res.string.event_scripts_that_run_when_the_player_s), file.triggers, { model.update { f -> f.copy(triggers = it) } },
+            EventSection(tr(Res.string.script_triggers), tr(Res.string.event_scripts_that_run_when_the_player_s), file.triggers, { model.update { f -> f.copy(triggers = it) } }, csv = Trigger.CSV,
                 summary = { tr(Res.string.event_script_x, it.script) + if (it.variable != 0) " when var ${it.variable} is ${it.expectedValue}" else "" },
                 create = { file.triggers.lastOrNull() ?: Trigger(0, 0, 0, 1, 1, 0, 0, 0) },
             ) { t, set -> TriggerForm(t, set) }
-            EventSection(tr(Res.string.event_signs_boards_and_hidden_items), null, file.spawnables, { model.update { f -> f.copy(spawnables = it) } },
+            EventSection(tr(Res.string.event_signs_boards_and_hidden_items), null, file.spawnables, { model.update { f -> f.copy(spawnables = it) } }, csv = Spawnable.CSV,
                 summary = { sp -> "${Spawnable.TYPES.getOrElse(sp.type) { n -> "Type $n" }}, script ${sp.script}" },
                 create = { file.spawnables.lastOrNull() ?: Spawnable(0, 0, 0, 0, 0, 0, 0, 0, 0) },
             ) { s, set -> SpawnableForm(s, set) }
@@ -106,10 +108,14 @@ private fun <T> EventSection(
     summary: (T) -> String,
     create: () -> T,
     leading: (@Composable (T) -> Unit)? = null,
+    csv: RecordCsv<T>? = null,
     form: @Composable (T, (T) -> Unit) -> Unit,
 ) {
     var open by remember { mutableStateOf<Int?>(null) }
-    SectionCard(title, subtitle = subtitle, actions = { Chip(items.size.toString()) }) {
+    SectionCard(title, subtitle = subtitle, actions = {
+        if (csv != null) CsvButtons(csv, title, { items }, { "" }) { change -> onChange(change(items)) }
+        Chip(items.size.toString())
+    }) {
         if (items.isEmpty()) Text(stringResource(Res.string.building_none), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         items.forEachIndexed { i, item ->
             Row(Modifier.fillMaxWidth().clickable { open = if (open == i) null else i }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
