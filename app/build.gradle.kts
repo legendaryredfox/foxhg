@@ -58,5 +58,12 @@ compose.desktop {
 
 // the window shows the version, read from this resource
 tasks.named<ProcessResources>("jvmProcessResources") {
+    // the version is an input of the task, or a changed version would keep the old file in build/
+    inputs.property("appVersion", appVersion)
     filesMatching("version.properties") { expand("version" to appVersion) }
+}
+
+// the version test compares what the window shows with the version declared here
+tasks.withType<Test>().configureEach {
+    systemProperty("foxhg.expectedVersion", appVersion)
 }
