@@ -653,6 +653,20 @@ so `WriteByteToAddr 0x20436D4, <weather>`, `FlashEffect`, `WriteByteToAddr 0x204
 7, stores the weather in a variable and gives that many Great Balls (7 were given, where the vanilla Flash weather would give 12). Limit from the guide: do not run it in
 a level script while a loading zone is being crossed (null pointer, crashes real hardware).
 
+## Adding a trainer (HeartGold English)
+
+`NewTrainer.add` appends one trainer. Counts on the vanilla ROM: 738 headers (`a/0/5/5`) and parties (`a/0/5/6`), 738 names in text bank 729, but only 735 message offsets
+(`a/1/3/1` stops at trainer 734; trainers 735 to 737, the partner rivals, have none), 1717 battle messages. A new trainer grows all four: header and party (a copy of the trainer
+it is made from), a name at the end of bank 729, and the offsets file, which is padded with 0 up to the new trainer (so 735 to 737 get their 0 as well). Verified in the game
+(`NewTrainerInGameEmulatorTest`): the clerk's script runs `TrainerBattle 738, 0, 0, 0` and the game battles trainer 738 (the party of the Youngster it was copied from, and its
+name FOXHG from the grown bank is in RAM while the battle starts). Things found on the way:
+- The class Rival does not take its name from bank 729: the intro reads "You are challenged by Rival !" with an empty name (the rival's name is saved in the save), so a copy of
+  trainer 1 shows no name. Copy a trainer of another class.
+- Script file 953 (`a/0/1/2`) holds the trainer scripts of the map objects: entries 1 to 737 are `std_trainer` (script id 3000 + trainer - 1, all sharing one body) and entries 738 to 740
+  are different scripts (the third one is the rematch phone call), so a new trainer has no slot there. A script with `TrainerBattle` starts its battle instead. Not done: moving those
+  three entries so that trainers 738 and up get the shared script and an eye-contact object (a trainer object calls script `3000 + trainer - 1` and a second block at 5000).
+- The beaten flag of a trainer is `0x550 + trainer` (decomp `FLAG_TRAINER`); trainer 738 gets 0x832, a flag the decomp calls unknown. **[UNVERIFIED]** that nothing else uses 0x832 and up.
+
 ## Shiny rates (HeartGold English)
 
 - The game has no shiny chance to edit: a Pokémon is shiny when `(tid ^ sid ^ pid high ^ pid low) < 8` (8 in 65536, `SHINY_CHECK`, inlined in several places; the stand-alone check is at ARM9 0x2070068, `cmp r0, #8` at 0x2070080), so no single number changes the rate of one kind of Pokémon. The "Shiny rates" patch (`ShinyRatesPatch`, source `docs/asm/shiny_rates.s`, built by `scripts/build-shiny-asm.sh`) hooks the places that make them instead and keeps four u32 rates (chance out of 65536) at synthetic overlay 0x11D00; the routines are at 0x11D20 (264 bytes). A rate of 0 exits before drawing a random number. It needs the ARM9 expansion.

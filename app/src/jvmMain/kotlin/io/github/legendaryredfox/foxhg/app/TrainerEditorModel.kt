@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import io.github.legendaryredfox.foxhg.core.FoxResult
+import io.github.legendaryredfox.foxhg.core.data.trainer.NewTrainer
 import io.github.legendaryredfox.foxhg.core.data.trainer.Trainer
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerMon
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
@@ -15,7 +16,7 @@ import io.github.legendaryredfox.foxhg.core.project.RomProject
 
 /** State of the Trainer editor: list with search, selected trainer, and edits written to the project. */
 class TrainerEditorModel(private val project: RomProject, private val onChanged: () -> Unit = {}) {
-    val names: GameNames? = project.names
+    val names: GameNames? get() = project.names
     private var table: TrainerTable? = null
     private val original: List<Trainer> = TrainerTable.original(project)
 
@@ -93,6 +94,22 @@ class TrainerEditorModel(private val project: RomProject, private val onChanged:
         )
         if (changed > 0) replace(updated)
         return changed
+    }
+
+    /** Adds a copy of the selected trainer named [name] at the end of the list and selects it; returns why it failed, or null. */
+    fun addTrainer(name: String): String? {
+        val added = when (val r = NewTrainer.add(project, name.trim(), selectedIndex)) {
+            is FoxResult.Ok -> r.value
+            is FoxResult.Err -> return r.message
+        }
+        when (val loaded = TrainerTable.load(project)) {
+            is FoxResult.Ok -> table = loaded.value
+            is FoxResult.Err -> return loaded.message
+        }
+        selectedIndex = added
+        version++
+        onChanged()
+        return null
     }
 
     private fun replace(updated: TrainerTable) {

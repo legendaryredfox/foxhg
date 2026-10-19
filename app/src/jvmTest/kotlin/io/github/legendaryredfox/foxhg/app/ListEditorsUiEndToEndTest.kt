@@ -284,6 +284,22 @@ class ListEditorsUiEndToEndTest {
     }
 
     @Test
+    fun addingATrainerFromTheTrainerScreen() = withHeartGoldApp { _, project ->
+        open("Trainers")
+        val before = (TrainerTable.load(project) as FoxResult.Ok).value.trainers.size
+        tap(onNodeWithTag("add-toggle"), inScrollPane = false)
+        onNodeWithTag("add-trainer").assertIsNotEnabled()
+        onNodeWithTag("field:New trainer name").performTextInput("FOXHG")
+        tap(onNodeWithTag("add-trainer"), inScrollPane = false)
+        waitForIdle()
+        val after = (TrainerTable.load(project) as FoxResult.Ok).value
+        assertEquals(before + 1, after.trainers.size)
+        assertEquals("FOXHG", project.names!!.trainerNames[before])
+        onNodeWithText("Added trainer $before", substring = true).assertIsDisplayed()
+        onAllNodesWithText("FOXHG", substring = true).onFirst().assertIsDisplayed()
+    }
+
+    @Test
     fun aReversibleToolboxPatchIsASwitch() = withHeartGoldApp { _, project ->
         open("ROM toolbox")
         onNodeWithTag("apply:reusable-tms").assertDoesNotExist()

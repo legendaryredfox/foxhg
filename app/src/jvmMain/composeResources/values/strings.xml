@@ -405,6 +405,12 @@
     <string name="trainer_replace_a_pok_mon_in_every_trainer">Replace a Pokémon in every trainer party</string>
     <string name="trainer_keeps_level_and_everything_else_ch">Keeps level and everything else; changes the species only</string>
     <string name="trainer_hide">Hide</string>
+    <string name="trainer_add_title">Add a trainer</string>
+    <string name="trainer_add_subtitle">A copy of the selected trainer at the end of the list, with the name you type. Give it battle messages in the Trainer messages editor and start its battle from a script with TrainerBattle (the shared trainer scripts of the map objects only reach the 737 original trainers).</string>
+    <string name="trainer_add_name">Name</string>
+    <string name="trainer_add_button">Add</string>
+    <string name="trainer_added_x">Added trainer %1$d. Ctrl+Z undoes it.</string>
+    <string name="trainer_add_failed_x">Could not add the trainer: %1$s</string>
     <string name="trainer_show">Show</string>
     <string name="trainer_replace">Replace</string>
     <string name="trainer_with">With</string>

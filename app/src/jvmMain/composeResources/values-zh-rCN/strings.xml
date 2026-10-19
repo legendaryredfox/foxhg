@@ -401,6 +401,12 @@
     <string name="trainer_replace_a_pok_mon_in_every_trainer">替换所有训练家队伍中的某只宝可梦</string>
     <string name="trainer_keeps_level_and_everything_else_ch">保留等级及其他一切；只更改宝可梦种类</string>
     <string name="trainer_hide">隐藏</string>
+    <string name="trainer_add_title">添加训练家</string>
+    <string name="trainer_add_subtitle">在列表末尾添加所选训练家的副本，使用你输入的名字。在“训练家对话”编辑器中为其设置战斗对话，并在脚本中用 TrainerBattle 开始战斗（地图对象共用的训练家脚本只覆盖原有的737名训练家）。</string>
+    <string name="trainer_add_name">名字</string>
+    <string name="trainer_add_button">添加</string>
+    <string name="trainer_added_x">已添加训练家 %1$d。Ctrl+Z 可撤销。</string>
+    <string name="trainer_add_failed_x">无法添加训练家：%1$s</string>
     <string name="trainer_show">显示</string>
     <string name="trainer_replace">替换</string>
     <string name="trainer_with">替换为</string>

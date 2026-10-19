@@ -405,6 +405,12 @@
     <string name="trainer_replace_a_pok_mon_in_every_trainer">Sustituir un Pokémon en todos los equipos de entrenadores</string>
     <string name="trainer_keeps_level_and_everything_else_ch">Mantiene el nivel y todo lo demás; cambia solo la especie</string>
     <string name="trainer_hide">Ocultar</string>
+    <string name="trainer_add_title">Añadir un entrenador</string>
+    <string name="trainer_add_subtitle">Una copia del entrenador seleccionado al final de la lista, con el nombre que escribas. Dale mensajes de batalla en el editor de Mensajes de entrenador e inicia su combate desde un script con TrainerBattle (los scripts de entrenador compartidos de los objetos del mapa solo llegan a los 737 entrenadores originales).</string>
+    <string name="trainer_add_name">Nombre</string>
+    <string name="trainer_add_button">Añadir</string>
+    <string name="trainer_added_x">Entrenador %1$d añadido. Ctrl+Z lo deshace.</string>
+    <string name="trainer_add_failed_x">No se pudo añadir el entrenador: %1$s</string>
     <string name="trainer_show">Mostrar</string>
     <string name="trainer_replace">Sustituir</string>
     <string name="trainer_with">Por</string>

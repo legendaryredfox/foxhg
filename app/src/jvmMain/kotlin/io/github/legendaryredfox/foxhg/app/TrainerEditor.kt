@@ -49,6 +49,7 @@ fun TrainerEditor(model: TrainerEditorModel, modifier: Modifier = Modifier) {
     }
     Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         ReplaceSpeciesCard(model)
+        AddTrainerCard(model)
         Row(Modifier.fillMaxSize()) {
             ListPane(
                 rows = model.rows(),
@@ -65,6 +66,31 @@ fun TrainerEditor(model: TrainerEditorModel, modifier: Modifier = Modifier) {
             )
             model.selected?.let { t -> DetailPane { Detail(model, t) } }
         }
+    }
+}
+
+/** A copy of the selected trainer at the end of the list, with a name typed here. */
+@Composable
+private fun AddTrainerCard(model: TrainerEditorModel) {
+    var open by remember { mutableStateOf(false) }
+    var name by remember { mutableStateOf("") }
+    var message by remember { mutableStateOf<String?>(null) }
+    var failed by remember { mutableStateOf(false) }
+    SectionCard(
+        stringResource(Res.string.trainer_add_title),
+        subtitle = stringResource(Res.string.trainer_add_subtitle),
+        actions = { OutlinedButton(onClick = { open = !open }, modifier = Modifier.testTag("add-toggle")) { Text(if (open) stringResource(Res.string.trainer_hide) else stringResource(Res.string.trainer_show)) } },
+    ) {
+        if (open) FieldFlow {
+            LabeledText(stringResource(Res.string.trainer_add_name), name, tag = "New trainer name") { name = it }
+            OutlinedButton(onClick = {
+                val problem = model.addTrainer(name)
+                failed = problem != null
+                message = problem?.let { tr(Res.string.trainer_add_failed_x, it) } ?: tr(Res.string.trainer_added_x, model.selectedIndex)
+                if (problem == null) name = ""
+            }, enabled = name.isNotBlank(), modifier = Modifier.testTag("add-trainer")) { Text(stringResource(Res.string.trainer_add_button)) }
+        }
+        message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary) }
     }
 }
 
