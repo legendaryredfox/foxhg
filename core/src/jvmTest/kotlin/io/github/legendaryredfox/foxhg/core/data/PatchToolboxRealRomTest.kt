@@ -12,6 +12,9 @@ import io.github.legendaryredfox.foxhg.core.patch.RomPatch
 import io.github.legendaryredfox.foxhg.core.patch.TextureAnimationsPatch
 import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
 import io.github.legendaryredfox.foxhg.core.project.RomProject
+import io.github.legendaryredfox.foxhg.core.script.ScriptText
+import io.github.legendaryredfox.foxhg.core.script.ScriptWeather
+import io.github.legendaryredfox.foxhg.core.u8
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.test.Test
@@ -94,6 +97,19 @@ class PatchToolboxRealRomTest {
         assertTrue(DsprePatches.all.filter { it !== ReusableTmsPatch }.none { it.reversible }, "only the plain byte patches are switches")
         assertTrue(DsprePatches.trainerNames.revert(project) is FoxResult.Err)
         project.revertAll()
+    }
+
+    @Test
+    fun theScriptWeatherImmediateIsWhereTheGuideSaysAndTheSnippetParses() = withProject { project ->
+        assertTrue(ScriptWeather.check(project) is FoxResult.Ok, "the guide's byte pattern is in the vanilla ARM9")
+        assertEquals(ScriptWeather.DEFAULT, (project.readArm9() as FoxResult.Ok).value.u8(ScriptWeather.OFFSET), "movs r1, #12")
+        assertEquals(0x02000000 + ScriptWeather.OFFSET, ScriptWeather.ADDRESS)
+        val script = "script_1:\n" + ScriptWeather.snippet(3) + "\n        End\n"
+        val parsed = ScriptText.parse(script)
+        assertTrue(parsed is FoxResult.Ok, "WriteByteToAddr and FlashEffect are commands of the database: $parsed")
+        val text = ScriptText.toText((parsed as FoxResult.Ok).value)
+        assertTrue("WriteByteToAddr ${ScriptWeather.ADDRESS}, 3" in text && "FlashEffect" in text && "WriteByteToAddr ${ScriptWeather.ADDRESS}, 12" in text, text)
+        assertEquals((0..13).toList(), ScriptWeather.NAMES.keys.toList())
     }
 
     @Test

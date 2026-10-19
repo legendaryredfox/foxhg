@@ -14,9 +14,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,7 +47,10 @@ import io.github.legendaryredfox.foxhg.core.script.LevelTrigger
 import io.github.legendaryredfox.foxhg.core.script.ScriptCommands
 import io.github.legendaryredfox.foxhg.core.script.ScriptEntry
 import io.github.legendaryredfox.foxhg.core.script.ScriptText
+import io.github.legendaryredfox.foxhg.core.script.ScriptWeather
 import io.github.legendaryredfox.foxhg.core.script.VariableTrigger
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 
 /** Script files labelled by the maps that use them. */
 class ScriptLabels(project: RomProject) {
@@ -85,6 +90,13 @@ class ScriptLabels(project: RomProject) {
 class ScriptEditorModel(project: RomProject, private val labels: ScriptLabels, onChanged: () -> Unit = {}) {
     val files = RecordEditorModel(project, ScriptEntry.SPEC, labels::label, onChanged)
     init { labels.firstUsedFile().let { if (it in 0 until files.recordCount) files.select(it) } }
+
+    /** Whether the weather commands of the wiki guide work on this ROM (the code they change is where the guide says); the weather picked for the snippet. */
+    val weatherAvailable: Boolean = ScriptWeather.check(project) is FoxResult.Ok
+    var weather by mutableIntStateOf(1)
+
+    /** Puts the three weather commands on the clipboard, to paste into a script. */
+    fun copyWeatherSnippet() = Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(ScriptWeather.snippet(weather)), null)
 
     private val archives: List<TextArchive> = (TextArchive.load(project) as? FoxResult.Ok)?.value?.records ?: emptyList()
 
@@ -136,6 +148,7 @@ fun ScriptEditor(model: ScriptEditorModel, labels: ScriptLabels, modifier: Modif
         if (scriptUsers.isNotEmpty()) Text("Script of map header " + labels.describe(scriptUsers), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (levelUsers.isNotEmpty()) Text("Level script of map header " + labels.describe(levelUsers), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (entry is ScriptEntry.Script) ScriptSounds(model.draft)
+        if (entry is ScriptEntry.Script && model.weatherAvailable) WeatherSnippet(model)
         when (entry) {
             is ScriptEntry.Script -> SectionCard(
                 stringResource(Res.string.event_script),
@@ -155,6 +168,33 @@ fun ScriptEditor(model: ScriptEditorModel, labels: ScriptLabels, modifier: Modif
         }
     }
 }
+
+/** The weather commands of the wiki guide, ready to paste: pick a weather, copy. */
+@Composable
+private fun WeatherSnippet(model: ScriptEditorModel) {
+    var copied by remember { mutableStateOf(false) }
+    SectionCard(stringResource(Res.string.script_weather_title), subtitle = stringResource(Res.string.script_weather_subtitle)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            PickerField(
+                stringResource(Res.string.script_weather_label), model.weather, ScriptWeather.NAMES.keys.map { weatherName(it) },
+                { model.weather = it; copied = false }, tag = "Weather",
+            )
+            OutlinedButton(onClick = { model.copyWeatherSnippet(); copied = true }, modifier = Modifier.testTag("weather-copy")) { Text(stringResource(Res.string.script_weather_copy)) }
+            if (copied) Text(stringResource(Res.string.script_weather_copied), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun weatherName(id: Int): String = stringResource(
+    when (id) {
+        0 -> Res.string.script_weather_name_0; 1 -> Res.string.script_weather_name_1; 2 -> Res.string.script_weather_name_2
+        3 -> Res.string.script_weather_name_3; 4 -> Res.string.script_weather_name_4; 5 -> Res.string.script_weather_name_5
+        6 -> Res.string.script_weather_name_6; 7 -> Res.string.script_weather_name_7; 8 -> Res.string.script_weather_name_8
+        9 -> Res.string.script_weather_name_9; 10 -> Res.string.script_weather_name_10; 11 -> Res.string.script_weather_name_11
+        12 -> Res.string.script_weather_name_12; else -> Res.string.script_weather_name_13
+    },
+)
 
 /** Colours labels, command names, numbers and comments of a script text. */
 internal class ScriptHighlight(dark: Boolean) : VisualTransformation {

@@ -641,6 +641,18 @@ Both are the condition byte of a THUMB conditional branch turned into an uncondi
 (Return) in the bag, the TM used on Cyndaquil from the bag: the vanilla ROM loses the TM (2 copies of the pair item 354, quantity 1 in RAM before, 1 after), the patched
 one keeps it (2 and 2), and Cyndaquil learns Return in both. The patch is the first one the app shows as a switch (`RomPatch.reversible`): turning it off writes the vanilla bytes back.
 
+## Weather from a script (wiki guide "Setting the Weather From a Script"), HeartGold English
+
+No ROM byte changes: it is script text (`ScriptWeather`). `ChangeWeather` is dummied out, but the script command `FlashEffect` (decomp `ScrCmd_FlashEffect`, the guide's
+`FlashAnimation`) sets the area weather to a constant 12 and updates the graphics. That 12 is the immediate of a `movs r1, #12` (`0C 21`) in the ARM9 at file offset
+`0x436D4` (RAM `0x020436D4`), inside the guide's byte pattern `70 BD 38 B5 04 1C .. .. .. .. C0 68 F8 F7 .. .. .. .. 0C 21 ..` (the pattern is found at `0x436C2` in
+the vanilla ROM; the check is `ScriptWeather.check`). The debug command `WriteByteToAddr` (the guide's `AdrsValueSet`: u32 address, u8 value) can write that byte,
+so `WriteByteToAddr 0x20436D4, <weather>`, `FlashEffect`, `WriteByteToAddr 0x20436D4, 0xC` shows a weather and leaves Flash as it was. Weather numbers (decomp
+`weather.h`): 0 sunny, 1 rain, 2 heavy rain, 3 thunderstorm, 4 unknown, 5 snow, 6 blizzard, 7 sandstorm, 8 diamond dust, 9 and 10 unknown, 11 flash, 12 flash after use,
+13 low light. `ScrCmd_684` stores the current weather in a variable. Verified in the game (`ScriptWeatherInGameEmulatorTest`): the clerk's script runs the snippet with
+7, stores the weather in a variable and gives that many Great Balls (7 were given, where the vanilla Flash weather would give 12). Limit from the guide: do not run it in
+a level script while a loading zone is being crossed (null pointer, crashes real hardware).
+
 ## Shiny rates (HeartGold English)
 
 - The game has no shiny chance to edit: a Pokémon is shiny when `(tid ^ sid ^ pid high ^ pid low) < 8` (8 in 65536, `SHINY_CHECK`, inlined in several places; the stand-alone check is at ARM9 0x2070068, `cmp r0, #8` at 0x2070080), so no single number changes the rate of one kind of Pokémon. The "Shiny rates" patch (`ShinyRatesPatch`, source `docs/asm/shiny_rates.s`, built by `scripts/build-shiny-asm.sh`) hooks the places that make them instead and keeps four u32 rates (chance out of 65536) at synthetic overlay 0x11D00; the routines are at 0x11D20 (264 bytes). A rate of 0 exits before drawing a random number. It needs the ARM9 expansion.

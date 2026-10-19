@@ -30,6 +30,7 @@ import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.script.ScriptEntry
 import io.github.legendaryredfox.foxhg.core.script.ScriptText
+import io.github.legendaryredfox.foxhg.core.script.ScriptWeather
 import io.github.legendaryredfox.foxhg.core.text.TextArchive
 import java.nio.file.Files
 import java.nio.file.Path
@@ -121,6 +122,19 @@ class UiEndToEndTest {
         buildAndReopen(model) { rebuilt ->
             assertEquals("Mega Ball", (TextArchive.load(rebuilt) as FoxResult.Ok).value.records[222].entries[3].text())
         }
+    }
+
+    @Test
+    fun theWeatherCommandsAreCopiedForTheChosenWeather() = withApp { _, _ ->
+        open("Scripts")
+        onAllNodesWithText("Mt. Moon")[1].performClick()
+        waitForIdle()
+        pick("Weather", "Sandstorm")
+        tap(onNodeWithTag("weather-copy"))
+        val clipboard = java.awt.Toolkit.getDefaultToolkit().systemClipboard.getData(java.awt.datatransfer.DataFlavor.stringFlavor) as String
+        assertEquals(ScriptWeather.snippet(7), clipboard)
+        assertTrue("FlashEffect" in clipboard && clipboard.lines().first().trim() == "WriteByteToAddr 0x20436D4, 7", clipboard)
+        onNodeWithText("Copied", substring = true).assertIsDisplayed()
     }
 
     @Test
