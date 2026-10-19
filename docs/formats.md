@@ -273,6 +273,16 @@ and `scripts/boot-test.sh`, 2400 frames). Nothing was tried in game past the int
 - Not ported yet: dynamic headers (moves the header table to `a/0/5/0`; the Map headers editor reads the ARM9 table only), Sentence Case names,
   Standardize items.
 
+## Trainer battle messages (`a/0/5/7`, `a/1/3/1`, bank 728)
+
+HeartGold English, confirmed on the real ROM (`RealRomTrainerMessagesTest`); layout from VSMaker2 `RomFileMethods` and DSPRE `RomInfo` (`trainerTextTable`, `trainerTextOffset`, `trainerMessageTextNumber`).
+
+- `a/0/5/7` is a NARC with one file: 1717 pairs of `u16 trainer, u16 trigger`. Pair `n` goes with message `n` of text bank 728 (also 1717 entries). The pairs are not sorted by trainer, but the pairs of one trainer are next to each other.
+- `a/1/3/1` is a NARC with one file: 735 `u16`, one for each trainer number 0 to 734 (the trainer names bank has 738). Value = byte offset into the pair table of the trainer's first pair (always a multiple of 4), 0 for a trainer without messages. The game reads pairs from there while the pair's trainer number matches, so a trainer's messages must stay contiguous.
+- Triggers used in vanilla (count): 0 pre-battle 383, 1 player wins 616, 2 post-battle 383, 3 to 10 double battle lines (14, 20, 14, 14, 14, 20, 14, 14), 15 last Pokémon 68, 16 last Pokémon at critical HP 71, 17 rematch 45, 18 and 19 double rematch 2 each, 20 player loses 23. 11 to 14 are not used.
+- Rebuilding the tables with every trainer's messages grouped in order of first appearance reproduces the vanilla bytes exactly, so foxhg regroups on every add, remove and CSV import (`TrainerMessages.replaceAll`) and the numbers of the messages after the change move; the text of a message that did not change keeps its stored form.
+- Not checked in the running game **[UNVERIFIED]**: a trainer given a new message in a place the game did not use before (for example a trigger the trainer never had).
+
 ## Trainers (`a/0/5/5` headers, `a/0/5/6` parties)
 
 - 738 trainers; both NARCs have 738 files. Header is 20 bytes: type (bit 0 custom moves, bit 1 held items), class,

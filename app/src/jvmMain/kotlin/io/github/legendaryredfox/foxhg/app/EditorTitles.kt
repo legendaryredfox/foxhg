@@ -52,6 +52,7 @@ private fun EditorKind.titleResource(): StringResource = when (this) {
     EditorKind.TRAINERS -> Res.string.editor_trainers
     EditorKind.BATTLE_TOWER_TRAINERS -> Res.string.editor_battle_tower_trainers
     EditorKind.BATTLE_TOWER_SETS -> Res.string.editor_battle_tower_sets
+    EditorKind.TRAINER_MESSAGES -> Res.string.editor_trainer_messages
     EditorKind.TRAINER_FLAGS -> Res.string.editor_trainer_flags
     EditorKind.TRAINER_CLASSES -> Res.string.editor_trainer_classes
     EditorKind.ENCOUNTERS -> Res.string.editor_encounters

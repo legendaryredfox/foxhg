@@ -51,6 +51,12 @@ object HgssLayout {
     const val TRAINER_DATA = "a/0/5/5"
     const val TRAINER_PARTIES = "a/0/5/6"
 
+    /** One-file NARC of `u16 trainer, u16 trigger` pairs, one for each battle message; entry `n` goes with message `n` of [TextBanks.TRAINER_MESSAGES]. */
+    const val TRAINER_MESSAGE_TABLE = "a/0/5/7"
+
+    /** One-file NARC of one `u16` for each trainer: the byte offset in [TRAINER_MESSAGE_TABLE] of the trainer's first message (0 for a trainer with none). */
+    const val TRAINER_MESSAGE_OFFSETS = "a/1/3/1"
+
     /** Offset in the decompressed ARM9 of the TM/HM move list: 92 TMs then 8 HMs, u16 each. */
     const val TM_MOVES_ARM9_OFFSET = 0x1000CC
 
@@ -188,6 +194,8 @@ object TextBanks {
     const val BATTLE_TOWER_NAMES = 27
     /** Entries `3n` to `3n + 2` are the three messages of Battle Tower trainer `n`. */
     const val BATTLE_TOWER_MESSAGES = 724
+    /** 1717 entries, the battle messages of the trainers, in the order of [HgssLayout.TRAINER_MESSAGE_TABLE]. */
+    const val TRAINER_MESSAGES = 728
     /** Entry `n` is the nickname of trade `n`, entry `n + 13` the name of its original trainer. */
     const val TRADE_NAMES = 200
 
@@ -199,6 +207,7 @@ object TextBanks {
         ABILITIES -> "Ability names"
         TYPES -> "Type names"
         TRAINER_NAMES -> "Trainer names"
+        TRAINER_MESSAGES -> "Trainer battle messages"
         TRAINER_CLASSES -> "Trainer class names"
         LOCATIONS -> "Location names"
         else -> null

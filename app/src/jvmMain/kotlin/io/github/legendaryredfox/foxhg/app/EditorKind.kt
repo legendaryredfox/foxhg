@@ -28,6 +28,7 @@ enum class EditorKind(val group: String, val title: String, val implemented: Boo
     TRAINERS("Trainers", "Trainers", implemented = true),
     BATTLE_TOWER_TRAINERS("Trainers", "Battle Tower trainers", implemented = true),
     BATTLE_TOWER_SETS("Trainers", "Battle Tower sets", implemented = true),
+    TRAINER_MESSAGES("Trainers", "Trainer messages", implemented = true),
     TRAINER_FLAGS("Trainers", "Battle flags", implemented = true),
     TRAINER_CLASSES("Trainers", "Trainer classes", implemented = true),
     ENCOUNTERS("World", "Wild encounters", implemented = true),

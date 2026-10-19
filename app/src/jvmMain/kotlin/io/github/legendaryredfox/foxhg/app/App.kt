@@ -322,6 +322,10 @@ private fun Content(model: AppModel, modifier: Modifier) {
         selected == EditorKind.RESEARCH -> Loading(project, "research", { ResearchEditorModel(project) }) { editor ->
             ResearchEditor(editor, onOpen = model::openAt, modifier = modifier.padding(16.dp))
         }
+        selected == EditorKind.TRAINER_MESSAGES -> Loading(project, tr(Res.string.app_trainer_messages), { TrainerMessageEditorModel(project, onChanged = model::projectChanged).also { m -> model.selectionMemory[EditorKind.TRAINER_MESSAGES]?.let(m::select) } }) { editor ->
+            KeepSelection(model, EditorKind.TRAINER_MESSAGES, editor.selectedTrainer)
+            TrainerMessageEditor(editor, modifier.padding(16.dp))
+        }
         selected == EditorKind.GROUND_ITEMS -> Loading(project, tr(Res.string.app_ground_items), { GroundItemEditorModel(project, onChanged = model::projectChanged) }) { editor ->
             GroundItemEditor(editor, modifier.padding(16.dp))
         }

@@ -13,6 +13,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.encounter.EncounterData
 import io.github.legendaryredfox.foxhg.core.data.encounter.EncounterGroup
@@ -41,6 +42,7 @@ import io.github.legendaryredfox.foxhg.core.data.starter.Starters
 import io.github.legendaryredfox.foxhg.core.data.mapheader.MapHeader
 import io.github.legendaryredfox.foxhg.core.data.mapheader.MapHeaderTable
 import io.github.legendaryredfox.foxhg.core.data.matrix.GameMatrix
+import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerMessages
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -754,5 +756,36 @@ class ListEditorsUiEndToEndTest {
             assertEquals(before.width + 1, m[5].width)
             assertEquals(matrices()[0].width, m[0].width, "other matrices are untouched")
         }
+    }
+
+    @Test
+    fun editingAndAddingBattleMessagesOnTheTrainerMessagesScreenWritesTheTablesAndTheText() = withHeartGoldApp { _, project ->
+        val names = project.names!!
+        val falkner = names.trainerNames.indexOfFirst { it.equals("Falkner", ignoreCase = true) }
+        val load = { (TrainerMessages.load(project) as FoxResult.Ok).value }
+        val before = load()
+        val first = before.messagesOf(falkner).first()
+        assertTrue(before.messagesOf(falkner).size >= 2)
+
+        open("Trainer messages")
+        onNodeWithTag("search:Search trainers").performTextInput("Falkner")
+        waitForIdle()
+        // node 0 is the search box itself, then the rows 020 and 712 (two Falkners)
+        onAllNodesWithText("Falkner")[1].performClick()
+        waitForIdle()
+        onAllNodesWithTag("textarea").onFirst().performTextReplacement("Edited battle line!")
+        onAllNodesWithText("Apply").onFirst().performClick()
+        waitForIdle()
+        assertEquals("Edited battle line!", load().message(first).text)
+        assertEquals(before.size, load().size)
+        assertTrue(project.isDirty)
+
+        onNodeWithText("Add message").performScrollTo().performClick()
+        waitForIdle()
+        assertEquals(before.size + 1, load().size)
+        assertEquals(before.messagesOf(falkner).size + 1, load().messagesOf(falkner).size)
+        // every other trainer still finds its own messages
+        val other = (0 until before.offsets.size).first { it != falkner && before.messagesOf(it).isNotEmpty() }
+        assertEquals(before.messagesOf(other).map { before.message(it) }, load().messagesOf(other).map { load().message(it) })
     }
 }
