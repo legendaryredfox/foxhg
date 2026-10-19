@@ -7,6 +7,7 @@ import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
 import io.github.legendaryredfox.foxhg.core.patch.BytePatch
 import io.github.legendaryredfox.foxhg.core.patch.PatchStatus
 import io.github.legendaryredfox.foxhg.core.patch.PatchTarget
+import io.github.legendaryredfox.foxhg.core.patch.ReusableTmsPatch
 import io.github.legendaryredfox.foxhg.core.patch.RomPatch
 import io.github.legendaryredfox.foxhg.core.patch.TextureAnimationsPatch
 import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
@@ -41,6 +42,7 @@ class PatchToolboxRealRomTest {
         assertEquals(PatchStatus.Available, DsprePatches.matrixExpansion.status(project))
         assertEquals(PatchStatus.Available, DsprePatches.trainerNames.status(project))
         assertEquals(PatchStatus.Available, TextureAnimationsPatch.status(project))
+        assertEquals(PatchStatus.Available, ReusableTmsPatch.status(project), "the guide's bytes are in the vanilla ARM9 and overlay 15")
         for (p in listOf(DsprePatches.dynamicCamera, DsprePatches.buildingRotation, DsprePatches.scriptCommandRepoint)) {
             assertEquals(PatchStatus.Unavailable("Apply \"Expand ARM9 memory\" first"), p.status(project), p.id)
         }
@@ -76,6 +78,21 @@ class PatchToolboxRealRomTest {
         val restored = images(project)
         for ((target, bytes) in vanilla) assertContentEquals(bytes, restored.getValue(target), "$target after undoing everything")
         assertEquals(PatchStatus.Available, TextureAnimationsPatch.status(project), "undo brought the animations back")
+        project.revertAll()
+    }
+
+    @Test
+    fun reusableTmsTurnOffAgainAndRestoreTheVanillaBytes() = withProject { project ->
+        val vanilla = listOf(PatchTarget.Arm9, PatchTarget.Overlay(15)).associateWith { it.read(project).let { r -> (r as FoxResult.Ok).value } }
+        assertTrue(ReusableTmsPatch.reversible)
+        assertTrue(ReusableTmsPatch.revert(project) is FoxResult.Err, "off while it is off is refused")
+        assertTrue(ReusableTmsPatch.apply(project) is FoxResult.Ok)
+        assertEquals(PatchStatus.Applied, ReusableTmsPatch.status(project))
+        assertTrue(ReusableTmsPatch.revert(project) is FoxResult.Ok)
+        assertEquals(PatchStatus.Available, ReusableTmsPatch.status(project))
+        for ((target, bytes) in vanilla) assertContentEquals(bytes, (target.read(project) as FoxResult.Ok).value, "$target after turning it off")
+        assertTrue(DsprePatches.all.filter { it !== ReusableTmsPatch }.none { it.reversible }, "only the plain byte patches are switches")
+        assertTrue(DsprePatches.trainerNames.revert(project) is FoxResult.Err)
         project.revertAll()
     }
 

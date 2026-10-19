@@ -28,6 +28,12 @@ interface RomPatch {
     /** The same list for the open ROM, for patches whose edits depend on it. */
     fun changesFor(project: RomProject): List<String> = changes
 
+    /** True for a patch the app offers as a switch: it can be turned off again, restoring the bytes it replaced. */
+    val reversible: Boolean get() = false
+
     fun status(project: RomProject): PatchStatus
     fun apply(project: RomProject): FoxResult<Unit>
+
+    /** Turns an applied [reversible] patch off; journaled like [apply]. */
+    fun revert(project: RomProject): FoxResult<Unit> = FoxResult.Err("\"$title\" can not be turned off")
 }

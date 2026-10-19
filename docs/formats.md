@@ -628,6 +628,19 @@ egg moves `a/2/2/9`, moves `a/0/1/1`, items `a/0/1/7`, scripts `a/0/1/2`, events
 - `ScrCmd_GetFossilPokemon` and `CountFossils` (decomp `scrcmd_fossils.c`) read `sFossilPokemonMap`: 7 pairs of u16 item and u16 species, 28 bytes. In the real ROM it is in **overlay 21 at offset 304** (not in the main ARM9, although the decomp lists the file in `main.lsf`; found by searching the ARM9 and every overlay for the bytes). Order: Old Amber (103) to 142 Aerodactyl, Helix (101) to 138 Omanyte, Dome (102) to 140 Kabuto, Root (99) to 345 Lileep, Claw (100) to 347 Anorith, Armor (104) to 410 Shieldon, Skull (105) to 408 Cranidos. foxhg finds it by the seven item ids in that order with a species 1 to 493 after each, so an edited table is still found.
 - The museum scientist's script (file 755) calls `GetFossilPokemon` to put the species in variable 0x407F, then `GiveMon 0x407F, 20, ...`: the level 20 is in the script. The same script checks the fossil items with `HasItem` by item id, so only the species is edited. Not checked in game.
 
+## Reusable TMs (wiki guide "Enabling Reusable TMs"), HeartGold English
+
+Two one-byte edits, checked on the real ROM (the original byte is there in the vanilla file; `ReusableTmsPatch`):
+
+| Where | Offset | Vanilla | Patched | Effect |
+|-------|--------|---------|---------|--------|
+| ARM9 (decompressed) | `0x825A7` | `D1` (`BNE`) | `E0` (`B`) | the TM is not removed from the bag after it is taught |
+| overlay 15 (decompressed) | `0x6239` | `D3` (`BCC`) | `E0` (`B`) | the bag draws no count for a TM |
+
+Both are the condition byte of a THUMB conditional branch turned into an unconditional one. Verified in the game (`ReusableTms*EmulatorTest`): a save with TM27
+(Return) in the bag, the TM used on Cyndaquil from the bag: the vanilla ROM loses the TM (2 copies of the pair item 354, quantity 1 in RAM before, 1 after), the patched
+one keeps it (2 and 2), and Cyndaquil learns Return in both. The patch is the first one the app shows as a switch (`RomPatch.reversible`): turning it off writes the vanilla bytes back.
+
 ## Shiny rates (HeartGold English)
 
 - The game has no shiny chance to edit: a Pokémon is shiny when `(tid ^ sid ^ pid high ^ pid low) < 8` (8 in 65536, `SHINY_CHECK`, inlined in several places; the stand-alone check is at ARM9 0x2070068, `cmp r0, #8` at 0x2070080), so no single number changes the rate of one kind of Pokémon. The "Shiny rates" patch (`ShinyRatesPatch`, source `docs/asm/shiny_rates.s`, built by `scripts/build-shiny-asm.sh`) hooks the places that make them instead and keeps four u32 rates (chance out of 65536) at synthetic overlay 0x11D00; the routines are at 0x11D20 (264 bytes). A rate of 0 exits before drawing a random number. It needs the ARM9 expansion.

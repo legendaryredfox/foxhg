@@ -85,6 +85,7 @@ open class BytePatch(
     override val description: String,
     private val fixedEdits: List<ByteEdit> = emptyList(),
     protected val requires: RomPatch? = null,
+    override val reversible: Boolean = false,
 ) : RomPatch {
     val edits: List<ByteEdit> get() = fixedEdits
 
@@ -130,6 +131,25 @@ open class BytePatch(
         val edits = (editsFor(project) as FoxResult.Ok).value
         val loaded = (images(project, edits) as FoxResult.Ok).value.mapValues { it.value.copyOf() }
         edits.forEach { it.write(loaded.getValue(it.target)) }
+        return project.atomically {
+            for ((target, bytes) in loaded) {
+                val written = target.write(project, bytes)
+                if (written is FoxResult.Err) return@atomically written
+            }
+            FoxResult.Ok(Unit)
+        }
+    }
+
+    override fun revert(project: RomProject): FoxResult<Unit> {
+        if (!reversible) return super.revert(project)
+        when (val s = status(project)) {
+            PatchStatus.Applied -> Unit
+            PatchStatus.Available -> return FoxResult.Err("\"$title\" is not applied")
+            is PatchStatus.Unavailable -> return FoxResult.Err(s.reason)
+        }
+        val edits = (editsFor(project) as FoxResult.Ok).value
+        val loaded = (images(project, edits) as FoxResult.Ok).value.mapValues { it.value.copyOf() }
+        edits.forEach { it.original.copyInto(loaded.getValue(it.target), it.offset) }
         return project.atomically {
             for ((target, bytes) in loaded) {
                 val written = target.write(project, bytes)

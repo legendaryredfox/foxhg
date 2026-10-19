@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -57,6 +58,18 @@ class PatchToolboxModel(private val project: RomProject, private val onChanged: 
         }
         version++
     }
+
+    /** The switch of a reversible patch: on applies it (no question asked, it can be turned off), off restores the bytes it replaced. */
+    fun toggle(patch: RomPatch, on: Boolean) {
+        if (on) return apply(patch)
+        message = null
+        error = null
+        when (val r = patch.revert(project)) {
+            is FoxResult.Ok -> { message = tr(Res.string.patch_toolbox_x_turned_off_ctrl_z_brings_it_back, patch.title); onChanged() }
+            is FoxResult.Err -> error = tr(Res.string.patch_toolbox_x_failed_x, patch.title, r.message)
+        }
+        version++
+    }
 }
 
 @Composable
@@ -81,7 +94,16 @@ fun PatchToolbox(model: PatchToolboxModel, modifier: Modifier = Modifier) {
                         is PatchStatus.Unavailable -> Chip(status.reason, modifier = Modifier.testTag("status:${patch.id}"))
                     }
                     OutlinedButton(onClick = { showChanges = !showChanges }) { Text(if (showChanges) stringResource(Res.string.patch_toolbox_hide_changes) else stringResource(Res.string.patch_toolbox_show_changes)) }
-                    Button(onClick = { asking = patch }, enabled = status == PatchStatus.Available, modifier = Modifier.testTag("apply:${patch.id}")) { Text(stringResource(Res.string.patch_toolbox_apply)) }
+                    if (patch.reversible) {
+                        Switch(
+                            checked = status == PatchStatus.Applied,
+                            onCheckedChange = { model.toggle(patch, it) },
+                            enabled = status == PatchStatus.Applied || status == PatchStatus.Available,
+                            modifier = Modifier.testTag("toggle:${patch.id}"),
+                        )
+                    } else {
+                        Button(onClick = { asking = patch }, enabled = status == PatchStatus.Available, modifier = Modifier.testTag("apply:${patch.id}")) { Text(stringResource(Res.string.patch_toolbox_apply)) }
+                    }
                 }
                 if (showChanges) {
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

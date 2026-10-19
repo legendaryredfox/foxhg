@@ -978,6 +978,7 @@
     <string name="overlay_exported_overlay_x_to_x">已把overlay %1$s 导出到 %2$s</string>
     <string name="overlay_replace_overlay_x">替换overlay %1$s</string>
     <string name="patch_toolbox_x_applied_ctrl_z_undoes_it_the_rom">已应用“%1$s”。Ctrl+Z 可撤销；生成ROM时才会改变ROM。</string>
+    <string name="patch_toolbox_x_turned_off_ctrl_z_brings_it_back">已关闭“%1$s”。Ctrl+Z 可恢复；生成ROM时才会改变ROM。</string>
     <string name="patch_toolbox_x_failed_x">“%1$s”失败：%2$s</string>
     <string name="patch_toolbox_apply_x">应用“%1$s”？</string>
     <string name="personal_medium_fast">中速</string>

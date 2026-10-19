@@ -988,6 +988,7 @@
     <string name="overlay_exported_overlay_x_to_x">Exported overlay %1$s to %2$s</string>
     <string name="overlay_replace_overlay_x">Replace overlay %1$s</string>
     <string name="patch_toolbox_x_applied_ctrl_z_undoes_it_the_rom">"%1$s" applied. Ctrl+Z undoes it; the ROM changes when it is built.</string>
+    <string name="patch_toolbox_x_turned_off_ctrl_z_brings_it_back">"%1$s" turned off. Ctrl+Z brings it back; the ROM changes when it is built.</string>
     <string name="patch_toolbox_x_failed_x">"%1$s" failed: %2$s</string>
     <string name="patch_toolbox_apply_x">Apply "%1$s"?</string>
     <string name="personal_medium_fast">Medium Fast</string>

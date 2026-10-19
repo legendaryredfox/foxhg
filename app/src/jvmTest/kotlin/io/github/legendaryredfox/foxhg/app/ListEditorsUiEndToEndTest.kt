@@ -20,6 +20,7 @@ import io.github.legendaryredfox.foxhg.core.data.encounter.EncounterGroup
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.fly.FlyTable
 import io.github.legendaryredfox.foxhg.core.patch.PatchStatus
+import io.github.legendaryredfox.foxhg.core.patch.ReusableTmsPatch
 import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
 import io.github.legendaryredfox.foxhg.core.data.hiddenitem.HiddenItems
 import io.github.legendaryredfox.foxhg.core.data.battledisplay.BattleDisplayTable
@@ -280,6 +281,20 @@ class ListEditorsUiEndToEndTest {
             assertEquals(PatchStatus.Applied, DsprePatches.arm9Expansion.status(rebuilt), "the expansion is in the built ROM")
             assertEquals(PatchStatus.Available, DsprePatches.trainerNames.status(rebuilt))
         }
+    }
+
+    @Test
+    fun aReversibleToolboxPatchIsASwitch() = withHeartGoldApp { _, project ->
+        open("ROM toolbox")
+        onNodeWithTag("apply:reusable-tms").assertDoesNotExist()
+        assertEquals(PatchStatus.Available, ReusableTmsPatch.status(project))
+        tap(onNodeWithTag("toggle:reusable-tms"), inScrollPane = false)
+        waitForIdle()
+        assertEquals(PatchStatus.Applied, ReusableTmsPatch.status(project), "on: no question asked")
+        tap(onNodeWithTag("toggle:reusable-tms"), inScrollPane = false)
+        waitForIdle()
+        assertEquals(PatchStatus.Available, ReusableTmsPatch.status(project), "off: the vanilla bytes are back")
+        onNodeWithTag("toolbox-message").assertIsDisplayed()
     }
 
     @Test
