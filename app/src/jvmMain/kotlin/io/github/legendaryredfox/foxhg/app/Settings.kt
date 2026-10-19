@@ -17,8 +17,8 @@ data class AppSettings(
     val emulatorCommand: String = "",
     /** Whether a newly opened project saves automatically. */
     val autosave: Boolean = true,
-    /** The language of foxhg's own windows; the default follows the operating system. */
-    val language: AppLanguage = AppLanguage.SYSTEM,
+    /** The language of foxhg's own windows; the default is Brazilian Portuguese, "system" follows the operating system. */
+    val language: AppLanguage = AppLanguage.PORTUGUESE_BR,
 )
 
 /** The settings in a `key=value` text file. A missing or unreadable file gives the defaults, with an emulator found on this machine. */

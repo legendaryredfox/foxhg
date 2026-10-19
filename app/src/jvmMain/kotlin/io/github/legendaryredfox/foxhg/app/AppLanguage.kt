@@ -31,7 +31,8 @@ enum class AppLanguage(val tag: String, val nativeName: String, val language: St
 
         private fun osLocale(): Locale = System.getenv("FOXHG_LANG")?.takeIf { it.isNotBlank() }?.let(Locale::forLanguageTag) ?: operatingSystem
 
-        fun fromTag(tag: String?): AppLanguage = entries.firstOrNull { it.tag.equals(tag, ignoreCase = true) } ?: SYSTEM
+        /** The language saved under [tag]; none or an unknown one is the standard language of the app, Brazilian Portuguese. */
+        fun fromTag(tag: String?): AppLanguage = entries.firstOrNull { it.tag.equals(tag, ignoreCase = true) } ?: PORTUGUESE_BR
     }
 }
 

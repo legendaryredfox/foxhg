@@ -2,8 +2,12 @@
 
 # foxhg
 
-**A native, cross-platform ROM editor for Pokémon HeartGold and SoulSilver.**
-Edit Pokémon, moves, items, trainers, wild encounters, maps (in 3D), scripts, text and more - on Linux, Windows and macOS, no Wine required.
+**Um editor de ROM nativo e multiplataforma para Pokémon HeartGold e SoulSilver.**
+Edite Pokémon, golpes, itens, treinadores, encontros selvagens, mapas (em 3D), scripts, textos e mais - no Linux, Windows e macOS, sem Wine.
+
+*A native, cross-platform ROM editor for Pokémon HeartGold and SoulSilver. Edit Pokémon, moves, items, trainers, wild encounters, maps (in 3D), scripts, text and more - on Linux, Windows and macOS, no Wine required.*
+
+**[Português (Brasil)](#português-brasil)** · **[English](#english)**
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white)
@@ -17,6 +21,249 @@ Edit Pokémon, moves, items, trainers, wild encounters, maps (in 3D), scripts, t
 </div>
 
 ---
+
+# Português (Brasil)
+
+## O que é o foxhg?
+
+O [DSPRE](https://github.com/DS-Pokemon-Rom-Editor/DSPRE) é o editor de referência para ROMs de Pokémon de Nintendo DS, mas é um
+aplicativo C# WinForms que só roda no Windows (ou no Wine). O **foxhg** faz o mesmo trabalho, reconstruído do zero em Kotlin Multiplatform
+com Compose Multiplatform, e por isso roda nativamente em qualquer sistema. O código dos formatos fica em uma biblioteca sem interface
+(`core`) e é testado contra uma ROM real, byte a byte.
+
+**Alvo atual: Pokémon HeartGold (inglês).** O SoulSilver (inglês) também abre onde o layout é idêntico. O objetivo é cobrir todos os jogos
+Pokémon de Nintendo DS e todos os idiomas (Platinum, Diamond, Pearl, outros idiomas de HeartGold e SoulSilver, depois Black, White, Black 2
+e White 2), e então Game Boy e Game Boy Advance, mas nada disso é suportado ainda: o HeartGold vem primeiro.
+
+> **O foxhg não inclui nenhum dado de jogo.** Você precisa da sua própria ROM, obtida legalmente. Nenhuma ROM, arquivo extraído ou sprite é
+> guardado neste repositório (as capturas de tela mostram só texto e números), e o foxhg nunca modifica a ROM que você abre: *Gerar ROM*
+> escreve um arquivo novo.
+
+O idioma padrão da interface do aplicativo é o português do Brasil. Também há inglês, espanhol e chinês simplificado (**Projeto ▾ → Configurações…**).
+
+## Capturas de tela
+
+<table>
+  <tr>
+    <td><img src="docs/images/moves-editor.png" alt="Editor de golpes" width="440"><br><sub><b>Golpes:</b> dados de batalha, efeito, flags, importação e exportação CSV</sub></td>
+    <td><img src="docs/images/scripts-editor.png" alt="Editor de scripts" width="440"><br><sub><b>Scripts:</b> destaque de sintaxe, nomes de flags e variáveis, prévia de som</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/text-editor.png" alt="Editor de arquivos de texto" width="440"><br><sub><b>Arquivos de texto:</b> todos os bancos de mensagens, busca, códigos de comando</sub></td>
+    <td><img src="docs/images/tms-editor.png" alt="Editor de TMs e HMs" width="440"><br><sub><b>TMs e HMs:</b> escolha o golpe de cada disco</sub></td>
+  </tr>
+</table>
+
+## Recursos
+
+### Editores
+
+| Área | Editores |
+|------|----------|
+| **Pokémon** | Dados pessoais (stats base, EVs dados, tipos, habilidades, taxa de captura, crescimento, grupos de ovo, itens segurados selvagens, compatibilidade com TM/HM), Learnsets, Evoluções, Golpes de ovo, Iniciais (espécie, nível, item segurado; o rival e o professor acompanham), Trocas no jogo |
+| **Golpes e itens** | Golpes (dados de batalha, flags, alcance, dados de concurso), Itens (importação e exportação CSV para ambos), Itens escondidos, TMs e HMs |
+| **Treinadores** | Treinadores (cabeçalho, time com itens segurados e golpes personalizados, itens de batalha, *trocar uma espécie em todos os times*), Classes de treinador (gênero, prêmio em dinheiro) |
+| **Mundo** | Encontros selvagens (taxas, grama por hora do dia, slots de água e pesca, enxames, slots de rádio, cópia do SoulSilver), Rock Smash (chance de drop e tabelas de itens), Headbutt (tabelas e tiles de árvores), Bug Contest (os quatro conjuntos diários), Cabeçalhos de mapa (todos os campos), Matrizes, Mapas, Eventos |
+| **Scripts e texto** | Scripts (uma linguagem de texto com destaque de sintaxe, nomes de flags, variáveis e mensagens, level scripts), Arquivos de texto (todos os bancos de mensagens, busca em todas as mensagens, nomes dos bancos quando conhecidos) |
+| **Áudio** | Navegador de sons (sequências SDAT) com player de sequências embutido |
+| **Ferramentas** | Arquivos: árvore somente leitura da ROM com tamanhos, offsets, dump hexadecimal e exportação |
+
+### Edição de mapas
+
+- **Visão 2D do mapa:** tipos de tile e colisão, pintar / preencher / pegar, e todos os eventos (NPCs, treinadores, warps, gatilhos, placas)
+  desenhados no mapa - selecione, arraste, adicione, duplique e remova direto no canvas.
+- **Visão 3D do mapa:** terreno e construções renderizados com as texturas reais por um renderizador por software embutido (sem biblioteca
+  de GPU). Gire, incline, mova e dê zoom; clique em uma construção para selecioná-la; sobreposições para eventos, colisão e a superfície
+  de caminhada (BDHC).
+- **Edição de construções:** adicione, mova (clicando no chão em 3D), duplique e remova construções, escolha um modelo em um navegador com
+  os 340 modelos e suas prévias.
+- **Visão geral da matriz:** o mundo inteiro como uma única imagem renderizada.
+
+### Imagens e som em todo lugar
+
+Ícones de Pokémon (inclusive ovos e formas), sprites de frente e de costas com alternância de shiny, ícones de itens, sprites de classes de
+treinador, sprites de NPCs, miniaturas de mapa e reprodução de sons aparecem ao lado dos ids em todo lugar onde o aplicativo mostra um.
+
+### Fluxo de trabalho
+
+- **Projetos:** um projeto é uma pasta com *apenas as suas mudanças*. A ROM nunca é copiada nem modificada. Salvamento automático, recentes, religar uma ROM que foi movida.
+- **Desfazer e refazer** (Ctrl+Z, Ctrl+Shift+Z) em todos os editores, mantidos quando você fecha e reabre um projeto.
+- **Gerar ROM** escreve um novo `.nds` (o arquivo anterior fica como `.bak`); **Executar** gera e abre o seu emulador.
+- **Tela de arquivos, barras de progresso e tela de carregamento**, temas claro e escuro, navegação por teclado em todas as listas (setas), Ctrl+F abre a aba Pesquisa, confirmação antes de ferramentas que mudam muitos registros de uma vez.
+
+### Por baixo dos panos
+
+- Contêiner NDS, NARC, overlays e ARM9 tratados em Kotlin puro, inclusive a compressão BLZ, então overlays editados e um ARM9 substituído
+  são recomprimidos e reconstruídos. Uma geração sem edições é idêntica byte a byte à entrada.
+- Parsers para dados pessoais, learnsets, evoluções, treinadores, encontros, cabeçalhos de mapa, matrizes, mapas, eventos, scripts, texto,
+  gráficos NSBMD / NSBTX / NCGR / NCLR / NCER e o arquivo de som SDAT. **Todo formato tem um teste de ida e volta contra a ROM real.**
+
+## Instalação
+
+### Download
+
+Os pacotes prontos serão publicados na página de releases. Até lá, compile a partir do código-fonte (abaixo). Os pacotes são gerados por
+sistema operacional (veja [Empacotamento](#empacotamento)).
+
+### Compilar a partir do código-fonte
+
+Você precisa do **JDK 26** (o projeto está fixado nele; quem usa o [SDKMAN](https://sdkman.io) roda `sdk env`, que escolhe o JDK pelo `.sdkmanrc`) e
+mais nada - o Gradle vem no wrapper.
+
+```bash
+git clone https://github.com/legendaryredfox/foxhg.git
+cd foxhg
+./gradlew :app:run                 # abre o aplicativo
+```
+
+Abra a sua ROM em **Projeto ▾ → Abrir ROM sem projeto…**, ou comece um projeto com **Novo projeto…** (recomendado: ele salva o seu trabalho
+conforme você edita).
+
+```bash
+./gradlew :core:jvmTest            # testes de formatos e modelos, sem interface
+./gradlew build                    # tudo, inclusive os testes de interface (precisa de um display)
+```
+
+## Usando o foxhg
+
+1. **Novo projeto…** → escolha a ROM e uma pasta. O foxhg guarda nessa pasta apenas os arquivos que você muda.
+2. Escolha um editor na barra lateral e mude o que quiser. As edições são salvas automaticamente; **Ctrl+Z** desfaz.
+3. **Gerar ROM…** escreve um `.nds` modificado. **Executar** gera um arquivo temporário e abre o seu emulador.
+
+### Executar e o seu emulador
+
+Defina o comando em **Projeto ▾ → Configurações…**; `{rom}` marca onde entra o caminho da ROM (ele é acrescentado ao final se faltar):
+
+```text
+desmume {rom}
+melonDS {rom}
+retroarch -L /usr/lib/x86_64-linux-gnu/libretro/desmume_libretro.so {rom}
+```
+
+Um emulador no seu `PATH` é detectado na primeira vez. As configurações ficam em `~/.config/foxhg/settings.properties`.
+
+### Atalhos de teclado
+
+| Atalho | Ação |
+|--------|------|
+| Ctrl+N / Ctrl+O / Ctrl+Shift+O | Novo projeto / abrir projeto / abrir uma ROM sem projeto |
+| Ctrl+S | Salvar (e gravar o histórico de desfazer) |
+| Ctrl+B / Ctrl+R | Gerar ROM / Executar |
+| Ctrl+Z / Ctrl+Shift+Z ou Ctrl+Y | Desfazer / refazer |
+| Ctrl+F | Ir para a aba Pesquisa (achar onde uma flag, variável, item ou treinador é usado) |
+| ↑ ↓ PgUp PgDn | Andar pela lista |
+| Visão 3D: arrastar / arrastar com o botão direito / Ctrl+roda | Girar e inclinar / mover / zoom |
+
+(No macOS use ⌘ no lugar de Ctrl.)
+
+## Como funciona
+
+```
+foxhg/
+├── core/    Biblioteca Kotlin Multiplatform, sem interface: contêiner NDS, NARC, overlays, texto, gráficos,
+│            som e um pacote por tipo de dado da ROM. Acesso a arquivos e ao sistema só em jvmMain.
+├── app/     Aplicativo desktop Compose Multiplatform: uma tela por editor, estado em view models
+│            que dependem só do core.
+├── docs/    spec.md, plan.md e formats.md (cada offset e peculiaridade confirmados na ROM real).
+└── scripts/ ajudantes de captura de tela, teste de cliques ao vivo e teste de boot em emulador; geradores de tabelas.
+```
+
+- **As edições são uma camada por cima.** O `RomProject` guarda os seus arquivos alterados sobre a ROM intacta; *Gerar* aplica as edições.
+  Os editores leem através do projeto, então sempre enxergam as próprias edições ainda não salvas.
+- **Parse → editar dados imutáveis → serializar.** Cada formato é uma data class imutável com `parse(bytes)` e `toBytes()`, e um teste que
+  prova que `parse` seguido de `serialize` reproduz os bytes originais de cada entrada da ROM.
+- **Documentado.** O [`docs/formats.md`](docs/formats.md) registra cada endereço, offset e peculiaridade encontrados durante a portabilidade,
+  inclusive como os dados do mapa 3D (NSBMD, BDHC) são organizados.
+
+### Testes
+
+- Os testes de formatos rodam contra `roms/heartgold.nds` (um link simbólico que você cria; fica fora do git). Sem a ROM eles **são pulados com um aviso**,
+  então um clone novo e a CI ainda compilam. `FOXHG_REQUIRE_ROM=1` faz a falta da ROM falhar em vez de pular.
+- Os testes de interface usam o Compose UI test contra o conteúdo real da janela e a ROM real, acionando os widgets (cliques, digitação, arrastos). Rode-os com um
+  display: `env -u XDG_CURRENT_DESKTOP -u DESKTOP_SESSION -u GNOME_DESKTOP_SESSION_ID xvfb-run -a ./gradlew build`.
+- `scripts/live-click-test.sh` roda o aplicativo real no xvfb e o aciona com eventos reais de mouse e teclado do X.
+- `scripts/boot-test.sh` inicia uma ROM gerada, sem janela, no RetroArch + DeSmuME, para conferir que as edições ainda chegam à tela de título.
+
+### Empacotamento
+
+Os instaladores nativos vêm do `jpackage` e só podem ser gerados **no sistema operacional de destino**:
+
+| Destino | Comando | Gerado em |
+|---------|---------|-----------|
+| Debian / Ubuntu | `./gradlew :app:packageDeb` | Linux |
+| Instalador do Windows | `./gradlew :app:packageMsi` | Windows (precisa do WiX) |
+| Imagem de disco do macOS | `./gradlew :app:packageDmg` | macOS |
+
+O `.deb` é gerado e o seu lançador é conferido no Linux; os pacotes do Windows e do macOS ainda não foram gerados.
+
+## Situação e roteiro
+
+O foxhg está em **alfa**. O HeartGold (inglês) é o foco e a maioria dos editores cobre todos os dados que edita, mas nem tudo foi verificado no
+próprio jogo. O que se sabe que não está pronto ou não foi conferido está marcado em [`docs/plan.md`](docs/plan.md), por exemplo:
+
+- A edição de mapas em 3D é feita por etapas: o visualizador, a edição de construções e a exibição da superfície de caminhada funcionam; iluminação, sombras,
+  animação de água, placas de superfície inclinadas, rotação e escala, e a escrita de modelos novos ainda faltam.
+- A reprodução de sons foi conferida quanto a duração e volume, ainda não de ouvido; alguns recursos do SDAT (streams, portamento, sweeps) são ignorados.
+- Ainda não: o editor de Fly, o editor de overlays e a caixa de ferramentas de patches do ARM9, extras de encontros exclusivos do SoulSilver,
+  troca do ARM7 e do banner, outros jogos Pokémon.
+
+Especificação: [`docs/spec.md`](docs/spec.md) · Plano e situação: [`docs/plan.md`](docs/plan.md)
+
+## Contribuindo
+
+Issues e pull requests são bem-vindos. Antes de começar em um formato:
+
+1. Veja como os projetos de referência fazem, depois a página do formato, e então escreva o seu próprio código a partir da descrição do formato - **não copie código**
+   do DSPRE (AGPL-3.0), do ndspy (GPL-3.0) ou de outros projetos; leia-os para entender um formato e anote o que confirmar em `docs/formats.md`.
+   A única exceção são os patches da caixa de ferramentas da ROM, portados do DSPRE sob a AGPL-3.0 (veja [Licença](#licença)).
+2. Escreva o parser junto com o seu **teste de ida e volta contra a ROM real**.
+3. O `./gradlew build` precisa passar, e nunca faça commit de uma ROM nem de nada extraído de uma.
+
+Olhe antes o código ao redor: uma classe por tipo de arquivo, data classes imutáveis, `core` sem Compose nem AWT.
+
+## Agradecimentos
+
+O foxhg se apoia nos ombros da comunidade de hacking de Pokémon de DS. Obrigado a:
+
+- [DSPRE](https://github.com/DS-Pokemon-Rom-Editor/DSPRE) e seus colaboradores, cujo editor serviu de modelo para este;
+- a [documentação de hacking de Pokémon DS](https://ds-pokemon-hacking.github.io/) pelas descrições dos formatos de arquivo;
+- [pret/pokeheartgold](https://github.com/pret/pokeheartgold), a decompilação do HeartGold, pelos layouts de structs, constantes e tabelas;
+- [scrcmd-database](https://github.com/DS-Pokemon-Rom-Editor/scrcmd-database) (MIT) pelo banco de dados de comandos de script;
+- [Pokémon DS Map Studio](https://github.com/Trifindo/Pokemon-DS-Map-Studio), [VSMaker2](https://github.com/Chvlkie/VSMaker2),
+  [ndspy](https://github.com/RoadrunnerWMC/ndspy) e [Nds4j](https://github.com/turtleisaac/Nds4j) por documentarem formatos que o foxhg lê.
+
+## Aviso legal
+
+O foxhg é um projeto de fã e não é afiliado nem endossado pela Nintendo, Game Freak, Creatures Inc. ou The Pokémon Company. Pokémon e os nomes
+relacionados são marcas registradas de seus donos. O foxhg não contém dados de jogo protegidos por direitos autorais e não ajuda a obtê-los; use-o somente com
+uma ROM que você possui e respeite a lei do lugar onde mora.
+
+## Apoio
+
+Se você gosta deste projeto, considere me pagar um café. ☕
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-legendaryredfox-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/legendaryredfox)
+
+## Licença
+
+O foxhg é software livre sob a **[GNU General Public License v3.0 ou posterior](LICENSE)** (`GPL-3.0-or-later`), com uma parte sob a AGPL:
+
+- Os **patches da caixa de ferramentas da ROM** (`core/src/commonMain/kotlin/io/github/legendaryredfox/foxhg/core/patch/dspre/`) foram portados do
+  [DSPRE](https://github.com/DS-Pokemon-Rom-Editor/DSPRE) e continuam sob a **[GNU Affero General Public License v3.0](LICENSES/AGPL-3.0.txt)**
+  (`AGPL-3.0-only`), copyright dos colaboradores do DSPRE. A GPL e a AGPL permitem combinar as duas em um só programa. Por causa desses arquivos o
+  programa como um todo não pode ser relicenciado para uma licença permissiva (MIT, Apache), a menos que eles sejam removidos ou substituídos. Se você oferecer o foxhg a
+  usuários por uma rede, a AGPL pede que você entregue o código-fonte a esses usuários.
+- Os dados tirados de outros projetos estão listados com a sua licença em [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Por que a GPL: esta é uma ferramenta em um ecossistema construído sobre ferramentas copyleft (o DSPRE é AGPL-3.0, o ndspy e o Nds4j são GPL-3.0). A GPL mantém o foxhg e
+todos os seus forks livres para a comunidade, é compatível com as suas dependências (Kotlin, Compose Multiplatform e kotlinx são Apache-2.0)
+e com os dados que ele usa (o banco de scripts em MIT), e permite que qualquer pessoa o use, estude, modifique e compartilhe.
+
+Copyright © 2026 legendaryredfox
+
+---
+
+# English
 
 ## What is foxhg?
 

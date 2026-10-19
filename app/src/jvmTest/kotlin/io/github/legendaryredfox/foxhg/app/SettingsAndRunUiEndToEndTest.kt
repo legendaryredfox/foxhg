@@ -20,7 +20,7 @@ class SettingsAndRunUiEndToEndTest {
     fun runAsksForAnEmulatorThenBuildsAndStartsItAndTheSettingsPersist() {
         if (!romAvailable()) return
         val file = tempDir("foxhg-settings").resolve("settings.properties")
-        val model = AppModel(Recents(tempDir("foxhg-recents").resolve("r.txt")), ManualScheduler().scheduler, settingsStore = SettingsStore(file, detectEmulator = { "" }))
+        val model = AppModel(Recents(tempDir("foxhg-recents").resolve("r.txt")), ManualScheduler().scheduler, settingsStore = SettingsStore(file, detectEmulator = { "" }).also { it.save(AppSettings(language = AppLanguage.ENGLISH)) })
         model.openRom(romPath)
         val started = ArrayList<List<String>>()
         val old = Emulator.launcher

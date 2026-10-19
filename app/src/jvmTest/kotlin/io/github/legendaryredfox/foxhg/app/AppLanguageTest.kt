@@ -61,6 +61,8 @@ class AppLanguageTest {
         val store = testSettings()
         store.save(AppSettings(language = AppLanguage.CHINESE_SIMPLIFIED))
         assertEquals(AppLanguage.CHINESE_SIMPLIFIED, store.load().language)
-        assertEquals(AppLanguage.SYSTEM, AppLanguage.fromTag("klingon"), "an unknown tag is the system language")
+        assertEquals(AppLanguage.PORTUGUESE_BR, AppLanguage.fromTag("klingon"), "an unknown tag is the standard language")
+        assertEquals(AppLanguage.PORTUGUESE_BR, AppSettings().language, "a new install starts in Brazilian Portuguese")
+        assertEquals(AppLanguage.SYSTEM, AppLanguage.fromTag("system"))
     }
 }
