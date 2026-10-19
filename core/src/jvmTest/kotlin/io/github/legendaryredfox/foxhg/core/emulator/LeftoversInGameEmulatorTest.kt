@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 /**
  * The "Leftovers healing" battle rule in the game: it is set to 2 (half of the maximum HP instead of 1/16), the lead Pokémon of the saved game is made a
  * level 50 Cyndaquil holding Leftovers with 40 of 110 HP, and a wild Rattata battle (from the clerk's script, as in the shiny rate tests) runs one turn
- * (Tackle). The lead's HP bar on the top screen is about a third full when the battle starts and well over half full after the turn: the Rattata's
+ * (Leer, which does no damage: a Tackle faints the Rattata when it holds no Chilan Berry and the battle ends before the turn does). The lead's HP bar on the top screen is about a third full when the battle starts and well over half full after the turn: the Rattata's
  * Quick Attack can not do that, Leftovers healing 55 HP can (vanilla would heal 6).
  */
 class LeftoversInGameEmulatorTest {
@@ -66,7 +66,7 @@ class LeftoversInGameEmulatorTest {
             EmulatorDriver(rom, saves).use { emu ->
                 emu.run(EmulatorSaves.OPEN_BUY_LIST_SCRIPT + ",s1200")
                 val before = emu.playerBarPixels()
-                emu.run("A,s120,A,s120,A,s400")
+                emu.run("A,s120,A,s120,RIGHT,A,s400") // the first A wakes the menu, then FIGHT, then the second move (Leer): it does no damage, so the Rattata never faints, whatever item it holds
                 Files.createDirectories(MartInGame.shotDir)
                 val after = try { emu.settled { playerBarPixels() } } catch (e: IllegalStateException) {
                     emu.savePicture(MartInGame.shotDir.resolve("leftovers-stuck.png"))
