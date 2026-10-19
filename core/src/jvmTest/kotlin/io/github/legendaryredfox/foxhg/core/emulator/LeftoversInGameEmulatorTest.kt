@@ -67,8 +67,11 @@ class LeftoversInGameEmulatorTest {
                 emu.run(EmulatorSaves.OPEN_BUY_LIST_SCRIPT + ",s1200")
                 val before = emu.playerBarPixels()
                 emu.run("A,s120,A,s120,A,s400")
-                val after = emu.settled { playerBarPixels() }
                 Files.createDirectories(MartInGame.shotDir)
+                val after = try { emu.settled { playerBarPixels() } } catch (e: IllegalStateException) {
+                    emu.savePicture(MartInGame.shotDir.resolve("leftovers-stuck.png"))
+                    throw e
+                }
                 emu.savePicture(MartInGame.shotDir.resolve("leftovers.png"))
                 println("LEFTOVERS player HP bar pixels before the turn: $before, after: $after")
                 assertTrue(before in 10..24, "the bar starts about a third full: $before")
