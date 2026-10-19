@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,7 +32,9 @@ import io.github.legendaryredfox.foxhg.app.ui.PickerField
 import io.github.legendaryredfox.foxhg.app.ui.SectionCard
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.csv.RecordCsv
+import io.github.legendaryredfox.foxhg.core.data.event.EventCsv
 import io.github.legendaryredfox.foxhg.core.data.event.EventFile
+import io.github.legendaryredfox.foxhg.core.data.event.EventKind
 import io.github.legendaryredfox.foxhg.core.data.event.MAP_SIZE
 import io.github.legendaryredfox.foxhg.core.data.event.OverworldEvent
 import io.github.legendaryredfox.foxhg.core.data.event.Spawnable
@@ -40,6 +43,8 @@ import io.github.legendaryredfox.foxhg.core.data.event.Warp
 import io.github.legendaryredfox.foxhg.core.data.mapheader.MapHeader
 import io.github.legendaryredfox.foxhg.core.data.mapheader.MapHeaderTable
 import io.github.legendaryredfox.foxhg.core.project.RomProject
+import java.awt.FileDialog
+import java.nio.file.Files
 
 /** Event files with the maps that use them, so a file reads as "Route 29" instead of a number. */
 class EventLabels(project: RomProject) {
@@ -68,7 +73,7 @@ fun EventEditor(model: RecordEditorModel<EventFile>, labels: EventLabels, modifi
         listOfNotNull(labels.usedBy(i).firstOrNull()?.let { "hdr $it" }, count).joinToString(" · ").ifEmpty { null }
     }) { file ->
         val users = labels.usedBy(model.selectedIndex)
-        EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)))
+        EditorHeader(model.selectedIndex.toString(), nameOf(model.label(model.selectedIndex)), trailing = { ExportAllEvents(model.records, labels) })
         if (users.isNotEmpty()) {
             Text(
                 "Loaded by map header " + summarize(users.map { "$it (${labels.mapName(it)})" }),
@@ -96,6 +101,24 @@ fun EventEditor(model: RecordEditorModel<EventFile>, labels: EventLabels, modifi
             ) { s, set -> SpawnableForm(s, set) }
         }
     }
+}
+
+/** Writes the events of every map as four CSV files beside the chosen name: `<name>_objects.csv`, `_warps`, `_triggers` and `_signs`. */
+@Composable
+private fun ExportAllEvents(files: List<EventFile>, labels: EventLabels) {
+    var message by remember { mutableStateOf<String?>(null) }
+    var failed by remember { mutableStateOf(false) }
+    OutlinedButton(onClick = {
+        val path = pickFile(tr(Res.string.event_export_all_name), FileDialog.SAVE, ".csv") ?: return@OutlinedButton
+        val stem = path.fileName.toString().removeSuffix(".csv")
+        runCatching {
+            for ((kind, suffix) in listOf(EventKind.OVERWORLD to "objects", EventKind.WARP to "warps", EventKind.TRIGGER to "triggers", EventKind.SIGN to "signs")) {
+                Files.writeString(path.resolveSibling("${stem}_$suffix.csv"), EventCsv.export(files, kind) { labels.label(it) })
+            }
+        }.onSuccess { failed = false; message = tr(Res.string.csv_buttons_exported_to_x, "${stem}_*.csv") }
+            .onFailure { failed = true; message = tr(Res.string.csv_buttons_export_failed_x, it.message) }
+    }) { Text(stringResource(Res.string.event_export_all_csv)) }
+    message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant) }
 }
 
 /** A list of events as collapsible rows with add, duplicate and remove. */

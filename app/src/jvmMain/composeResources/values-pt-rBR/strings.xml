@@ -205,6 +205,8 @@
     <string name="learnset_replace_the_move_above">Substituir o golpe acima</string>
     <string name="learnset_export_csv">Exportar CSV</string>
     <string name="encounter_export_json">Exportar JSON</string>
+    <string name="event_export_all_csv">Exportar todos os mapas (CSV)</string>
+    <string name="event_export_all_name">Exportar todos os eventos</string>
     <string name="encounter_wild_pokemon_json_name">Pokémon selvagens</string>
     <string name="learnset_import_csv">Importar CSV</string>
     <string name="evolution_remove_trade_evolutions">Remover evoluções por troca</string>

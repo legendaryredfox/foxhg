@@ -61,6 +61,18 @@ class RecordCsv<T>(private val columns: List<CsvColumn<T>>) {
                 records.mapIndexed { i, r -> listOf(i.toString(), nameOf(i)) + columns.map { it.get(r).toString() } },
         )
 
+    /**
+     * Read-only dump of several lists in one table, for the lists of a whole ROM (the objects of every map). Layout:
+     * `group`, `group_name`, `index` (the position in its own list), then one column per [columns] entry.
+     */
+    fun exportAll(groups: List<List<T>>, groupName: (Int) -> String): String =
+        Csv.format(
+            listOf(listOf("group", "group_name", "index") + columns.map { it.name }) +
+                groups.flatMapIndexed { g, records ->
+                    records.mapIndexed { i, r -> listOf(g.toString(), groupName(g), i.toString()) + columns.map { it.get(r).toString() } }
+                },
+        )
+
     fun import(text: String, records: List<T>): FoxResult<List<T>> {
         val rows = when (val parsed = Csv.parse(text)) {
             is FoxResult.Ok -> parsed.value

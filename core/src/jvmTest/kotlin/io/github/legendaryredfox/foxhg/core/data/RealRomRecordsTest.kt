@@ -3,7 +3,10 @@ package io.github.legendaryredfox.foxhg.core.data
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.eggmove.EggMoveGroup
 import io.github.legendaryredfox.foxhg.core.data.eggmove.EggMoves
+import io.github.legendaryredfox.foxhg.core.data.csv.Csv
+import io.github.legendaryredfox.foxhg.core.data.event.EventCsv
 import io.github.legendaryredfox.foxhg.core.data.event.EventFile
+import io.github.legendaryredfox.foxhg.core.data.event.EventKind
 import io.github.legendaryredfox.foxhg.core.data.event.OverworldEvent
 import io.github.legendaryredfox.foxhg.core.data.event.OverworldSprites
 import io.github.legendaryredfox.foxhg.core.data.event.Spawnable
@@ -823,6 +826,22 @@ class RealRomRecordsTest {
         assertEquals(warps.mapIndexed { i, w -> if (i == 1) w.copy(x = 7) else w }, edited)
         lines[2] = cells.also { it[2] = "70000" }.joinToString(",")
         assertTrue(Warp.CSV.import(lines.joinToString("\r\n"), warps) is FoxResult.Err)
+    }
+
+    @Test
+    fun theWholeRomEventExportHasOneRowPerEvent() = withProject { project ->
+        val files = EventFile.load(project).ok().records
+        for (kind in EventKind.entries) {
+            val rows = Csv.parse(EventCsv.export(files, kind) { "file $it" }).ok()
+            assertEquals(files.sumOf { it.count(kind) }, rows.size - 1, "rows of $kind")
+            assertEquals(listOf("group", "group_name", "index"), rows.first().take(3))
+            assertTrue(rows.all { it.size == rows.first().size })
+        }
+        // The first warp of the first file with warps comes out with its own file number and position.
+        val g = files.indexOfFirst { it.warps.isNotEmpty() }
+        val warp = files[g].warps.first()
+        val row = Csv.parse(EventCsv.export(files, EventKind.WARP) { "file $it" }).ok().first { it[0] == g.toString() }
+        assertEquals(listOf(g.toString(), "file $g", "0", warp.x.toString(), warp.y.toString()), row.take(5))
     }
 
     @Test

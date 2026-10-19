@@ -205,6 +205,8 @@
     <string name="learnset_replace_the_move_above">Replace the move above</string>
     <string name="learnset_export_csv">Export CSV</string>
     <string name="encounter_export_json">Export JSON</string>
+    <string name="event_export_all_csv">Export all maps (CSV)</string>
+    <string name="event_export_all_name">Export all events</string>
     <string name="encounter_wild_pokemon_json_name">wild Pokémon</string>
     <string name="learnset_import_csv">Import CSV</string>
     <string name="evolution_remove_trade_evolutions">Remove trade evolutions</string>
