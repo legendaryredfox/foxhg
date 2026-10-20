@@ -41,7 +41,7 @@ class BattleRule(
 /**
  * The simple battle tweaks of the guide for HeartGold English: each is one byte in an overlay (an immediate of a Thumb instruction of the battle
  * code) or in a battle script (a NARC file), so a rule is read and written byte by byte; the critical hit table is five rules, one byte each. Tweaks that
- * need several bytes that change together in another way (Flail, Disable, Taunt, no hail damage, the bug fixes) are not here. The paralysis Speed cut is a field of a Thumb shift instruction (the shift count sits in the two top bits of its low byte), so its sites encode the value.
+ * need several bytes that change together in another way (Flail, Disable, no hail damage, the bug fixes) are not here. The paralysis Speed cut is a field of a Thumb shift instruction (the shift count sits in the two top bits of its low byte), so its sites encode the value.
  */
 object BattleRules {
     const val SUB_SEQ = "a/0/0/1"
@@ -127,6 +127,10 @@ object BattleRules {
             listOf(BattleSite.Overlay(BATTLE_OVERLAY, 0xA8F4), BattleSite.Overlay(TRAINER_AI_OVERLAY, 0x3548)), 150, 1..255) { "power $it" },
         BattleRule("gyro-ball", "Move effects", "Gyro Ball power multiplier", "The target's Speed divided by the user's is multiplied by this to get the power (at most 150); the Trainer AI has its own copy in overlay 10, written together.",
             listOf(BattleSite.Overlay(BATTLE_OVERLAY, 0xBEAA), BattleSite.Overlay(TRAINER_AI_OVERLAY, 0x347C)), 25, 1..255) { "x$it" },
+        BattleRule("taunt-range", "Move effects", "Taunt: random extra turns", "Taunt lasts a random 0 to this many turns on top of the base (battle script 1_132). 0 here and a base of 4 make it always last 4.",
+            listOf(BattleSite.NarcFile(SUB_SEQ, 132, 0x38)), 2, 0..255) { "0 to ${turns(it)} extra" },
+        BattleRule("taunt-base", "Move effects", "Taunt: base turns", "The fixed part of the Taunt duration; the target can use a move one turn less when the user is slower.",
+            listOf(BattleSite.NarcFile(SUB_SEQ, 132, 0x3C)), 3, 0..255) { "${turns(it)} at least" },
         BattleRule("encore", "Move effects", "Encore duration (base)", "Turns Encore lasts, before the extra random part the code adds.", ov(0x939A), 5, 1..255) { turns(it) },
     )
 

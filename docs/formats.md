@@ -698,7 +698,8 @@ Not checked in game.
 No Hail damage: 0xA406 `16 D0` -> `16 E0` (the Ice check branch becomes unconditional).
 Disable fixed duration: 0x90DA `20 40` -> `04 20` (`ANDS R0, R4` becomes `MOVS R0, #4`). Trainers use Trick/Switcheroo: 0xB1DA `84` -> `85` (battle type mask gains the trainer bit; items stay swapped after the battle).
 The paralysis Speed cut is not a switch but the Battle rules number `paralysis-shift` (1 to 3, game 2): overlay 12 0x185CA (`B6`) and 0x18776 (`A4`) are `LSRS Rd, Rd, #n` low bytes, byte = base + n * 64 with base 0x36 and 0x24 (shift 1 = `76`/`64`, 3 = `F6`/`E4`; shift 0 would mean 32 in Thumb, so it is not offered).
-Left out: Taunt duration (a battle script file, `a/0/0/1` file 132, no `PatchTarget` for NARC files yet) and Flail/Reversal (the multiplier and the table change together).
+Taunt duration is two Battle rules, not a switch (`taunt-range` and `taunt-base`, bytes 0x38 and 0x3C of `a/0/0/1` file 132, vanilla 2 and 3: 3 to 5 turns; 0 and 4 make it always 4).
+Left out: Flail/Reversal (the multiplier and the table change together).
 
 ## Shiny rates (HeartGold English)
 
