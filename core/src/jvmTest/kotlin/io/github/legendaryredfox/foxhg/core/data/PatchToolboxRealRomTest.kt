@@ -4,6 +4,7 @@ import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
+import io.github.legendaryredfox.foxhg.core.patch.BattleBugFixPatches
 import io.github.legendaryredfox.foxhg.core.patch.BytePatch
 import io.github.legendaryredfox.foxhg.core.patch.FastHpBarPatch
 import io.github.legendaryredfox.foxhg.core.patch.PatchStatus
@@ -96,7 +97,7 @@ class PatchToolboxRealRomTest {
         assertTrue(ReusableTmsPatch.revert(project) is FoxResult.Ok)
         assertEquals(PatchStatus.Available, ReusableTmsPatch.status(project))
         for ((target, bytes) in vanilla) assertContentEquals(bytes, (target.read(project) as FoxResult.Ok).value, "$target after turning it off")
-        assertTrue(DsprePatches.all.filter { it !== ReusableTmsPatch && it !== FastHpBarPatch }.none { it.reversible }, "only the plain byte patches are switches")
+        assertTrue(DsprePatches.all.filter { it !== ReusableTmsPatch && it !== FastHpBarPatch && it !in BattleBugFixPatches.all }.none { it.reversible }, "only the plain byte patches are switches")
         assertTrue(DsprePatches.trainerNames.revert(project) is FoxResult.Err)
         project.revertAll()
     }
@@ -123,6 +124,22 @@ class PatchToolboxRealRomTest {
         assertTrue(FastHpBarPatch.revert(project) is FoxResult.Ok)
         assertEquals(PatchStatus.Available, FastHpBarPatch.status(project))
         assertContentEquals(vanilla, (PatchTarget.Overlay(12).read(project) as FoxResult.Ok).value)
+        project.revertAll()
+    }
+
+    @Test
+    fun everyBattleBugFixIsFoundInTheVanillaRomAndTurnsOffAgain() = withProject { project ->
+        val vanilla = listOf(PatchTarget.Overlay(10), PatchTarget.Overlay(12)).associateWith { (it.read(project) as FoxResult.Ok).value }
+        assertEquals(11, BattleBugFixPatches.all.size)
+        for (patch in BattleBugFixPatches.all) {
+            assertTrue(patch.reversible, patch.id)
+            assertEquals(PatchStatus.Available, patch.status(project), "${patch.id}: the guide's bytes are in the vanilla ROM")
+            assertTrue(patch.apply(project) is FoxResult.Ok, patch.id)
+            assertEquals(PatchStatus.Applied, patch.status(project), patch.id)
+            assertTrue(patch.revert(project) is FoxResult.Ok, patch.id)
+            assertEquals(PatchStatus.Available, patch.status(project), patch.id)
+            for ((target, bytes) in vanilla) assertContentEquals(bytes, (target.read(project) as FoxResult.Ok).value, "${patch.id}: $target after turning it off")
+        }
         project.revertAll()
     }
 

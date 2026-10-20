@@ -672,6 +672,26 @@ name FOXHG from the grown bank is in RAM while the battle starts). Things found 
 One two-byte edit in overlay 12 (decompressed) at `0x2E17A`: the THUMB `LSLS R0, R0, #8` (`00 02`, speed 256) becomes `LSLS R0, R0, #9` (`40 02`, x2) in `FastHpBarPatch`.
 The vanilla bytes `00 02` are there in the real ROM (checked). The guide's other speeds are `80 01` x0.25, `C0 01` x0.5, `80 02` x4, `C0 02` x8; foxhg offers only x2, as a switch. Checked in game (`HpBarFasterPatchEmulatorTest`): about 1.2 pixels a frame against 0.56 unpatched.
 
+## Battle bug fixes (wiki guide "Battle Logic Edits", Bug Fixes), HeartGold English
+
+`BattleBugFixPatches`: 11 plain byte patches, each a reversible switch in the toolbox. All vanilla bytes were checked on the real ROM (decompressed overlays).
+
+| Patch | Overlay | Offset | Vanilla -> fixed |
+|-------|---------|--------|------------------|
+| Fire Fang vs Wonder Guard | 12 | 0x20BCC | `11` -> `10` |
+| Rage glitch | 12 | 0x11B3C | `01` -> `41` |
+| AI: Water vs Dry Skin (ability id Levitate 26 -> Dry Skin 87) | 10 | 0x4DB4 | `1A` -> `57` |
+| AI: Sunny Day check | 10 | 0x6310, 0x6318 | `5D` -> `66`, `09` -> `0A` |
+| AI: Foresight / Odor Sleuth uses the defender's types | 10 | 0x9DD0, 0x9DE4 | `01` -> `00`, `03` -> `02` |
+| AI: Facade checks the user's status | 10 | 0xA7F4 | `00` -> `01` |
+| AI: Leaf Guard and Sunny Day | 10 | 0xA198 | `09` -> `0A` |
+| AI: Water Spout / Eruption use the user's HP | 10 | 0xB110, 0xB128 | `00` -> `01` |
+| AI: charge-turn moves (Fly, Dig) score -1 | 10 | 0xA710 | `01 00 00 00` -> `FF FF FF FF` |
+| AI: Thunder dispatch | 10 | 0x788C | `97` -> `98` |
+| AI: Discharge in double battles (three partner type checks reordered, 72 bytes) | 10 | 0xE190 | see `BattleBugFixPatches.aiDischarge` |
+
+Not checked in game.
+
 ## Shiny rates (HeartGold English)
 
 - The game has no shiny chance to edit: a Pokémon is shiny when `(tid ^ sid ^ pid high ^ pid low) < 8` (8 in 65536, `SHINY_CHECK`, inlined in several places; the stand-alone check is at ARM9 0x2070068, `cmp r0, #8` at 0x2070080), so no single number changes the rate of one kind of Pokémon. The "Shiny rates" patch (`ShinyRatesPatch`, source `docs/asm/shiny_rates.s`, built by `scripts/build-shiny-asm.sh`) hooks the places that make them instead and keeps four u32 rates (chance out of 65536) at synthetic overlay 0x11D00; the routines are at 0x11D20 (264 bytes). A rate of 0 exits before drawing a random number. It needs the ARM9 expansion.
