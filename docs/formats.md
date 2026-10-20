@@ -692,6 +692,14 @@ The vanilla bytes `00 02` are there in the real ROM (checked). The guide's other
 
 Not checked in game.
 
+## Battle tweaks as switches (wiki guide "Battle Logic Edits"), HeartGold English
+
+`BattleTweakPatches`: three reversible byte patches in overlay 12 (vanilla bytes checked on the real ROM, not checked in game).
+No Hail damage: 0xA406 `16 D0` -> `16 E0` (the Ice check branch becomes unconditional).
+Disable fixed duration: 0x90DA `20 40` -> `04 20` (`ANDS R0, R4` becomes `MOVS R0, #4`). Trainers use Trick/Switcheroo: 0xB1DA `84` -> `85` (battle type mask gains the trainer bit; items stay swapped after the battle).
+The paralysis Speed cut is not a switch but the Battle rules number `paralysis-shift` (1 to 3, game 2): overlay 12 0x185CA (`B6`) and 0x18776 (`A4`) are `LSRS Rd, Rd, #n` low bytes, byte = base + n * 64 with base 0x36 and 0x24 (shift 1 = `76`/`64`, 3 = `F6`/`E4`; shift 0 would mean 32 in Thumb, so it is not offered).
+Left out: Taunt duration (a battle script file, `a/0/0/1` file 132, no `PatchTarget` for NARC files yet) and Flail/Reversal (the multiplier and the table change together).
+
 ## Shiny rates (HeartGold English)
 
 - The game has no shiny chance to edit: a Pokémon is shiny when `(tid ^ sid ^ pid high ^ pid low) < 8` (8 in 65536, `SHINY_CHECK`, inlined in several places; the stand-alone check is at ARM9 0x2070068, `cmp r0, #8` at 0x2070080), so no single number changes the rate of one kind of Pokémon. The "Shiny rates" patch (`ShinyRatesPatch`, source `docs/asm/shiny_rates.s`, built by `scripts/build-shiny-asm.sh`) hooks the places that make them instead and keeps four u32 rates (chance out of 65536) at synthetic overlay 0x11D00; the routines are at 0x11D20 (264 bytes). A rate of 0 exits before drawing a random number. It needs the ARM9 expansion.

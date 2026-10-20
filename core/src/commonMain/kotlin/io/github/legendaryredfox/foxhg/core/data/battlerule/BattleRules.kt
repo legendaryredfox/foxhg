@@ -4,12 +4,22 @@ import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
-/** Where one byte of a battle rule lives: in the decompressed overlay [id] or in file [file] of the NARC [narc]. */
+/**
+ * Where one byte of a battle rule lives: in the decompressed overlay [id] or in file [file] of the NARC [narc]. The byte holds
+ * `base + value * scale`; the usual rule stores the value as it is (scale 1, base 0), a rule that is a field of a Thumb instruction does not.
+ */
 sealed interface BattleSite {
     val offset: Int
+    val scale: Int
+    val base: Int
 
-    data class Overlay(val id: Int, override val offset: Int) : BattleSite
-    data class NarcFile(val narc: String, val file: Int, override val offset: Int) : BattleSite
+    fun encode(value: Int): Int = base + value * scale
+
+    /** The rule value this byte holds, or null when the byte is not `base + n * scale`. */
+    fun decode(byte: Int): Int? = (byte - base).takeIf { it >= 0 && it % scale == 0 }?.div(scale)
+
+    data class Overlay(val id: Int, override val offset: Int, override val scale: Int = 1, override val base: Int = 0) : BattleSite
+    data class NarcFile(val narc: String, val file: Int, override val offset: Int, override val scale: Int = 1, override val base: Int = 0) : BattleSite
 }
 
 /**
@@ -31,7 +41,7 @@ class BattleRule(
 /**
  * The simple battle tweaks of the guide for HeartGold English: each is one byte in an overlay (an immediate of a Thumb instruction of the battle
  * code) or in a battle script (a NARC file), so a rule is read and written byte by byte; the critical hit table is five rules, one byte each. Tweaks that
- * need several bytes that change together in another way (paralysis shifts, Flail, Disable, Taunt, no hail damage, the bug fixes) are not here.
+ * need several bytes that change together in another way (Flail, Disable, Taunt, no hail damage, the bug fixes) are not here. The paralysis Speed cut is a field of a Thumb shift instruction (the shift count sits in the two top bits of its low byte), so its sites encode the value.
  */
 object BattleRules {
     const val SUB_SEQ = "a/0/0/1"
@@ -54,6 +64,8 @@ object BattleRules {
             listOf(BattleSite.NarcFile(SUB_SEQ, 18, 0x268)), 2, 0..255) { "${turns(it)} at least" },
         BattleRule("freeze-thaw", "Statuses", "Freeze thaw chance", "Each turn a random number is divided by this, and a remainder of 0 thaws the Pokémon.",
             ov(0x13E12), 5, 1..255) { chance(it) },
+        BattleRule("paralysis-shift", "Statuses", "Paralysis Speed cut (shifts)", "Speed is shifted right by this many bits when paralyzed: 1 halves it, 2 (the game) leaves a quarter, 3 an eighth. Both battlers' copies of the code.",
+            listOf(BattleSite.Overlay(BATTLE_OVERLAY, 0x185CA, 64, 0x36), BattleSite.Overlay(BATTLE_OVERLAY, 0x18776, 64, 0x24)), 2, 1..3) { n -> "Speed x1/${1 shl n} (${100 - 100 / (1 shl n)} % cut)" },
         // abilities
         BattleRule("iron-fist-multiplier", "Abilities", "Iron Fist: multiplier", "Power of punching moves is multiplied by this and divided by the divisor (12 and 10 make +20 %).",
             ov(0x1FF44), 12, 1..255) { "x$it" },
@@ -136,7 +148,8 @@ object BattleRules {
             }
         }
         if (site.offset !in bytes.indices) return FoxResult.Err("Offset 0x${site.offset.toString(16).uppercase()} is outside the file")
-        return FoxResult.Ok(bytes[site.offset].toInt() and 0xFF)
+        val byte = bytes[site.offset].toInt() and 0xFF
+        return site.decode(byte)?.let { FoxResult.Ok(it) } ?: FoxResult.Err("Offset 0x${site.offset.toString(16).uppercase()} holds 0x${byte.toString(16).uppercase()}, which is not a value of this rule")
     }
 
     /** The value of [rule]: what every site holds. An error says when the sites disagree (another tool changed one of them). */
@@ -156,13 +169,13 @@ object BattleRules {
         // overlays one by one, each NARC once with all its files
         for ((id, sites) in rule.sites.filterIsInstance<BattleSite.Overlay>().groupBy { it.id }) {
             val overlay = when (val o = project.readOverlay(id)) { is FoxResult.Ok -> o.value; is FoxResult.Err -> return o }
-            sites.forEach { overlay[it.offset] = value.toByte() }
+            sites.forEach { overlay[it.offset] = it.encode(value).toByte() }
             project.writeOverlay(id, overlay).let { if (it is FoxResult.Err) return it }
         }
         for ((path, sites) in rule.sites.filterIsInstance<BattleSite.NarcFile>().groupBy { it.narc }) {
             val narc = (Narc.parse(project.read(path)!!) as FoxResult.Ok).value
             val files = narc.files.map { it.copyOf() }
-            sites.forEach { files[it.file][it.offset] = value.toByte() }
+            sites.forEach { files[it.file][it.offset] = it.encode(value).toByte() }
             project.write(path, Narc(files, narc.nameTable).toBytes()).let { if (it is FoxResult.Err) return it }
         }
         return FoxResult.Ok(Unit)

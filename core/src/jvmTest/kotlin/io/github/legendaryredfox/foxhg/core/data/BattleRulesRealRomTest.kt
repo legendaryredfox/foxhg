@@ -39,6 +39,18 @@ class BattleRulesRealRomTest {
             assertTrue(BattleRules.write(project, magnitude, 200) is FoxResult.Ok)
             assertEquals(200, (BattleRules.read(project, magnitude) as FoxResult.Ok).value)
             assertTrue(BattleRules.write(project, magnitude, magnitude.vanilla) is FoxResult.Ok)
+            val paralysis = BattleRules.byId("paralysis-shift")!!
+            val bytes = { listOf(0x185CA, 0x18776).map { (project.readOverlay(12) as FoxResult.Ok).value[it].toInt() and 0xFF } }
+            assertEquals(listOf(0xB6, 0xA4), bytes(), "the game's two shift bytes")
+            for ((shift, expected) in listOf(1 to listOf(0x76, 0x64), 3 to listOf(0xF6, 0xE4))) {
+                assertTrue(BattleRules.write(project, paralysis, shift) is FoxResult.Ok)
+                assertEquals(expected, bytes(), "paralysis shift $shift")
+                assertEquals(shift, (BattleRules.read(project, paralysis) as FoxResult.Ok).value)
+            }
+            assertTrue(BattleRules.write(project, paralysis, 0) is FoxResult.Err, "a shift of 0 would mean 32 in Thumb")
+            assertTrue(BattleRules.write(project, paralysis, 4) is FoxResult.Err)
+            assertTrue(BattleRules.write(project, paralysis, paralysis.vanilla) is FoxResult.Ok)
+            assertEquals(listOf(0xB6, 0xA4), bytes())
             assertTrue(BattleRules.write(project, burn, 0) is FoxResult.Err, "a divisor of 0 would divide by zero")
             assertTrue(BattleRules.write(project, BattleRules.byId("grip-claw")!!, 8) is FoxResult.Err, "the game does not take a Grip Claw duration above 7")
             for (rule in listOf(burn, slow, reckless)) assertTrue(BattleRules.write(project, rule, rule.vanilla) is FoxResult.Ok)
