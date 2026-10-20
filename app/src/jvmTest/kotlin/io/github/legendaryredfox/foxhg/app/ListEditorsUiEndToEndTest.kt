@@ -19,6 +19,7 @@ import io.github.legendaryredfox.foxhg.core.data.encounter.EncounterData
 import io.github.legendaryredfox.foxhg.core.data.encounter.EncounterGroup
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.fly.FlyTable
+import io.github.legendaryredfox.foxhg.core.patch.FastHpBarPatch
 import io.github.legendaryredfox.foxhg.core.patch.PatchStatus
 import io.github.legendaryredfox.foxhg.core.patch.ReusableTmsPatch
 import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
@@ -311,6 +312,18 @@ class ListEditorsUiEndToEndTest {
         waitForIdle()
         assertEquals(PatchStatus.Available, ReusableTmsPatch.status(project), "off: the vanilla bytes are back")
         onNodeWithTag("toolbox-message").assertIsDisplayed()
+    }
+
+    @Test
+    fun theFasterHpBarsSwitchTurnsOnAndOff() = withHeartGoldApp { _, project ->
+        open("ROM toolbox")
+        assertEquals(PatchStatus.Available, FastHpBarPatch.status(project))
+        tap(onNodeWithTag("toggle:fast-hp-bar"), inScrollPane = false)
+        waitForIdle()
+        assertEquals(PatchStatus.Applied, FastHpBarPatch.status(project))
+        tap(onNodeWithTag("toggle:fast-hp-bar"), inScrollPane = false)
+        waitForIdle()
+        assertEquals(PatchStatus.Available, FastHpBarPatch.status(project))
     }
 
     @Test

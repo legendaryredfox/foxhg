@@ -13,6 +13,7 @@ import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.patch.ByteEdit
 import io.github.legendaryredfox.foxhg.core.patch.BytePatch
+import io.github.legendaryredfox.foxhg.core.patch.FastHpBarPatch
 import io.github.legendaryredfox.foxhg.core.patch.PatchTarget
 import io.github.legendaryredfox.foxhg.core.patch.RomPatch
 import io.github.legendaryredfox.foxhg.core.patch.ReusableTmsPatch
@@ -187,7 +188,7 @@ object DsprePatches {
         }
     }
 
-    val all: List<RomPatch> = listOf(arm9Expansion, dynamicCamera, buildingRotation, scriptCommandRepoint, matrixExpansion, trainerNames, TextureAnimationsPatch, ShinyRatesPatch, ReusableTmsPatch)
+    val all: List<RomPatch> = listOf(arm9Expansion, dynamicCamera, buildingRotation, scriptCommandRepoint, matrixExpansion, trainerNames, TextureAnimationsPatch, ShinyRatesPatch, ReusableTmsPatch, FastHpBarPatch)
 
     /** A THUMB `bl` from the instruction at [source] to [target] (both runtime addresses), 4 bytes. */
     internal fun thumbBl(source: Int, target: Int): ByteArray {

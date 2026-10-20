@@ -3,6 +3,7 @@ package io.github.legendaryredfox.foxhg.core.emulator
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.hpbar.HpBarSpeed
 import io.github.legendaryredfox.foxhg.core.emulator.EmulatorSupport.available
+import io.github.legendaryredfox.foxhg.core.patch.FastHpBarPatch
 import io.github.legendaryredfox.foxhg.core.script.ScriptEntry
 import io.github.legendaryredfox.foxhg.core.script.ScriptText
 import java.nio.file.Files
@@ -27,12 +28,13 @@ internal object HpBarInGame {
     private val BARS = listOf(Triple(46..100, 43, 0), Triple(196..252, 119, 0))
 
     /** The first drain of an HP bar after Tackle was picked, at [shift]; null when the saved game is missing or no bar moved. */
-    fun drain(shift: Int): Drain? {
+    fun drain(shift: Int, fastPatch: Boolean = false): Drain? {
         if (!EmulatorSaves.available("party")) return null
         val work = Files.createTempDirectory("foxhg-hpbar")
         try {
             val rom = MartInGame.build(work, "hpbar.nds") { project ->
-                check(HpBarSpeed.save(project, HpBarSpeed(shift)) is FoxResult.Ok)
+                if (fastPatch) check(FastHpBarPatch.apply(project) is FoxResult.Ok)
+                else check(HpBarSpeed.save(project, HpBarSpeed(shift)) is FoxResult.Ok)
                 val scripts = (ScriptEntry.load(project) as FoxResult.Ok).value
                 val file = (scripts.records[851] as ScriptEntry.Script).file
                 val lines = ScriptText.toText(file).lines().toMutableList()
@@ -51,7 +53,7 @@ internal object HpBarInGame {
                     emu.step(1)
                     seen += fills(emu)
                     if (seen.last() != seen[seen.size - 2]) moves += frame
-                    if (frame == 60) { Files.createDirectories(MartInGame.shotDir); emu.savePicture(MartInGame.shotDir.resolve("hpbar-shift$shift.png")) }
+                    if (frame == 60) { Files.createDirectories(MartInGame.shotDir); emu.savePicture(MartInGame.shotDir.resolve("hpbar-shift$shift${if (fastPatch) "-patch" else ""}.png")) }
                 }
                 // a drain: changes that follow each other less than 12 frames apart; the first one that moved a bar by 3 pixels or more
                 // (a miss or a tiny hit would not tell the speed)
@@ -63,7 +65,7 @@ internal object HpBarInGame {
                     Drain(burst.size, burst.last() - burst.first(), seen[burst.first() - 1].indices.sumOf { abs(seen[burst.last()][it] - seen[burst.first() - 1][it]) }, burst.first())
                 }
                 val drain = drains.firstOrNull { it.pixels >= 3 }
-                println("HPBAR shift $shift: first drain ${drain?.let { "at frame ${it.start}: ${it.steps} steps over ${it.span} frames, ${it.pixels} pixels (${it.framesPerStep} frames per step)" }}; all changes $moves")
+                println("HPBAR shift $shift${if (fastPatch) " (Faster HP bars patch)" else ""}: first drain ${drain?.let { "at frame ${it.start}: ${it.steps} steps over ${it.span} frames, ${it.pixels} pixels (${it.framesPerStep} frames per step)" }}; all changes $moves")
                 return drain
             }
         } finally {
@@ -111,5 +113,15 @@ class HpBarFastSpeedEmulatorTest {
         val drain = HpBarInGame.drain(12)
         if (!EmulatorSaves.available("party")) return
         assertTrue(drain != null && drain.pixels >= 3 && drain.span <= 2, "a bar at 16 times the speed jumps within two frames: ${drain?.pixels} pixels over ${drain?.span} frames")
+    }
+}
+
+/** The "Faster HP bars" switch of the toolbox (x2, the same bytes as shift 9): about 1.2 pixels a frame, twice the game's own 0.56 (the steps are two pixels wide). */
+class HpBarFasterPatchEmulatorTest {
+    @Test fun theSwitchSpeedsTheBarsUp() {
+        if (!available()) return
+        val drain = HpBarInGame.drain(9, fastPatch = true)
+        if (!EmulatorSaves.available("party")) return
+        assertTrue(drain != null && drain.span > 0 && drain.pixels.toDouble() / drain.span in 1.0..1.6, "a bar with the switch on moves about 1.2 pixels a frame: ${drain?.pixels} pixels over ${drain?.span} frames")
     }
 }

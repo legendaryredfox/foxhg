@@ -667,6 +667,11 @@ name FOXHG from the grown bank is in RAM while the battle starts). Things found 
   three entries so that trainers 738 and up get the shared script and an eye-contact object (a trainer object calls script `3000 + trainer - 1` and a second block at 5000).
 - The beaten flag of a trainer is `0x550 + trainer` (decomp `FLAG_TRAINER`); trainer 738 gets 0x832, a flag the decomp calls unknown. **[UNVERIFIED]** that nothing else uses 0x832 and up.
 
+## HP bar speed (wiki guide "Changing the HP bar Speed"), HeartGold English
+
+One two-byte edit in overlay 12 (decompressed) at `0x2E17A`: the THUMB `LSLS R0, R0, #8` (`00 02`, speed 256) becomes `LSLS R0, R0, #9` (`40 02`, x2) in `FastHpBarPatch`.
+The vanilla bytes `00 02` are there in the real ROM (checked). The guide's other speeds are `80 01` x0.25, `C0 01` x0.5, `80 02` x4, `C0 02` x8; foxhg offers only x2, as a switch. Checked in game (`HpBarFasterPatchEmulatorTest`): about 1.2 pixels a frame against 0.56 unpatched.
+
 ## Shiny rates (HeartGold English)
 
 - The game has no shiny chance to edit: a Pokémon is shiny when `(tid ^ sid ^ pid high ^ pid low) < 8` (8 in 65536, `SHINY_CHECK`, inlined in several places; the stand-alone check is at ARM9 0x2070068, `cmp r0, #8` at 0x2070080), so no single number changes the rate of one kind of Pokémon. The "Shiny rates" patch (`ShinyRatesPatch`, source `docs/asm/shiny_rates.s`, built by `scripts/build-shiny-asm.sh`) hooks the places that make them instead and keeps four u32 rates (chance out of 65536) at synthetic overlay 0x11D00; the routines are at 0x11D20 (264 bytes). A rate of 0 exits before drawing a random number. It needs the ARM9 expansion.
