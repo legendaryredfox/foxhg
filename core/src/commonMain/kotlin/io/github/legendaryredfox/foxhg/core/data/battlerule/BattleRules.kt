@@ -131,7 +131,7 @@ object BattleRules {
             listOf(BattleSite.NarcFile(SUB_SEQ, 132, 0x38)), 2, 0..255) { "0 to ${turns(it)} extra" },
         BattleRule("taunt-base", "Move effects", "Taunt: base turns", "The fixed part of the Taunt duration; the target can use a move one turn less when the user is slower.",
             listOf(BattleSite.NarcFile(SUB_SEQ, 132, 0x3C)), 3, 0..255) { "${turns(it)} at least" },
-        BattleRule("flail-multiplier", "Move effects", "Flail and Reversal: HP multiplier", "The user's current HP divided by its maximum is multiplied by this, then compared with the limits of the table below (the game has 64, Gen V and later 48). Change the limits with it.",
+        BattleRule("flail-multiplier", "Move effects", "Flail and Reversal: HP multiplier", "The user's current HP divided by its maximum is multiplied by this, then compared with the limits of the table below (the game has 64, Gen V and later 48). Change the limits with it, and keep limit 6 at least as high as this, or the game reads past the table.",
             ov(0x97A4), 64, 1..255) { "x$it" },
         BattleRule("flail-limit-1", "Move effects", "Flail and Reversal: limit 1", "The result of the multiplication is at most this for step 1 of the power table; the last limit is the multiplier itself.",
             ov(0x34A40 + 0), 1, 1..255) { "up to $it" },
