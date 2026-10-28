@@ -41,7 +41,7 @@ class BattleRule(
 /**
  * The simple battle tweaks of the guide for HeartGold English: each is one byte in an overlay (an immediate of a Thumb instruction of the battle
  * code) or in a battle script (a NARC file), so a rule is read and written byte by byte; the critical hit table is five rules, one byte each. Tweaks that
- * need several bytes that change together in another way (Flail, Disable, no hail damage, the bug fixes) are not here. The paralysis Speed cut is a field of a Thumb shift instruction (the shift count sits in the two top bits of its low byte), so its sites encode the value.
+ * need several bytes that change together in another way (Disable, no hail damage, the bug fixes) are not here. The paralysis Speed cut is a field of a Thumb shift instruction (the shift count sits in the two top bits of its low byte), so its sites encode the value.
  */
 object BattleRules {
     const val SUB_SEQ = "a/0/0/1"
@@ -131,6 +131,32 @@ object BattleRules {
             listOf(BattleSite.NarcFile(SUB_SEQ, 132, 0x38)), 2, 0..255) { "0 to ${turns(it)} extra" },
         BattleRule("taunt-base", "Move effects", "Taunt: base turns", "The fixed part of the Taunt duration; the target can use a move one turn less when the user is slower.",
             listOf(BattleSite.NarcFile(SUB_SEQ, 132, 0x3C)), 3, 0..255) { "${turns(it)} at least" },
+        BattleRule("flail-multiplier", "Move effects", "Flail and Reversal: HP multiplier", "The user's current HP divided by its maximum is multiplied by this, then compared with the limits of the table below (the game has 64, Gen V and later 48). Change the limits with it.",
+            ov(0x97A4), 64, 1..255) { "x$it" },
+        BattleRule("flail-limit-1", "Move effects", "Flail and Reversal: limit 1", "The result of the multiplication is at most this for step 1 of the power table; the last limit is the multiplier itself.",
+            ov(0x34A40 + 0), 1, 1..255) { "up to $it" },
+        BattleRule("flail-power-1", "Move effects", "Flail and Reversal: power 1", "The power of Flail and Reversal for step 1 of the table (its limit is the rule above).",
+            ov(0x34A41 + 0), 200, 1..255) { "power $it" },
+        BattleRule("flail-limit-2", "Move effects", "Flail and Reversal: limit 2", "The result of the multiplication is at most this for step 2 of the power table; the last limit is the multiplier itself.",
+            ov(0x34A40 + 2), 5, 1..255) { "up to $it" },
+        BattleRule("flail-power-2", "Move effects", "Flail and Reversal: power 2", "The power of Flail and Reversal for step 2 of the table (its limit is the rule above).",
+            ov(0x34A41 + 2), 150, 1..255) { "power $it" },
+        BattleRule("flail-limit-3", "Move effects", "Flail and Reversal: limit 3", "The result of the multiplication is at most this for step 3 of the power table; the last limit is the multiplier itself.",
+            ov(0x34A40 + 4), 12, 1..255) { "up to $it" },
+        BattleRule("flail-power-3", "Move effects", "Flail and Reversal: power 3", "The power of Flail and Reversal for step 3 of the table (its limit is the rule above).",
+            ov(0x34A41 + 4), 100, 1..255) { "power $it" },
+        BattleRule("flail-limit-4", "Move effects", "Flail and Reversal: limit 4", "The result of the multiplication is at most this for step 4 of the power table; the last limit is the multiplier itself.",
+            ov(0x34A40 + 6), 21, 1..255) { "up to $it" },
+        BattleRule("flail-power-4", "Move effects", "Flail and Reversal: power 4", "The power of Flail and Reversal for step 4 of the table (its limit is the rule above).",
+            ov(0x34A41 + 6), 80, 1..255) { "power $it" },
+        BattleRule("flail-limit-5", "Move effects", "Flail and Reversal: limit 5", "The result of the multiplication is at most this for step 5 of the power table; the last limit is the multiplier itself.",
+            ov(0x34A40 + 8), 42, 1..255) { "up to $it" },
+        BattleRule("flail-power-5", "Move effects", "Flail and Reversal: power 5", "The power of Flail and Reversal for step 5 of the table (its limit is the rule above).",
+            ov(0x34A41 + 8), 40, 1..255) { "power $it" },
+        BattleRule("flail-limit-6", "Move effects", "Flail and Reversal: limit 6", "The result of the multiplication is at most this for step 6 of the power table; the last limit is the multiplier itself.",
+            ov(0x34A40 + 10), 64, 1..255) { "up to $it" },
+        BattleRule("flail-power-6", "Move effects", "Flail and Reversal: power 6", "The power of Flail and Reversal for step 6 of the table (its limit is the rule above).",
+            ov(0x34A41 + 10), 20, 1..255) { "power $it" },
         BattleRule("encore", "Move effects", "Encore duration (base)", "Turns Encore lasts, before the extra random part the code adds.", ov(0x939A), 5, 1..255) { turns(it) },
     )
 
