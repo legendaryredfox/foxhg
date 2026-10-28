@@ -53,6 +53,15 @@ class BattleRulesRealRomTest {
             assertEquals(listOf(0xB6, 0xA4), bytes())
             assertTrue(BattleRules.write(project, burn, 0) is FoxResult.Err, "a divisor of 0 would divide by zero")
             assertTrue(BattleRules.write(project, BattleRules.byId("grip-claw")!!, 8) is FoxResult.Err, "the game does not take a Grip Claw duration above 7")
+            val flailMultiplier = BattleRules.byId("flail-multiplier")!!
+            val flailLimit6 = BattleRules.byId("flail-limit-6")!!
+            assertTrue(BattleRules.write(project, flailMultiplier, 65) is FoxResult.Err, "a multiplier above limit 6 would read past the table")
+            assertTrue(BattleRules.write(project, flailLimit6, 63) is FoxResult.Err, "limit 6 below the multiplier too")
+            assertTrue(BattleRules.write(project, flailMultiplier, 48) is FoxResult.Ok)
+            assertTrue(BattleRules.write(project, flailLimit6, 48) is FoxResult.Ok)
+            assertTrue(BattleRules.write(project, flailLimit6, 100) is FoxResult.Ok)
+            assertTrue(BattleRules.write(project, flailMultiplier, 100) is FoxResult.Ok)
+            for (rule in listOf(flailMultiplier, flailLimit6)) assertTrue(BattleRules.write(project, rule, rule.vanilla) is FoxResult.Ok)
             for (rule in listOf(burn, slow, reckless)) assertTrue(BattleRules.write(project, rule, rule.vanilla) is FoxResult.Ok)
             assertTrue(!project.isDirty, "vanilla again leaves the ROM as it was")
         }

@@ -192,10 +192,19 @@ object BattleRules {
     /** The value at the first site, even when the others differ. */
     fun readFirst(project: RomProject, rule: BattleRule): FoxResult<Int> = readSite(project, rule.sites[0])
 
+    /** The Flail loop stops at the first limit the result does not pass, so limit 6 must stay at least the multiplier or the power is read past the table. */
+    private fun flailTableError(project: RomProject, rule: BattleRule, value: Int): String? {
+        val other = when (rule.id) { "flail-multiplier" -> byId("flail-limit-6"); "flail-limit-6" -> byId("flail-multiplier"); else -> return null } ?: return null
+        val otherValue = (read(project, other) as? FoxResult.Ok)?.value ?: return null
+        val (multiplier, limit) = if (rule.id == "flail-multiplier") value to otherValue else otherValue to value
+        return if (multiplier > limit) "${byId("flail-multiplier")!!.name} ($multiplier) must not be above ${byId("flail-limit-6")!!.name} ($limit): the game would read past the power table. Change the other one first" else null
+    }
+
     /** Writes [value] into every site of [rule]. */
     fun write(project: RomProject, rule: BattleRule, value: Int): FoxResult<Unit> {
         if (value !in rule.range) return FoxResult.Err("${rule.name} is ${rule.range.first} to ${rule.range.last}")
         for (site in rule.sites) readSite(project, site).let { if (it is FoxResult.Err) return it }
+        flailTableError(project, rule, value)?.let { return FoxResult.Err(it) }
         // overlays one by one, each NARC once with all its files
         for ((id, sites) in rule.sites.filterIsInstance<BattleSite.Overlay>().groupBy { it.id }) {
             val overlay = when (val o = project.readOverlay(id)) { is FoxResult.Ok -> o.value; is FoxResult.Err -> return o }
