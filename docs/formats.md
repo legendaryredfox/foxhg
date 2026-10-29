@@ -680,9 +680,10 @@ name FOXHG from the grown bank is in RAM while the battle starts). Things found 
 - Where foxhg puts the tables: the synthetic overlay (the ARM9 expansion patch must be applied) at 0x5000 (gender, 0x100 bytes) and 0x5100 (prize rows, 4 bytes each), a block of
   0x500 bytes between the mart area (0x4000) and the camera routine (0x115B0). The ARM9 word and the two overlay words are set to 0x023C8000 + those offsets and the three
   immediates to the new row count. The tables are read through those pointers, so the Trainer classes editor keeps working after a class is added.
-- Tests: `RealRomNewTrainerClassTest` (tables, name, pictures, a second class, refusals). In the game (`NewTrainerClassInGameEmulatorTest`): a new trainer of the new class
-  FOXCLS starts a battle without a crash and the class name codes are in RAM while it starts. The class picture, the gender and the prize money in a battle were not
-  checked in game; **[UNVERIFIED]**.
+- Tests: `RealRomNewTrainerClassTest` (tables, name, pictures, a second class, refusals). In the game (`NewTrainerClassInGameEmulatorTest`, 2026-10-29): a new trainer of the new
+  class FOXCLS (a copy of the Youngster picture, prize multiplier 20) starts a battle that reads "You are challenged by FOXCLS FOXHG!" with the copied picture on screen, and winning
+  it pays 320 = last level 4 x 4 x 20, so the moved prize table, its pointers and the raised row count work. The gender of a new class was not checked in game (it only
+  matters for Pokémon of an even gender ratio); **[UNVERIFIED]**.
 
 ## HP bar speed (wiki guide "Changing the HP bar Speed"), HeartGold English
 
