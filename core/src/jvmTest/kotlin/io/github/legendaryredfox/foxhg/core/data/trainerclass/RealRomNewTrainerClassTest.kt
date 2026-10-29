@@ -92,4 +92,24 @@ class RealRomNewTrainerClassTest {
         assertEquals(count, names(project).entries.size)
         assertEquals(128, TrainerClassGenders.load(project).ok().genders.size)
     }
+
+    @Test
+    fun aClassWithEyeContactMusicGetsARowAndTheTableMovesOnce() = withProject { project ->
+        check(DsprePatches.arm9Expansion.apply(project) is FoxResult.Ok)
+        val vanilla = TrainerEncounterMusic.load(project).ok()
+        assertEquals(HgssLayout.ENCOUNTER_MUSIC_VANILLA_ROWS, vanilla.rows.size)
+        assertEquals(EncounterMusicRow(2, 1108, 1108), vanilla.rows[0], "the Youngster row")
+        val count = names(project).entries.size
+
+        assertEquals(count, NewTrainerClass.add(project, "NOMUSIC", 1, 0, 5).ok())
+        assertEquals(vanilla, TrainerEncounterMusic.load(project).ok(), "a class added without music leaves the table where it is")
+        assertEquals(count + 1, NewTrainerClass.add(project, "WITHMUSIC", 1, 0, 5, eyeMusic = 1113).ok())
+        val moved = TrainerEncounterMusic.load(project).ok()
+        assertEquals(vanilla.rows + EncounterMusicRow(count + 1, 1113, 1113), moved.rows)
+        assertEquals(1113, moved.of(count + 1)?.first)
+        assertEquals(null, moved.of(count), "the class with no music has no row")
+        assertEquals(count + 2, NewTrainerClass.add(project, "MORE", 1, 0, 5, eyeMusic = 1112).ok())
+        assertEquals(vanilla.rows + EncounterMusicRow(count + 1, 1113, 1113) + EncounterMusicRow(count + 2, 1112, 1112), TrainerEncounterMusic.load(project).ok().rows)
+        assertEquals(count + 3, TrainerClassGenders.load(project).ok().genders.size, "the other tables kept growing")
+    }
 }

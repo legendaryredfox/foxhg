@@ -1120,4 +1120,5 @@
     <string name="trainer_class_add_button">添加职业</string>
     <string name="trainer_class_add_failed_x">无法添加职业：%1$s</string>
     <string name="trainer_class_added_x">已添加职业 %1$s</string>
+    <string name="trainer_class_add_music">对视音乐（序列号，0 = Youngster 的音乐）</string>
 </resources>

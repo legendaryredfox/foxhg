@@ -21,9 +21,8 @@ internal object TrainerClassTables {
         (PatchTarget.SyntheticOverlay.read(project) as? FoxResult.Ok)?.value?.takeIf { it.size >= HgssLayout.SYNTHETIC_OVERLAY_SIZE }
 
     /** The offset in the synthetic overlay a table pointer names, or an error when it is somewhere foxhg does not know. */
-    fun areaOffset(pointer: Long, what: String, from: Int, size: Int): FoxResult<Int> {
+    fun areaOffset(pointer: Long, what: String, from: Int, size: Int, end: Int = HgssLayout.CLASS_TABLE_AREA + HgssLayout.CLASS_TABLE_AREA_SIZE): FoxResult<Int> {
         val offset = pointer - HgssLayout.SYNTHETIC_OVERLAY_ADDRESS
-        val end = HgssLayout.CLASS_TABLE_AREA + HgssLayout.CLASS_TABLE_AREA_SIZE
         return if (offset >= from && offset + size <= end) FoxResult.Ok(offset.toInt())
         else FoxResult.Err("The $what table is at 0x${pointer.toString(16).uppercase()}, not where foxhg or the game put it")
     }

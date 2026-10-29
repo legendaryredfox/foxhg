@@ -11,6 +11,7 @@ import io.github.legendaryredfox.foxhg.core.putU32
 import io.github.legendaryredfox.foxhg.core.text.MessageText
 import io.github.legendaryredfox.foxhg.core.text.TextArchive
 import io.github.legendaryredfox.foxhg.core.text.TextEntry
+import io.github.legendaryredfox.foxhg.core.u32
 import io.github.legendaryredfox.foxhg.core.u8
 
 /**
@@ -22,12 +23,15 @@ import io.github.legendaryredfox.foxhg.core.u8
  *   128 keeps the byte the game reads for it, the first byte after the table;
  * - the prize table of overlay 12: moved to the same area with the row `{class, multiplier}` appended, its two pointers set and the three
  *   `cmp r4, #count` immediates raised. A class missing from this table gets the prize of row 2.
- * The eye-contact music table is not touched: a class missing from it plays the Youngster theme. A refusal leaves the project as it was.
+ * - the eye-contact music (when [eyeMusic] is not 0): the table of [TrainerEncounterMusic] moved to [HgssLayout.ENCOUNTER_MUSIC_AREA] with the row
+ *   `{class, eyeMusic, eyeMusic}` appended, its ARM9 pointer set and the `cmp r3, #rows` immediate raised. Without it a class plays the Youngster theme.
+ * A refusal leaves the project as it was.
  */
 object NewTrainerClass {
-    fun add(project: RomProject, name: String, template: Int, gender: Int, prizeMultiplier: Int): FoxResult<Int> = project.atomically {
+    fun add(project: RomProject, name: String, template: Int, gender: Int, prizeMultiplier: Int, eyeMusic: Int = 0): FoxResult<Int> = project.atomically {
         if (gender !in 0..2) return@atomically FoxResult.Err("Gender is 0 male, 1 female or 2 neither")
         if (prizeMultiplier !in 0..0xFFFF) return@atomically FoxResult.Err("The prize multiplier is a 16 bit number")
+        if (eyeMusic !in 0..0xFFFF) return@atomically FoxResult.Err("The eye-contact music is a sequence number of 16 bits")
         val chars = when (val c = MessageText.encode(name)) { is FoxResult.Ok -> c.value; is FoxResult.Err -> return@atomically FoxResult.Err("Name: ${c.message}") }
         val synth = TrainerClassTables.syntheticOverlay(project)
             ?: return@atomically FoxResult.Err("A new class needs the synthetic overlay: apply the ARM9 expansion patch in the ROM toolbox first")
@@ -60,12 +64,31 @@ object NewTrainerClass {
             return@atomically FoxResult.Err("The synthetic overlay is not empty at 0x${area.toString(16)}: something else is there")
         }
 
+        val music = if (eyeMusic == 0) null else when (val m = TrainerEncounterMusic.load(project)) { is FoxResult.Ok -> m.value.rows + EncounterMusicRow(count, eyeMusic, eyeMusic); is FoxResult.Err -> return@atomically m }
+        if (music != null) {
+            val musicMoved = arm9.u32(HgssLayout.ENCOUNTER_MUSIC_POINTER_ARM9) != HgssLayout.ENCOUNTER_MUSIC_VANILLA_ADDRESS.toLong()
+            if (music.size > HgssLayout.MAX_TRAINER_CLASSES) return@atomically FoxResult.Err("The eye-contact music table has no room for another row")
+            if (arm9.u8(HgssLayout.ENCOUNTER_MUSIC_COUNT_ARM9 + 1) != 0x2B) return@atomically FoxResult.Err("ARM9 0x${HgssLayout.ENCOUNTER_MUSIC_COUNT_ARM9.toString(16)} is not the `cmp r3, #count` the music search uses")
+            if (!musicMoved && (HgssLayout.ENCOUNTER_MUSIC_AREA until HgssLayout.ENCOUNTER_MUSIC_AREA + HgssLayout.ENCOUNTER_MUSIC_AREA_SIZE).any { synth[it] != 0.toByte() }) {
+                return@atomically FoxResult.Err("The synthetic overlay is not empty at 0x${HgssLayout.ENCOUNTER_MUSIC_AREA.toString(16)}: something else is there")
+            }
+        }
+
         val out = synth.copyOf()
+        music?.forEachIndexed { i, r ->
+            val at = HgssLayout.ENCOUNTER_MUSIC_AREA + i * 6
+            out.putU16(at, r.trainerClass); out.putU16(at + 2, r.first); out.putU16(at + 4, r.second)
+        }
         genders.forEachIndexed { i, g -> out[area + i] = g.toByte() }
         rows.forEachIndexed { i, e -> out.putU16(prizeAt + i * 4, e.trainerClass); out.putU16(prizeAt + i * 4 + 2, e.multiplier) }
         val genderPointer = (HgssLayout.SYNTHETIC_OVERLAY_ADDRESS + area).toLong()
         val prizePointer = (HgssLayout.SYNTHETIC_OVERLAY_ADDRESS + prizeAt).toLong()
-        arm9.copyOf().also { it.putU32(HgssLayout.TRAINER_CLASS_GENDER_POINTER_ARM9, genderPointer) }.let { (project.writeArm9(it) as? FoxResult.Err)?.let { e -> return@atomically e } }
+        val newArm9 = arm9.copyOf().also { it.putU32(HgssLayout.TRAINER_CLASS_GENDER_POINTER_ARM9, genderPointer) }
+        if (music != null) {
+            newArm9.putU32(HgssLayout.ENCOUNTER_MUSIC_POINTER_ARM9, (HgssLayout.SYNTHETIC_OVERLAY_ADDRESS + HgssLayout.ENCOUNTER_MUSIC_AREA).toLong())
+            newArm9[HgssLayout.ENCOUNTER_MUSIC_COUNT_ARM9] = music.size.toByte()
+        }
+        (project.writeArm9(newArm9) as? FoxResult.Err)?.let { return@atomically it }
         overlay.putU32(HgssLayout.PRIZE_TABLE_POINTER_OVERLAY, prizePointer)
         overlay.putU32(HgssLayout.PRIZE_TABLE_POINTER_PLUS_2_OVERLAY, prizePointer + 2)
         for (at in HgssLayout.PRIZE_COUNT_IMMEDIATES_OVERLAY) {

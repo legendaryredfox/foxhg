@@ -194,6 +194,19 @@ object HgssLayout {
     const val CLASS_TABLE_AREA_PRIZES = CLASS_TABLE_AREA + 0x100
     const val CLASS_TABLE_AREA_SIZE = 0x500
 
+    /**
+     * The eye-contact music table (`sTrainerEncounterMusicParam`, decompressed ARM9): [ENCOUNTER_MUSIC_VANILLA_ROWS] rows of three u16 (class, the sequence of
+     * region 0, the sequence of region 1) at [ENCOUNTER_MUSIC_VANILLA_ADDRESS]; `FieldBGM_GetEyesMeetForTrainer` searches it by class through the literal
+     * pool word at [ENCOUNTER_MUSIC_POINTER_ARM9] with `cmp r3, #rows` (immediate at [ENCOUNTER_MUSIC_COUNT_ARM9], opcode byte `2B` after it). A class that is
+     * not in it plays the sequence 1108 (the pool word before the pointer). Moved to [ENCOUNTER_MUSIC_AREA] when a class is added with its own music.
+     */
+    const val ENCOUNTER_MUSIC_POINTER_ARM9 = 0x550E0
+    const val ENCOUNTER_MUSIC_COUNT_ARM9 = 0x550D4
+    const val ENCOUNTER_MUSIC_VANILLA_ADDRESS = 0x020FC61C
+    const val ENCOUNTER_MUSIC_VANILLA_ROWS = 44
+    const val ENCOUNTER_MUSIC_AREA = CLASS_TABLE_AREA + CLASS_TABLE_AREA_SIZE
+    const val ENCOUNTER_MUSIC_AREA_SIZE = 0x600
+
     /** Front pictures: [TRAINER_FRONT_SPRITES] has this many files per class. */
     const val FILES_PER_TRAINER_CLASS_PICTURE = 5
 }

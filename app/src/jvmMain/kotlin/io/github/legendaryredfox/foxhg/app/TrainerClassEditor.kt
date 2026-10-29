@@ -62,8 +62,8 @@ class TrainerClassEditorModel(private val project: RomProject, private val onCha
     }
 
     /** Adds a class at the end of the list (see [NewTrainerClass]) and reloads the tables; returns why it failed, or null. */
-    fun addClass(name: String, template: Int, gender: Int, multiplier: Int): String? {
-        val id = when (val r = NewTrainerClass.add(project, name.trim(), template, gender, multiplier)) {
+    fun addClass(name: String, template: Int, gender: Int, multiplier: Int, eyeMusic: Int = 0): String? {
+        val id = when (val r = NewTrainerClass.add(project, name.trim(), template, gender, multiplier, eyeMusic)) {
             is FoxResult.Ok -> r.value
             is FoxResult.Err -> return r.message
         }
@@ -137,6 +137,7 @@ private fun AddClassCard(model: TrainerClassEditorModel) {
     var template by remember { mutableStateOf(0) }
     var gender by remember { mutableStateOf(0) }
     var multiplier by remember { mutableStateOf(5) }
+    var music by remember { mutableStateOf(0) }
     var message by remember { mutableStateOf<String?>(null) }
     var failed by remember { mutableStateOf(false) }
     SectionCard(
@@ -149,8 +150,9 @@ private fun AddClassCard(model: TrainerClassEditorModel) {
             PickerField(stringResource(Res.string.trainer_class_add_copy), template, model.names?.trainerClasses ?: emptyList(), { template = it }, Modifier.width(240.dp), tag = "Copy the picture of")
             PickerField(stringResource(Res.string.trainer_class_add_gender), gender, TrainerClassGenders.NAMES, { gender = it }, Modifier.width(140.dp), tag = "New class gender")
             NumberField(stringResource(Res.string.trainer_class_add_prize), multiplier, 0..65535, { multiplier = it }, Modifier.width(140.dp))
+            NumberField(stringResource(Res.string.trainer_class_add_music), music, 0..65535, { music = it }, Modifier.width(260.dp))
             OutlinedButton(onClick = {
-                val problem = model.addClass(name, template, gender, multiplier)
+                val problem = model.addClass(name, template, gender, multiplier, music)
                 failed = problem != null
                 message = problem?.let { tr(Res.string.trainer_class_add_failed_x, it) } ?: tr(Res.string.trainer_class_added_x, model.lastAdded)
                 if (problem == null) name = ""

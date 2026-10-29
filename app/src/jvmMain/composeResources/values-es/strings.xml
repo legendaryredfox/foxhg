@@ -1131,4 +1131,5 @@
     <string name="trainer_class_add_button">Añadir clase</string>
     <string name="trainer_class_add_failed_x">No se pudo añadir la clase: %1$s</string>
     <string name="trainer_class_added_x">Clase %1$s añadida</string>
+    <string name="trainer_class_add_music">Música de contacto visual (secuencia, 0 = el tema del Youngster)</string>
 </resources>

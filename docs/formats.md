@@ -674,11 +674,15 @@ name FOXHG from the grown bank is in RAM while the battle starts). Things found 
 - Prize table: `sPrizeMoneyTbl[0x81][2]` at overlay 12 0x34C04 (RAM 0x0226C4C4), searched by class id in `CalcPrizeMoney` (a class that is not found gets row 2). Two literal pool
   words in the overlay hold the table (0x8380) and the table + 2 (0x8384), and three THUMB `cmp r4, #0x81` (`81 2C` at 0x8310, 0x8314, 0x831C) hold the row count. The rows after the
   table (0x34E08) are another table, so it can not grow in place. Disassembled with `arm-none-eabi-objdump -Mforce-thumb`.
-- Eye-contact music: `sTrainerEncounterMusicParam` in `field_bgm.c` is searched too; a class that is missing plays the Youngster theme (`SEQ_GS_EYE_J_SHOUNEN`), so a new class
-  needs nothing there. Not edited by foxhg.
+- Eye-contact music: `sTrainerEncounterMusicParam` (`field_bgm.c`) is 44 rows of three u16 (class, region 0 sequence, region 1 sequence) at ARM9 0xFC61C (RAM 0x020FC61C; row 0 is
+  Youngster, 1108 and 1108), searched by class in `FieldBGM_GetEyesMeetForTrainer` (ARM9 0x55098). One literal pool word at ARM9 0x550E0 holds the table address, the word before
+  it (0x550DC) is the constant 1108 returned for a class that is not found, and the loop is `cmp r3, #44` (`2C 2B` at 0x550D4). The 44 rows are followed by other data at 0xFC724, so
+  a longer table is moved. DSPRE's offsets for HeartGold (0x550D8) do not match this ROM; the disassembly above does. A class without a row plays 1108, so a class needs
+  a row only for another theme; `NewTrainerClass.add(..., eyeMusic)` appends `{class, music, music}` (both regions) in the synthetic overlay at 0x5500 (0x600 bytes) and sets the
+  pointer and the count. Real-ROM test only; **[UNVERIFIED]** in game (the eye-contact music plays only when a trainer sees the player on a map).
 - Class pictures: `a/0/5/8` has 5 files per class in class order, so a new class appends 5 files (a copy of another class's).
 - Where foxhg puts the tables: the synthetic overlay (the ARM9 expansion patch must be applied) at 0x5000 (gender, 0x100 bytes) and 0x5100 (prize rows, 4 bytes each), a block of
-  0x500 bytes between the mart area (0x4000) and the camera routine (0x115B0). The ARM9 word and the two overlay words are set to 0x023C8000 + those offsets and the three
+  0x500 bytes between the mart area (0x4000) and the camera routine (0x115B0); the music table has its own block after it. The ARM9 word and the two overlay words are set to 0x023C8000 + those offsets and the three
   immediates to the new row count. The tables are read through those pointers, so the Trainer classes editor keeps working after a class is added.
 - Tests: `RealRomNewTrainerClassTest` (tables, name, pictures, a second class, refusals). In the game (`NewTrainerClassInGameEmulatorTest`, 2026-10-29): a new trainer of the new
   class FOXCLS (a copy of the Youngster picture, prize multiplier 20) starts a battle that reads "You are challenged by FOXCLS FOXHG!" with the copied picture on screen, and winning
