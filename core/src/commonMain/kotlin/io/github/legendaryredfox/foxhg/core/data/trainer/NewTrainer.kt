@@ -22,16 +22,20 @@ import io.github.legendaryredfox.foxhg.core.text.TextEntry
  * `script_739` share one body (so trainers 738 and 739 already work) and `script_740`, the game's own eye-contact script, belongs to the engine, so
  * trainer 740 can only be fought from a `TrainerBattle` in a script. From trainer 741 on this appends `script_<trainer>: GoTo script_1` at the end
  * of the file (the shared body reads the trainer from the number of the running script, so a jump keeps it). The game also keeps whether a trainer
- * was beaten in the flag `0x550 + trainer`, which for trainers from 738 on is a flag the game names unknown (0x832 and up).
+ * was beaten in the flag `0x550 + trainer`, which for trainers from 735 on is a flag the game names unknown (0x82E and up). No script or object
+ * of the vanilla ROM uses a flag from 0x82E to 0x963 (`RealRomTrainerFlagScanTest`), so trainers up to 1043 get a flag of their own; the next flag
+ * is a story flag, so there is no trainer after that.
  */
 object NewTrainer {
-    /** Trainers are numbered by a `u16` in the message table and the scripts. */
-    const val MAX_TRAINERS = 0xFFFF
+    /** Trainer flags are `0x550 + trainer`; the first flag a script or object uses above the trainer block is 0x964. */
+    const val FIRST_USED_FLAG_ABOVE_TRAINERS = 0x964
+    private const val TRAINER_FLAG_BASE = 0x550
+    const val MAX_TRAINERS = FIRST_USED_FLAG_ABOVE_TRAINERS - TRAINER_FLAG_BASE
 
     fun add(project: RomProject, name: String, template: Int): FoxResult<Int> = project.atomically {
         val table = when (val t = TrainerTable.load(project)) { is FoxResult.Ok -> t.value; is FoxResult.Err -> return@atomically t }
         val count = table.trainers.size
-        if (count >= MAX_TRAINERS) return@atomically FoxResult.Err("The game numbers trainers with 16 bits: there is no room for another one")
+        if (count >= MAX_TRAINERS) return@atomically FoxResult.Err("Trainer $count would use flag 0x${(TRAINER_FLAG_BASE + count).toString(16).uppercase()}, which the game already uses for something else: the most trainers are $MAX_TRAINERS")
         val source = table.trainers.getOrNull(template) ?: return@atomically FoxResult.Err("There is no trainer $template to copy (0 to ${count - 1})")
         val chars = when (val c = MessageText.encode(name)) { is FoxResult.Ok -> c.value; is FoxResult.Err -> return@atomically FoxResult.Err("Name: ${c.message}") }
 
