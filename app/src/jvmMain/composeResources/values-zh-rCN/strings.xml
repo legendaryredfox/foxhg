@@ -385,6 +385,13 @@
     <string name="ground_item_what_the_player_finds">玩家找到的东西</string>
     <string name="ground_item_quantity">数量</string>
     <string name="ground_item_no_overworld_event_runs_script_x_p">没有地图事件运行脚本 %1$s：请把它放在某张地图的物体上来放置这个球。</string>
+    <string name="ground_item_manage_title">添加或移除精灵球</string>
+    <string name="ground_item_manage_subtitle">新的精灵球会加在列表末尾，使用下一个脚本编号：把这个编号填到某张地图的对象上即可放置。没有事件、告示牌或脚本使用某个精灵球时即可移除；其后的精灵球编号各减一，引用它们的事件和脚本也随之更新。</string>
+    <string name="ground_item_add_button">添加</string>
+    <string name="ground_item_new_quantity">新精灵球的数量</string>
+    <string name="ground_item_remove_selected">移除此精灵球</string>
+    <string name="ground_item_added_x">已添加精灵球 %1$s。</string>
+    <string name="ground_item_removed_x">已移除精灵球 %1$s。</string>
     <string name="hidden_item_search_items_or_an_index">搜索道具或索引…</string>
     <string name="hidden_item_x_of_x_spots">%1$s / %2$s 个地点</string>
     <string name="hidden_item_the_game_reserves_room_for_x_spots">游戏为 %1$s 个地点预留了空间，因此新增一个需要先移除一个。</string>

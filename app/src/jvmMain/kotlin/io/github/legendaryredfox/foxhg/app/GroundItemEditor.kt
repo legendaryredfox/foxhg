@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.platform.testTag
+import androidx.compose.runtime.remember
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -74,6 +77,18 @@ class GroundItemEditorModel(private val project: RomProject, private val onChang
 
     fun select(position: Int) { if (position in balls.indices) selectedIndex = position }
 
+    /** Adds a ball and selects it; the message says what happened. */
+    fun addBall(item: Int, quantity: Int): String? = when (val r = GroundItems.add(project, item, quantity, itemCount = names?.items?.size ?: 0x10000)) {
+        is FoxResult.Ok -> { reload(); selectedIndex = balls.lastIndex; onChanged(); null }
+        is FoxResult.Err -> r.message
+    }
+
+    /** Removes the selected ball; null when it went, else why it stays. */
+    fun removeSelectedBall(): String? = when (val r = GroundItems.remove(project, selected?.scriptNumber ?: 0)) {
+        is FoxResult.Ok -> { reload(); selectedIndex = selectedIndex.coerceAtMost(balls.lastIndex); onChanged(); null }
+        is FoxResult.Err -> r.message
+    }
+
     fun change(item: Int, quantity: Int) {
         val ball = selected ?: return
         when (val r = GroundItems.change(project, ball.scriptNumber, item, quantity, itemCount = names?.items?.size ?: 0x10000)) {
@@ -104,6 +119,7 @@ fun GroundItemEditor(model: GroundItemEditorModel, modifier: Modifier = Modifier
         val ball = model.selected
         DetailPane {
             Chip(stringResource(Res.string.ground_item_x_item_balls, model.balls.size))
+            AddBallCard(model)
             if (ball != null) {
                 EditorHeader(ball.scriptNumber.toString(), model.itemName(ball.item))
                 SectionCard(stringResource(Res.string.ground_item_ball), subtitle = stringResource(Res.string.ground_item_what_the_player_finds)) {
@@ -120,5 +136,31 @@ fun GroundItemEditor(model: GroundItemEditorModel, modifier: Modifier = Modifier
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AddBallCard(model: GroundItemEditorModel) {
+    var item by remember { mutableIntStateOf(17) }
+    var quantity by remember { mutableIntStateOf(1) }
+    var message by remember { mutableStateOf<String?>(null) }
+    var failed by remember { mutableStateOf(false) }
+    SectionCard(stringResource(Res.string.ground_item_manage_title), subtitle = stringResource(Res.string.ground_item_manage_subtitle)) {
+        FieldFlow {
+            ItemPicker(stringResource(Res.string.evolution_item), item, model.names?.items ?: emptyList(), { item = it }, Modifier.width(240.dp))
+            NumberField(stringResource(Res.string.ground_item_new_quantity), quantity, 1..GroundItems.MAX_QUANTITY, { quantity = it }, Modifier.width(100.dp))
+            OutlinedButton(onClick = {
+                val problem = model.addBall(item, quantity)
+                failed = problem != null
+                message = problem ?: tr(Res.string.ground_item_added_x, model.selected?.scriptNumber ?: 0)
+            }, modifier = Modifier.testTag("add-ball")) { Text(stringResource(Res.string.ground_item_add_button)) }
+            OutlinedButton(onClick = {
+                val number = model.selected?.scriptNumber ?: 0
+                val problem = model.removeSelectedBall()
+                failed = problem != null
+                message = problem ?: tr(Res.string.ground_item_removed_x, number)
+            }, modifier = Modifier.testTag("remove-ball")) { Text(stringResource(Res.string.ground_item_remove_selected)) }
+        }
+        message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary) }
     }
 }

@@ -202,6 +202,25 @@ class ListEditorsUiEndToEndTest {
     }
 
     @Test
+    fun addingAndRemovingAnItemBallOnItsScreenChangesTheItemScriptFile() = withHeartGoldApp { _, project ->
+        val balls = { (io.github.legendaryredfox.foxhg.core.data.grounditem.GroundItems.load(project) as FoxResult.Ok).value }
+        assertEquals(255, balls().size)
+        open("Ground items")
+        tap(onNodeWithTag("add-ball"), inScrollPane = false)
+        waitForIdle()
+        assertEquals(256, balls().size, "the Add button appended a ball")
+        assertEquals(7255, balls().last().scriptNumber)
+        assertTrue(project.isDirty)
+        tap(onNodeWithTag("remove-ball"), inScrollPane = false)
+        waitForIdle()
+        assertEquals(255, balls().size, "the Remove button took it out again")
+        // the last vanilla ball is run by a map, so a second removal is refused and nothing changes
+        tap(onNodeWithTag("remove-ball"), inScrollPane = false)
+        waitForIdle()
+        assertEquals(255, balls().size)
+    }
+
+    @Test
     fun editingATownOnTheTownMapScreenWritesOverlay101() = withHeartGoldApp { _, project ->
         val table = { (io.github.legendaryredfox.foxhg.core.data.townmap.TownMap.load(project) as FoxResult.Ok).value }
         assertEquals(0x20, table().spots[0].redX)

@@ -389,6 +389,13 @@
     <string name="ground_item_what_the_player_finds">Lo que encuentra el jugador</string>
     <string name="ground_item_quantity">Cantidad</string>
     <string name="ground_item_no_overworld_event_runs_script_x_p">Ningún evento del mapa ejecuta el script %1$s: ponlo en un objeto de un mapa para colocar la bola.</string>
+    <string name="ground_item_manage_title">Añadir o quitar una bola</string>
+    <string name="ground_item_manage_subtitle">Una bola nueva va al final de la lista, con el siguiente número de script: pon ese número en un objeto de un mapa para colocarla. Se puede quitar una bola cuando ningún evento, letrero o script la ejecuta; las bolas siguientes bajan un número, junto con los eventos y scripts que las nombran.</string>
+    <string name="ground_item_add_button">Añadir</string>
+    <string name="ground_item_new_quantity">Cantidad de la bola nueva</string>
+    <string name="ground_item_remove_selected">Quitar esta bola</string>
+    <string name="ground_item_added_x">Bola %1$s añadida.</string>
+    <string name="ground_item_removed_x">Bola %1$s quitada.</string>
     <string name="hidden_item_search_items_or_an_index">Buscar objetos o un índice…</string>
     <string name="hidden_item_x_of_x_spots">%1$s de %2$s sitios</string>
     <string name="hidden_item_the_game_reserves_room_for_x_spots">El juego reserva sitio para %1$s sitios, así que uno nuevo necesita que se quite otro antes.</string>

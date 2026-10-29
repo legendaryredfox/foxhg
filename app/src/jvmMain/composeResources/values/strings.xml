@@ -389,6 +389,13 @@
     <string name="ground_item_what_the_player_finds">What the player finds</string>
     <string name="ground_item_quantity">Quantity</string>
     <string name="ground_item_no_overworld_event_runs_script_x_p">No overworld event runs script %1$s: put it on an overworld object of a map to place the ball.</string>
+    <string name="ground_item_manage_title">Add or remove a ball</string>
+    <string name="ground_item_manage_subtitle">A new ball goes at the end of the list, with the next script number: put that number on an overworld object of a map to place it. A ball can be removed when no event, sign or script runs it; the balls after it move one number down, with the events and scripts that name them.</string>
+    <string name="ground_item_add_button">Add</string>
+    <string name="ground_item_new_quantity">Quantity of the new ball</string>
+    <string name="ground_item_remove_selected">Remove this ball</string>
+    <string name="ground_item_added_x">Added ball %1$s.</string>
+    <string name="ground_item_removed_x">Removed ball %1$s.</string>
     <string name="hidden_item_search_items_or_an_index">Search items or an index…</string>
     <string name="hidden_item_x_of_x_spots">%1$s of %2$s spots</string>
     <string name="hidden_item_the_game_reserves_room_for_x_spots">The game reserves room for %1$s spots, so a new one needs a removed one first.</string>
