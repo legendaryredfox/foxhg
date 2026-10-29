@@ -29,12 +29,14 @@ class EmulatorDriver(rom: Path, private val saveDir: Path, corePath: Path = defa
     private val held = HashSet<Int>()
     private var touch: Pair<Int, Int>? = null
     private var lastFrame: VideoFrame? = null
+    private var recording: ArrayList<Short>? = null
 
     private val frontend = object : LibretroFrontend {
         override val systemDirectory: String = Files.createDirectories(saveDir.resolve("system")).toString()
         override val saveDirectory: String = Files.createDirectories(saveDir).toString()
         override fun variable(key: String): String? = OPTIONS[key].also { if (System.getenv("FOXHG_LOG_OPTIONS") != null) println("CORE OPTION $key -> $it") }
         override fun onVideoFrame(frame: VideoFrame) { lastFrame = frame }
+        override fun onAudio(data: ShortArray, frames: Int) { recording?.let { r -> for (i in 0 until minOf(frames * 2, data.size)) r.add(data[i]) } }
         override fun inputState(port: Int, device: Int, index: Int, id: Int): Short = also { if (System.getenv("FOXHG_LOG_INPUT") != null && device != Device.JOYPAD) println("INPUT port=$port device=$device index=$index id=$id touch=$touch") }.let { _ -> when {
             port != 0 -> 0
             device == Device.JOYPAD -> if (id in held) 1 else 0
@@ -60,6 +62,12 @@ class EmulatorDriver(rom: Path, private val saveDir: Path, corePath: Path = defa
     /** Frames run so far. */
     var frames: Int = 0
         private set
+
+    /** Starts keeping the sound the game makes (16 bit stereo, interleaved) until [stopRecording]. */
+    fun startRecording() { recording = ArrayList() }
+
+    /** The samples kept since [startRecording]. */
+    fun stopRecording(): ShortArray = (recording ?: error("not recording")).toShortArray().also { recording = null }
 
     /** Runs [count] frames with the buttons now held. */
     fun step(count: Int) {
