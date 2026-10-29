@@ -106,7 +106,7 @@ class RealRomNewTrainerTest {
         repeat(NewTrainer.MAX_TRAINERS - count) { assertEquals(count + it, NewTrainer.add(project, "T", 1).ok()) }
         assertEquals(NewTrainer.MAX_TRAINERS, TrainerTable.load(project).ok().trainers.size)
         val sizeBefore = TrainerTable.load(project).ok().trainers.size
-        assertTrue(NewTrainer.add(project, "TOO MANY", 1) is FoxResult.Err, "its flag 0x964 belongs to the story")
+        assertTrue(NewTrainer.add(project, "TOO MANY", 1) is FoxResult.Err, "its flag 0x960 is the game's own")
         assertEquals(sizeBefore, TrainerTable.load(project).ok().trainers.size, "the refusal changed nothing")
     }
 }

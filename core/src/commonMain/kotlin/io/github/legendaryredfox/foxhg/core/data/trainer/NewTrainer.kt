@@ -23,12 +23,12 @@ import io.github.legendaryredfox.foxhg.core.text.TextEntry
  * trainer 740 can only be fought from a `TrainerBattle` in a script. From trainer 741 on this appends `script_<trainer>: GoTo script_1` at the end
  * of the file (the shared body reads the trainer from the number of the running script, so a jump keeps it). The game also keeps whether a trainer
  * was beaten in the flag `0x550 + trainer`, which for trainers from 735 on is a flag the game names unknown (0x82E and up). No script or object
- * of the vanilla ROM uses a flag from 0x82E to 0x963 (`RealRomTrainerFlagScanTest`), so trainers up to 1043 get a flag of their own; the next flag
- * is a story flag, so there is no trainer after that.
+ * of the vanilla ROM uses a flag from 0x82E to 0x95F (`RealRomTrainerFlagScanTest`), so trainers up to 1039 get a flag of their own; 0x960 is set by
+ * the game's own code (`sys_flags.c`, set in a new game's save), then come 0x961 (follower) and 0x962 (Strength), so there is no trainer after that.
  */
 object NewTrainer {
-    /** Trainer flags are `0x550 + trainer`; the first flag a script or object uses above the trainer block is 0x964. */
-    const val FIRST_USED_FLAG_ABOVE_TRAINERS = 0x964
+    /** Trainer flags are `0x550 + trainer`; the first flag above the trainer block that the game uses is 0x960 (`FLAG_UNK_960`, then `FLAG_HAVE_FOLLOWER` and `FLAG_STRENGTH_ACTIVE`). */
+    const val FIRST_USED_FLAG_ABOVE_TRAINERS = 0x960
     private const val TRAINER_FLAG_BASE = 0x550
     const val MAX_TRAINERS = FIRST_USED_FLAG_ABOVE_TRAINERS - TRAINER_FLAG_BASE
 
