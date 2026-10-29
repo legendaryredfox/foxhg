@@ -351,6 +351,7 @@ class ListEditorsUiEndToEndTest {
         onAllNodesWithText(io.github.legendaryredfox.foxhg.core.sound.Sounds(project).name(1113)!!).onLast().performClick()
         waitForIdle()
         waitForIdle()
+        onNodeWithTag("play:seq1113").assertExists() // the picker shows a play button for the song it holds
         assertEquals(1113, (TrainerEncounterMusic.load(project) as FoxResult.Ok).value.of(youngster)!!.first)
         assertEquals(1108, (TrainerEncounterMusic.load(project) as FoxResult.Ok).value.of(youngster)!!.second, "the other region kept its song")
     }
@@ -787,6 +788,7 @@ class ListEditorsUiEndToEndTest {
         clickFirstText("Route 29", substring = true)
         onNodeWithTag("number:Weather").typeNumber(7)
         onNodeWithTag("number:Day music").typeNumber(1234)
+        onNodeWithTag("play:seq1234").assertExists() // the number field shows a play button for the sound it names
         tap(onNodeWithTag("chip:Bicycle"))
         waitForIdle()
 

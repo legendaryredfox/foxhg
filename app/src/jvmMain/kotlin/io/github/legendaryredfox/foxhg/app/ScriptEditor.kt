@@ -281,7 +281,7 @@ private fun ScriptSounds(text: String) {
         found.forEach { (command, id) ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("$command $id", style = io.github.legendaryredfox.foxhg.app.ui.Fox.mono, modifier = Modifier.width(160.dp))
-                if (command == tr(Res.string.script_playcry)) io.github.legendaryredfox.foxhg.app.ui.CryButton(id) else io.github.legendaryredfox.foxhg.app.ui.SoundButton(id)
+                io.github.legendaryredfox.foxhg.app.ui.Preview(if (command == tr(Res.string.script_playcry)) io.github.legendaryredfox.foxhg.app.ui.PreviewKind.CRY else io.github.legendaryredfox.foxhg.app.ui.PreviewKind.SOUND, id, named = true)
             }
         }
         io.github.legendaryredfox.foxhg.app.ui.AudioStatus()

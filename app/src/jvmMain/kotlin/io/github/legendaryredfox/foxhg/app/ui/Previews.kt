@@ -115,6 +115,26 @@ fun OverworldIcon(spriteEntry: Int, facing: Int = 1, size: Dp = 26.dp) {
     Picture(icons.overworld(spriteEntry, facing), size, tr(Res.string.previews_overworld_sprite))
 }
 
+/** What an id stands for, so a field can show it: a picture or a play button. */
+enum class PreviewKind { SPECIES, ITEM, TRAINER_CLASS, OVERWORLD, SOUND, CRY }
+
+/**
+ * The preview of [id] as [kind]: the icon of a species, an item or a trainer class, the overworld sprite of a sprite entry (looking
+ * [facing]: 0 up, 1 down, 2 left, 3 right), or a play button for a sound (with its name when [named]) or a species' cry. Fields get one by
+ * passing a [PreviewKind] (`NumberField`, `PickerField`), so an editor never wires pictures or players itself.
+ */
+@Composable
+fun Preview(kind: PreviewKind, id: Int, size: Dp = 26.dp, facing: Int = 1, named: Boolean = false) {
+    when (kind) {
+        PreviewKind.SPECIES -> PokemonIcon(id, size)
+        PreviewKind.ITEM -> ItemIcon(id, size)
+        PreviewKind.TRAINER_CLASS -> TrainerClassIcon(id, size)
+        PreviewKind.OVERWORLD -> OverworldIcon(id, facing, size)
+        PreviewKind.SOUND -> SoundButton(id, withName = named)
+        PreviewKind.CRY -> CryButton(id)
+    }
+}
+
 /** A square of [color] with a thin border, for things that have a colour instead of a picture (tile types). */
 @Composable
 fun Swatch(color: Color, size: Dp = 18.dp) {
@@ -124,17 +144,17 @@ fun Swatch(color: Color, size: Dp = 18.dp) {
 /** A species picker that shows each species' icon. */
 @Composable
 fun SpeciesPicker(label: String, selected: Int, species: List<String>, onSelect: (Int) -> Unit, modifier: Modifier = Modifier.then(Modifier)) {
-    PickerField(label, selected, species, onSelect, modifier, leading = { PokemonIcon(it, 22.dp) })
+    PickerField(label, selected, species, onSelect, modifier, preview = PreviewKind.SPECIES)
 }
 
 /** A trainer class picker that shows each class' picture. */
 @Composable
 fun TrainerClassPicker(label: String, selected: Int, classes: List<String>, onSelect: (Int) -> Unit, modifier: Modifier = Modifier.then(Modifier)) {
-    PickerField(label, selected, classes, onSelect, modifier, leading = { TrainerClassIcon(it, 26.dp) })
+    PickerField(label, selected, classes, onSelect, modifier, preview = PreviewKind.TRAINER_CLASS)
 }
 
 /** An item picker that shows each item's icon. */
 @Composable
 fun ItemPicker(label: String, selected: Int, items: List<String>, onSelect: (Int) -> Unit, modifier: Modifier = Modifier.then(Modifier)) {
-    PickerField(label, selected, items, onSelect, modifier, leading = { ItemIcon(it, 22.dp) })
+    PickerField(label, selected, items, onSelect, modifier, preview = PreviewKind.ITEM)
 }

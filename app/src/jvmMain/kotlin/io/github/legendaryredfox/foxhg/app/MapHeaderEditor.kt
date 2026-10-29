@@ -21,7 +21,7 @@ import io.github.legendaryredfox.foxhg.app.ui.FieldFlow
 import io.github.legendaryredfox.foxhg.app.ui.NumberField
 import io.github.legendaryredfox.foxhg.app.ui.PickerField
 import io.github.legendaryredfox.foxhg.app.ui.SectionCard
-import io.github.legendaryredfox.foxhg.app.ui.SoundButton
+import io.github.legendaryredfox.foxhg.app.ui.PreviewKind
 import io.github.legendaryredfox.foxhg.app.ui.ToggleChip
 import io.github.legendaryredfox.foxhg.core.data.mapheader.MapHeader
 
@@ -90,10 +90,8 @@ private fun Detail(model: MapHeaderEditorModel, h: MapHeader, onOpen: (EditorKin
 
     SectionCard(stringResource(Res.string.map_header_music_and_look)) {
         FieldFlow {
-            NumberField(stringResource(Res.string.map_header_day_music), h.musicDay, 0..65535, { v -> model.update { it.copy(musicDay = v) } }, Modifier.width(100.dp))
-            SoundButton(h.musicDay)
-            NumberField(stringResource(Res.string.map_header_night_music), h.musicNight, 0..65535, { v -> model.update { it.copy(musicNight = v) } }, Modifier.width(100.dp))
-            SoundButton(h.musicNight)
+            NumberField(stringResource(Res.string.map_header_day_music), h.musicDay, 0..65535, { v -> model.update { it.copy(musicDay = v) } }, Modifier.width(100.dp), preview = PreviewKind.SOUND)
+            NumberField(stringResource(Res.string.map_header_night_music), h.musicNight, 0..65535, { v -> model.update { it.copy(musicNight = v) } }, Modifier.width(100.dp), preview = PreviewKind.SOUND)
             NumberField(stringResource(Res.string.map_header_weather), h.weather, 0..127, { v -> model.update { it.withWeather(v) } }, Modifier.width(90.dp))
             NumberField(stringResource(Res.string.map_header_camera), h.camera, 0..63, { v -> model.update { it.withCamera(v) } }, Modifier.width(90.dp))
             NumberField(stringResource(Res.string.map_header_battle_background), h.battleBackground, 0..31, { v -> model.update { it.withBattleBackground(v) } }, Modifier.width(140.dp))

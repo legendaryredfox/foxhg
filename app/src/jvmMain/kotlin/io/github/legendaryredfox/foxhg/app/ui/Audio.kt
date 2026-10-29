@@ -129,10 +129,7 @@ fun SoundPicker(label: String, selected: Int, range: IntRange, onSelect: (Int) -
         NumberField(label, selected, range, onSelect, modifier)
         return
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
-        PickerField(label, selected, options, { if (it in range) onSelect(it) }, modifier, tag = tag)
-        Box(Modifier.height(36.dp), contentAlignment = Alignment.Center) { SoundButton(selected, withName = false) }
-    }
+    PickerField(label, selected, options, { if (it in range) onSelect(it) }, modifier, tag = tag, preview = PreviewKind.SOUND)
 }
 
 /** What went wrong with the last attempt to play something, if anything. */

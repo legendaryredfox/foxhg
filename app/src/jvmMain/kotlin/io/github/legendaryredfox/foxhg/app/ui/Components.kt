@@ -116,7 +116,21 @@ fun NumberField(
     modifier: Modifier = Modifier.width(96.dp),
     /** Name for tests to find the field by (`number:<tag>`); the label by default. */
     tag: String = label,
+    /** What the number stands for: its picture or play button is drawn next to the field (see [Preview]). */
+    preview: PreviewKind? = null,
 ) {
+    if (preview == null) {
+        NumberFieldBody(label, value, range, onChange, modifier, tag)
+    } else {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) {
+            NumberFieldBody(label, value, range, onChange, modifier, tag)
+            Box(Modifier.height(Fox.fieldHeight), contentAlignment = Alignment.Center) { Preview(preview, value, named = true) }
+        }
+    }
+}
+
+@Composable
+private fun NumberFieldBody(label: String, value: Int, range: IntRange, onChange: (Int) -> Unit, modifier: Modifier, tag: String) {
     var text by remember(value) { mutableStateOf(value.toString()) }
     val invalid = text.toIntOrNull()?.let { it !in range } ?: true
     Column(modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -184,7 +198,10 @@ fun PickerField(
     leading: (@Composable (Int) -> Unit)? = null,
     /** Name for tests to find the field by (`picker:<tag>`); the label by default, so a translated label needs the English name here. */
     tag: String = label,
+    /** What the ids stand for: each option and the selected one get their picture or play button (see [Preview]); [leading] wins when both are given. */
+    preview: PreviewKind? = null,
 ) {
+    val leading = leading ?: preview?.let { kind -> { id: Int -> Preview(kind, id, 22.dp) } }
     var open by remember { mutableStateOf(false) }
     // Closing the popup inside the pointer event that picked a row disposes its scene while that event is still being
     // dispatched ("RootNodeOwner is already disposed"), so selection and close run after the event.
