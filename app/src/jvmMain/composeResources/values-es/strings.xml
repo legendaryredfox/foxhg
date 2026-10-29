@@ -1132,4 +1132,14 @@
     <string name="trainer_class_add_failed_x">No se pudo añadir la clase: %1$s</string>
     <string name="trainer_class_added_x">Clase %1$s añadida</string>
     <string name="trainer_class_add_music">Música de contacto visual (secuencia, 0 = el tema del Youngster)</string>
+    <string name="trainer_class_music_title">Música de contacto visual</string>
+    <string name="trainer_class_music_subtitle">La música que suena cuando un entrenador de la clase ve al jugador, una para cada número de región del mapa (el número de sonido del archivo de sonido del juego). Una clase sin fila suena con 1108, la del Youngster. Una fila para una clase que no la tiene mueve la tabla al overlay sintético, así que necesita el parche de expansión del ARM9 de la caja de herramientas de la ROM.</string>
+    <string name="trainer_class_music_first">Música, región 0</string>
+    <string name="trainer_class_music_second">Música, región 1</string>
+    <string name="trainer_class_music_give_title">Dar una música a una clase</string>
+    <string name="trainer_class_music_class">Clase</string>
+    <string name="trainer_class_music_song">Música (número de sonido)</string>
+    <string name="trainer_class_music_set">Fijar</string>
+    <string name="trainer_class_music_failed_x">No se pudo fijar la música: %1$s</string>
+    <string name="trainer_class_music_done_x">Música fijada para %1$s</string>
 </resources>

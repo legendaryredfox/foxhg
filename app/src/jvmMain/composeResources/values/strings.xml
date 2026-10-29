@@ -1132,4 +1132,14 @@
     <string name="trainer_class_add_failed_x">Could not add the class: %1$s</string>
     <string name="trainer_class_added_x">Added class %1$s</string>
     <string name="trainer_class_add_music">Eye-contact music (sequence, 0 = the Youngster theme)</string>
+    <string name="trainer_class_music_title">Eye-contact music</string>
+    <string name="trainer_class_music_subtitle">The song that plays when a trainer of the class sees the player, one for each region number of the map (the sound number of the game\'s sound archive). A class with no row plays 1108, the Youngster\'s. A row for a class that has none moves the table to the synthetic overlay, so it needs the ARM9 expansion patch from the ROM toolbox.</string>
+    <string name="trainer_class_music_first">Song, region 0</string>
+    <string name="trainer_class_music_second">Song, region 1</string>
+    <string name="trainer_class_music_give_title">Give a class a song</string>
+    <string name="trainer_class_music_class">Class</string>
+    <string name="trainer_class_music_song">Song (sound number)</string>
+    <string name="trainer_class_music_set">Set</string>
+    <string name="trainer_class_music_failed_x">Could not set the song: %1$s</string>
+    <string name="trainer_class_music_done_x">Song set for %1$s</string>
 </resources>

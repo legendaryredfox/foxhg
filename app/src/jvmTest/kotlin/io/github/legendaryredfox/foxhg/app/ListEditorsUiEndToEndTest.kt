@@ -47,6 +47,7 @@ import io.github.legendaryredfox.foxhg.core.data.matrix.GameMatrix
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerMessages
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
 import io.github.legendaryredfox.foxhg.core.data.trainerclass.TrainerClassGenders
+import io.github.legendaryredfox.foxhg.core.data.trainerclass.TrainerEncounterMusic
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -334,6 +335,19 @@ class ListEditorsUiEndToEndTest {
         assertEquals("FOXCLS", project.names!!.trainerClasses[before])
         assertEquals(before + 1, TrainerClassGenders.load(project).let { (it as FoxResult.Ok).value.genders.size })
         onNodeWithText("Added class $before", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun editingTheEyeContactSongOfAClassOnTheTrainerClassScreen() = withHeartGoldApp { _, project ->
+        val youngster = project.names!!.trainerClasses.indexOf("Youngster")
+        open("Trainer classes")
+        tap(onNodeWithTag("music-toggle"), inScrollPane = false)
+        onNodeWithTag("search:Search classes…").performTextInput("youngster")
+        waitForIdle()
+        onNodeWithTag("number:%03d  Youngster - Song, region 0".format(youngster)).typeNumber(1113)
+        waitForIdle()
+        assertEquals(1113, (TrainerEncounterMusic.load(project) as FoxResult.Ok).value.of(youngster)!!.first)
+        assertEquals(1108, (TrainerEncounterMusic.load(project) as FoxResult.Ok).value.of(youngster)!!.second, "the other region kept its song")
     }
 
     @Test

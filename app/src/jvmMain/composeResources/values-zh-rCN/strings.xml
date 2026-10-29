@@ -1121,4 +1121,14 @@
     <string name="trainer_class_add_failed_x">无法添加职业：%1$s</string>
     <string name="trainer_class_added_x">已添加职业 %1$s</string>
     <string name="trainer_class_add_music">对视音乐（序列号，0 = Youngster 的音乐）</string>
+    <string name="trainer_class_music_title">对视音乐</string>
+    <string name="trainer_class_music_subtitle">该职业的训练家看到玩家时播放的音乐，地图的每个地区编号各有一首（游戏声音档案中的声音编号）。没有记录的职业播放 1108，即 Youngster 的音乐。为没有记录的职业添加记录会把表移到合成 overlay，因此需要 ROM 工具箱中的 ARM9 扩展补丁。</string>
+    <string name="trainer_class_music_first">音乐，地区 0</string>
+    <string name="trainer_class_music_second">音乐，地区 1</string>
+    <string name="trainer_class_music_give_title">为职业指定音乐</string>
+    <string name="trainer_class_music_class">职业</string>
+    <string name="trainer_class_music_song">音乐（声音编号）</string>
+    <string name="trainer_class_music_set">设置</string>
+    <string name="trainer_class_music_failed_x">无法设置音乐：%1$s</string>
+    <string name="trainer_class_music_done_x">已为 %1$s 设置音乐</string>
 </resources>
