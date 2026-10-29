@@ -4,6 +4,10 @@ import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
 import io.github.legendaryredfox.foxhg.core.project.RomProject
+import io.github.legendaryredfox.foxhg.core.script.LabelRef
+import io.github.legendaryredfox.foxhg.core.script.ScriptCommand
+import io.github.legendaryredfox.foxhg.core.script.ScriptEntry
+import io.github.legendaryredfox.foxhg.core.script.ScriptItem
 import io.github.legendaryredfox.foxhg.core.text.TextArchive
 import java.nio.file.Files
 import java.nio.file.Path
@@ -69,5 +73,30 @@ class RealRomNewTrainerTest {
         assertTrue(NewTrainer.add(project, "FOXHG", -1) is FoxResult.Err)
         assertTrue(NewTrainer.add(project, "A name with {BAD CODE", 1) is FoxResult.Err, "a name the game can not show")
         assertFalse(project.isDirty, "nothing was written")
+    }
+
+    @Test
+    fun trainersFrom741OnGetAnEntryInTheTrainerScriptFileThatJumpsToTheSharedBody() = withProject { project ->
+        val scripts = { (ScriptEntry.load(project).ok().records[NewTrainer.TRAINER_SCRIPT_FILE] as ScriptEntry.Script).file }
+        val before = scripts()
+        assertEquals(740, before.scriptCount)
+        // 738 and 739 already have the shared body, 740 is the engine's eye-contact script: nothing is added for them
+        for (id in 738..740) assertEquals(id, NewTrainer.add(project, "T$id", 1).ok())
+        assertEquals(before, scripts(), "trainers up to 740 leave the file alone")
+        assertEquals(741, NewTrainer.add(project, "T741", 1).ok())
+        val after = scripts()
+        assertEquals(741, after.scriptCount)
+        assertEquals(null, after.problem())
+        assertEquals(before.items, after.items.take(before.items.size), "the 740 entries did not change")
+        assertEquals(
+            listOf(ScriptItem.Label(LabelRef(LabelRef.Kind.SCRIPT, 741)), ScriptItem.Instruction(ScriptCommand(0x16, listOf(0L), LabelRef(LabelRef.Kind.SCRIPT, 1)))),
+            after.items.drop(before.items.size),
+        )
+        assertEquals(742, NewTrainer.add(project, "T742", 1).ok())
+        assertEquals(742, scripts().scriptCount)
+
+        // undo takes the entries back with the trainers
+        while (project.canUndo) project.undo()
+        assertEquals(before, scripts())
     }
 }

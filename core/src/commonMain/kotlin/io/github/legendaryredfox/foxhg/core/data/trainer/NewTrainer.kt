@@ -3,6 +3,11 @@ package io.github.legendaryredfox.foxhg.core.data.trainer
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.project.RomProject
+import io.github.legendaryredfox.foxhg.core.script.LabelRef
+import io.github.legendaryredfox.foxhg.core.script.ScriptCommand
+import io.github.legendaryredfox.foxhg.core.script.ScriptEntry
+import io.github.legendaryredfox.foxhg.core.script.ScriptFile
+import io.github.legendaryredfox.foxhg.core.script.ScriptItem
 import io.github.legendaryredfox.foxhg.core.text.MessageText
 import io.github.legendaryredfox.foxhg.core.text.TextArchive
 import io.github.legendaryredfox.foxhg.core.text.TextEntry
@@ -13,10 +18,11 @@ import io.github.legendaryredfox.foxhg.core.text.TextEntry
  * (`a/1/3/1`, 0 for none, see [TrainerMessages]; the vanilla file stops at trainer 734, so the missing offsets of 735 to 737 are filled with 0 as well). The new trainer starts as a copy of another one, so it is a working trainer at once; its
  * messages are added in the messages editor. A refusal leaves the project as it was.
  *
- * What this does not do: a trainer on a map uses the script `3000 + trainer - 1` of script file 953, which has entries for the 737 trainers of the
- * game and then three entries of its own (738 to 740, the rematch phone call among them), so a new trainer can not be met from the shared trainer
- * script without moving those; a script of the map starts its battle with `TrainerBattle` instead. The game also keeps whether a trainer was beaten
- * in the flag `0x550 + trainer`, which for trainers from 738 on is a flag the game names unknown (0x832 and up).
+ * A trainer on a map runs the script `3000 + trainer - 1`, entry `script_<trainer>` of script file 953. The vanilla file has 740 entries: `script_1` to
+ * `script_739` share one body (so trainers 738 and 739 already work) and `script_740`, the game's own eye-contact script, belongs to the engine, so
+ * trainer 740 can only be fought from a `TrainerBattle` in a script. From trainer 741 on this appends `script_<trainer>: GoTo script_1` at the end
+ * of the file (the shared body reads the trainer from the number of the running script, so a jump keeps it). The game also keeps whether a trainer
+ * was beaten in the flag `0x550 + trainer`, which for trainers from 738 on is a flag the game names unknown (0x832 and up).
  */
 object NewTrainer {
     /** Trainers are numbered by a `u16` in the message table and the scripts. */
@@ -39,6 +45,23 @@ object NewTrainer {
         val grown = TextArchive(names.key, names.entries + TextEntry(chars))
         (banks.with(TextBanks.TRAINER_NAMES, grown).save(project) as? FoxResult.Err)?.let { return@atomically it }
         (TrainerMessages(messages.trainers, messages.triggers, messages.offsets + List(count + 1 - messages.offsets.size) { 0 }, messages.texts).save(project) as? FoxResult.Err)?.let { return@atomically it }
+        (giveScript(project, count) as? FoxResult.Err)?.let { return@atomically it }
         FoxResult.Ok(count)
+    }
+
+    /** Script file of the trainers placed on maps. */
+    const val TRAINER_SCRIPT_FILE = 953
+    private const val GO_TO = 0x16
+
+    /** Makes sure the script file 953 has an entry `script_<trainer>`; a trainer the file already covers changes nothing. */
+    private fun giveScript(project: RomProject, trainer: Int): FoxResult<Unit> {
+        val records = when (val r = ScriptEntry.load(project)) { is FoxResult.Ok -> r.value; is FoxResult.Err -> return r }
+        val file = (records.records.getOrNull(TRAINER_SCRIPT_FILE) as? ScriptEntry.Script)?.file ?: return FoxResult.Err("Script file $TRAINER_SCRIPT_FILE is not a script")
+        if (file.scriptCount >= trainer) return FoxResult.Ok(Unit)
+        val jump = ScriptItem.Instruction(ScriptCommand(GO_TO, listOf(0L), LabelRef(LabelRef.Kind.SCRIPT, 1)))
+        val items = file.items + (file.scriptCount + 1..trainer).flatMap { listOf(ScriptItem.Label(LabelRef(LabelRef.Kind.SCRIPT, it)), jump) }
+        val grown = ScriptFile(items)
+        grown.problem()?.let { return FoxResult.Err("Script file $TRAINER_SCRIPT_FILE: $it") }
+        return records.with(TRAINER_SCRIPT_FILE, ScriptEntry.Script(grown)).save(project)
     }
 }
