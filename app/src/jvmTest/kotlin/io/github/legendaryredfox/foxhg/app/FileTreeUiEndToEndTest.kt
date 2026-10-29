@@ -61,6 +61,27 @@ class FileTreeUiEndToEndTest {
     }
 
     @Test
+    fun exportingTheRomAsAFolderForDspre() = withHeartGoldApp { model, project ->
+        open("Items")
+        clickFirstText("Poké Ball")
+        onNodeWithTag("number:Price").performTextReplacement("4321")
+        waitForIdle()
+        open("Files")
+        val parent = tempDir("foxhg-dspre-export")
+        withChoosers(directory = { _, _ -> parent }) {
+            onNodeWithTag("export-dspre").performClick()
+            waitForIdle()
+        }
+        model.awaitTask() // the export runs in the background
+        waitForIdle()
+        val folder = parent.resolve(model.romPath!!.fileName.toString().removeSuffix(".nds") + "_DSPRE_contents")
+        assertTrue(model.status!!.startsWith("Exported the DSPRE folder to"), model.status ?: model.error)
+        assertTrue(Files.exists(folder.resolve("header.bin")) && Files.exists(folder.resolve("arm9.bin")) && Files.isDirectory(folder.resolve("overlay")))
+        assertContentEquals(project.read("a/0/1/7"), Files.readAllBytes(folder.resolve("data/a/0/1/7")), "the folder carries the edit")
+        assertEquals(project.rom.files.size, Files.walk(folder.resolve("data")).use { s -> s.filter { Files.isRegularFile(it) }.count() }.toInt())
+    }
+
+    @Test
     fun exportingOntoTheOpenRomIsRefused() = withHeartGoldApp { model, _ ->
         open("Files")
         onNodeWithTag("search:Search paths…").performTextInput("a/0/1/7")

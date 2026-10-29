@@ -7,7 +7,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,6 +18,7 @@ import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -111,6 +114,24 @@ fun SoundButton(id: Int, withName: Boolean = true) {
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
         PlayButton("seq$id", { it.sequence(id) }, enabled = name != null)
         if (withName) Text(name ?: tr(Res.string.audio_no_sound_x, id), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/**
+ * A sound id (sequence number) chosen by name from a searchable list, with a play button for the one picked; a plain
+ * number field when the project has no sound archive. [range] is what the field may hold.
+ */
+@Composable
+fun SoundPicker(label: String, selected: Int, range: IntRange, onSelect: (Int) -> Unit, modifier: Modifier = Modifier.width(260.dp), tag: String = label) {
+    val context = LocalSounds.current
+    val options = remember(context) { context?.sounds?.let { s -> val named = s.sequences; List((named.maxOfOrNull { it.id } ?: -1) + 1) { id -> s.name(id).orEmpty() } } }
+    if (options.isNullOrEmpty()) {
+        NumberField(label, selected, range, onSelect, modifier)
+        return
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
+        PickerField(label, selected, options, { if (it in range) onSelect(it) }, modifier, tag = tag)
+        Box(Modifier.height(36.dp), contentAlignment = Alignment.Center) { SoundButton(selected, withName = false) }
     }
 }
 

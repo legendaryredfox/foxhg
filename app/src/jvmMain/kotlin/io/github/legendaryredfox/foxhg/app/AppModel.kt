@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import io.github.legendaryredfox.foxhg.core.FoxResult
+import io.github.legendaryredfox.foxhg.core.nds.DspreFolder
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSink
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
 import io.github.legendaryredfox.foxhg.core.nds.NdsHeader
@@ -488,6 +489,21 @@ class AppModel(
         } catch (e: Exception) {
             runCatching { Files.deleteIfExists(part) }
             fail(tr(Res.string.app_cannot_build_x_x, target, e.message ?: e::class.simpleName))
+        }
+    }
+
+    /**
+     * Writes the ROM with every edit applied as an unpacked folder in the layout DSPRE opens, called `<name>_DSPRE_contents`,
+     * inside [parent], in the background. The opened ROM is not modified.
+     */
+    fun exportDspreFolder(parent: Path) {
+        val project = project ?: return
+        val folder = parent.resolve(DspreFolder.folderName((projectDir ?: romPath)?.fileName?.toString() ?: "foxhg"))
+        startTask(tr(Res.string.app_exporting_x, folder.fileName)) { report ->
+            when (val result = io.github.legendaryredfox.foxhg.core.nds.exportDspreFolder(project, folder, report)) {
+                is FoxResult.Err -> fail(result.message)
+                is FoxResult.Ok -> { error = null; status = tr(Res.string.app_exported_dspre_x, folder) }
+            }
         }
     }
 

@@ -1131,4 +1131,10 @@
     <string name="trainer_class_music_set">设置</string>
     <string name="trainer_class_music_failed_x">无法设置音乐：%1$s</string>
     <string name="trainer_class_music_done_x">已为 %1$s 设置音乐</string>
+    <string name="file_tree_dspre_title">DSPRE 文件夹</string>
+    <string name="file_tree_dspre_subtitle">将应用了所有编辑的 ROM 以 DSPRE 可打开的解包文件夹格式（header.bin、arm9.bin、overlay/、data/ 等）写出。请选择存放位置，文件夹名为 &lt;名称&gt;_DSPRE_contents。已打开的 ROM 不会被修改。</string>
+    <string name="file_tree_dspre_export">导出 DSPRE 文件夹…</string>
+    <string name="file_tree_dspre_choose">选择 DSPRE 文件夹的存放位置</string>
+    <string name="app_exporting_x">正在导出 %1$s</string>
+    <string name="app_exported_dspre_x">已将 DSPRE 文件夹导出到 %1$s</string>
 </resources>

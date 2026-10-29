@@ -80,6 +80,9 @@ class NdsRom private constructor(
         return if (at + length <= source.size) source.read(at, length) else null
     }
 
+    /** [length] bytes at [offset] of the image, clipped to its end (the header, the overlay tables and the banner are read this way). */
+    fun readRange(offset: Long, length: Int): ByteArray = source.read(offset, minOf(length.toLong(), maxOf(0L, source.size - offset)).toInt())
+
     fun readArm7(): ByteArray = source.read(header.arm7.offset, header.arm7.size.toInt())
 
     fun readOverlay(entry: OverlayEntry): ByteArray? = file(entry.fileId)?.let(::read)

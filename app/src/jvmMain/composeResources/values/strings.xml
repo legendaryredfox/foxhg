@@ -1142,4 +1142,10 @@
     <string name="trainer_class_music_set">Set</string>
     <string name="trainer_class_music_failed_x">Could not set the song: %1$s</string>
     <string name="trainer_class_music_done_x">Song set for %1$s</string>
+    <string name="file_tree_dspre_title">DSPRE folder</string>
+    <string name="file_tree_dspre_subtitle">Writes the ROM with every edit applied as an unpacked folder (header.bin, arm9.bin, overlay/, data/ ...) in the layout DSPRE opens. Pick the folder to put it in; it is called &lt;name&gt;_DSPRE_contents. The opened ROM is not changed.</string>
+    <string name="file_tree_dspre_export">Export DSPRE folder…</string>
+    <string name="file_tree_dspre_choose">Choose where to put the DSPRE folder</string>
+    <string name="app_exporting_x">Exporting %1$s</string>
+    <string name="app_exported_dspre_x">Exported the DSPRE folder to %1$s</string>
 </resources>

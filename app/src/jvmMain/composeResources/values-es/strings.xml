@@ -1142,4 +1142,10 @@
     <string name="trainer_class_music_set">Fijar</string>
     <string name="trainer_class_music_failed_x">No se pudo fijar la música: %1$s</string>
     <string name="trainer_class_music_done_x">Música fijada para %1$s</string>
+    <string name="file_tree_dspre_title">Carpeta de DSPRE</string>
+    <string name="file_tree_dspre_subtitle">Escribe la ROM con todas las ediciones aplicadas como una carpeta desempaquetada (header.bin, arm9.bin, overlay/, data/ ...) con el formato que abre DSPRE. Elige la carpeta donde ponerla; se llama &lt;nombre&gt;_DSPRE_contents. La ROM abierta no cambia.</string>
+    <string name="file_tree_dspre_export">Exportar carpeta de DSPRE…</string>
+    <string name="file_tree_dspre_choose">Elige dónde poner la carpeta de DSPRE</string>
+    <string name="app_exporting_x">Exportando %1$s</string>
+    <string name="app_exported_dspre_x">Carpeta de DSPRE exportada a %1$s</string>
 </resources>

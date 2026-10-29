@@ -1142,4 +1142,10 @@
     <string name="trainer_class_music_set">Definir</string>
     <string name="trainer_class_music_failed_x">Não foi possível definir a música: %1$s</string>
     <string name="trainer_class_music_done_x">Música definida para %1$s</string>
+    <string name="file_tree_dspre_title">Pasta do DSPRE</string>
+    <string name="file_tree_dspre_subtitle">Grava a ROM com todas as edições aplicadas como uma pasta desempacotada (header.bin, arm9.bin, overlay/, data/ ...) no formato que o DSPRE abre. Escolha a pasta onde colocá-la; ela se chama &lt;nome&gt;_DSPRE_contents. A ROM aberta não é alterada.</string>
+    <string name="file_tree_dspre_export">Exportar pasta do DSPRE…</string>
+    <string name="file_tree_dspre_choose">Escolha onde colocar a pasta do DSPRE</string>
+    <string name="app_exporting_x">Exportando %1$s</string>
+    <string name="app_exported_dspre_x">Pasta do DSPRE exportada para %1$s</string>
 </resources>

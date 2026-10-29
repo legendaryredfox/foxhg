@@ -113,6 +113,12 @@ fun FileTreeEditor(model: FileTreeModel, appModel: AppModel, modifier: Modifier 
         val path = model.selected
         val file = path?.let(model::file)
         Column(Modifier.fillMaxSize().padding(start = 20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            SectionCard(stringResource(Res.string.file_tree_dspre_title), subtitle = stringResource(Res.string.file_tree_dspre_subtitle)) {
+                OutlinedButton(
+                    onClick = { chooseDirectory(tr(Res.string.file_tree_dspre_choose), appModel.projectDir?.parent ?: appModel.romPath?.parent, appModel::exportDspreFolder) },
+                    modifier = Modifier.testTag("export-dspre"),
+                ) { Text(stringResource(Res.string.file_tree_dspre_export)) }
+            }
             if (file == null) {
                 Text(stringResource(Res.string.file_tree_x_files_in_the_rom_pick_one_to_see, model.fileCount), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {

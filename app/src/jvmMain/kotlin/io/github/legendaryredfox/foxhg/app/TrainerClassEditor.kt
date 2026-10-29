@@ -20,7 +20,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.legendaryredfox.foxhg.app.ui.AudioStatus
 import io.github.legendaryredfox.foxhg.app.ui.FieldFlow
-import io.github.legendaryredfox.foxhg.app.ui.SoundButton
+import io.github.legendaryredfox.foxhg.app.ui.SoundPicker
 import io.github.legendaryredfox.foxhg.app.ui.NumberField
 import io.github.legendaryredfox.foxhg.app.ui.PickerField
 import io.github.legendaryredfox.foxhg.app.ui.SearchBox
@@ -168,8 +168,7 @@ private fun AddClassCard(model: TrainerClassEditorModel) {
             PickerField(stringResource(Res.string.trainer_class_add_copy), template, model.names?.trainerClasses ?: emptyList(), { template = it }, Modifier.width(240.dp), tag = "Copy the picture of")
             PickerField(stringResource(Res.string.trainer_class_add_gender), gender, TrainerClassGenders.NAMES, { gender = it }, Modifier.width(140.dp), tag = "New class gender")
             NumberField(stringResource(Res.string.trainer_class_add_prize), multiplier, 0..65535, { multiplier = it }, Modifier.width(140.dp))
-            NumberField(stringResource(Res.string.trainer_class_add_music), music, 0..65535, { music = it }, Modifier.width(260.dp))
-            if (music != 0) SoundButton(music)
+            SoundPicker(stringResource(Res.string.trainer_class_add_music), music, 0..65535, { music = it }, Modifier.width(260.dp), tag = "New class music")
             OutlinedButton(onClick = {
                 val problem = model.addClass(name, template, gender, multiplier, music)
                 failed = problem != null
@@ -204,16 +203,13 @@ private fun EncounterMusicCard(model: TrainerClassEditorModel) {
         if (open) {
             FieldFlow {
                 PickerField(stringResource(Res.string.trainer_class_music_class), pickedClass, model.names?.trainerClasses ?: emptyList(), { pickedClass = it }, Modifier.width(240.dp), tag = "Music class")
-                NumberField(stringResource(Res.string.trainer_class_music_song), song, 0..65535, { song = it }, Modifier.width(180.dp))
-                SoundButton(song)
+                SoundPicker(stringResource(Res.string.trainer_class_music_song), song, 0..65535, { song = it }, Modifier.width(260.dp), tag = "Music song")
                 OutlinedButton(onClick = { apply(EncounterMusicRow(pickedClass, song, song), tr(Res.string.trainer_class_music_done_x, model.label(pickedClass))) }, modifier = Modifier.testTag("music-set")) { Text(stringResource(Res.string.trainer_class_music_set)) }
             }
             music.rows.filter { model.search.isBlank() || model.label(it.trainerClass).contains(model.search.trim(), ignoreCase = true) }.forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    NumberField(model.label(row.trainerClass) + " - " + stringResource(Res.string.trainer_class_music_first), row.first, 0..65535, { v -> apply(row.copy(first = v), tr(Res.string.trainer_class_music_done_x, model.label(row.trainerClass))) }, Modifier.width(280.dp))
-                    SoundButton(row.first, withName = false)
-                    NumberField(stringResource(Res.string.trainer_class_music_second), row.second, 0..65535, { v -> apply(row.copy(second = v), tr(Res.string.trainer_class_music_done_x, model.label(row.trainerClass))) }, Modifier.width(180.dp))
-                    SoundButton(row.second, withName = false)
+                    SoundPicker(model.label(row.trainerClass) + " - " + stringResource(Res.string.trainer_class_music_first), row.first, 0..65535, { v -> apply(row.copy(first = v), tr(Res.string.trainer_class_music_done_x, model.label(row.trainerClass))) }, Modifier.width(300.dp))
+                    SoundPicker(stringResource(Res.string.trainer_class_music_second), row.second, 0..65535, { v -> apply(row.copy(second = v), tr(Res.string.trainer_class_music_done_x, model.label(row.trainerClass))) }, Modifier.width(260.dp), tag = model.label(row.trainerClass) + " - second song")
                 }
             }
         }

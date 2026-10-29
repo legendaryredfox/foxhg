@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
 /**
  * Compares the sound the `EyeMusic*EmulatorTest` classes recorded (its name sorts last, so it runs after them), all from the same saved game and the same frames. The runs are not bit for bit equal (the
  * samples differ from the first one on), but the loudness over twenty slices of the ten seconds is the song's own: the Youngster's and the Lass's differ by about 4000
- * (an RMS of 16 bit samples) and two runs of one song by under 200. A new class with no music row must sound like the Youngster (sequence 1108); one given the music
+ * (an RMS of 16 bit samples) and two runs of one song by under 200. The Youngster with a row edited in place to 1113 must sound like the Lass. A new class with no music row must sound like the Youngster (sequence 1108); one given the music
  * 1113 like the Lass. The recordings come from the runs of the same build: without all four fresh files (a class run alone) this passes with a notice.
  */
 class EyeMusicZCompareEmulatorTest {
@@ -40,6 +40,16 @@ class EyeMusicZCompareEmulatorTest {
         assertTrue(distance(youngster, lass) > 1000, "the two vanilla songs sound different")
         assertTrue(distance(plain, youngster) * 5 < distance(plain, lass), "a new class with no music row plays the Youngster's song")
         assertTrue(distance(sung, lass) * 5 < distance(sung, youngster), "a new class with the music 1113 plays the Lass's song")
+    }
+
+    @Test
+    fun aSongEditedInPlaceIsHeard() {
+        val tags = listOf("youngster", "lass", "youngster-edited")
+        val runs = tags.associateWith { read(it) }
+        if (runs.values.any { it == null }) { println("SKIPPED: missing or old recordings in ${EyeMusicRun.dir.toAbsolutePath()}: ${runs.filterValues { it == null }.keys}"); return }
+        val (youngster, lass, edited) = tags.map { runs.getValue(it)!! }
+        println("EYEMUSIC edited in place: to the Lass ${distance(edited, lass).toInt()}, to the Youngster ${distance(edited, youngster).toInt()}")
+        assertTrue(distance(edited, lass) * 5 < distance(edited, youngster), "a Youngster whose row was edited in place to 1113 plays the Lass's song")
     }
 
     private companion object { const val SLICES = 20 }
