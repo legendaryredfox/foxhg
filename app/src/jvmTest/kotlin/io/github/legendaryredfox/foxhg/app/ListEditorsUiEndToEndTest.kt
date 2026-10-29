@@ -46,6 +46,7 @@ import io.github.legendaryredfox.foxhg.core.data.mapheader.MapHeaderTable
 import io.github.legendaryredfox.foxhg.core.data.matrix.GameMatrix
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerMessages
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
+import io.github.legendaryredfox.foxhg.core.data.trainerclass.TrainerClassGenders
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -317,6 +318,22 @@ class ListEditorsUiEndToEndTest {
         assertEquals("FOXHG", project.names!!.trainerNames[before])
         onNodeWithText("Added trainer $before", substring = true).assertIsDisplayed()
         onAllNodesWithText("FOXHG", substring = true).onFirst().assertIsDisplayed()
+    }
+
+    @Test
+    fun addingATrainerClassFromTheTrainerClassScreen() = withHeartGoldApp { _, project ->
+        check(DsprePatches.arm9Expansion.apply(project) is FoxResult.Ok)
+        open("Trainer classes")
+        val before = project.names!!.trainerClasses.size
+        tap(onNodeWithTag("add-class-toggle"), inScrollPane = false)
+        onNodeWithTag("add-class").assertIsNotEnabled()
+        onNodeWithTag("field:New class name").performTextInput("FOXCLS")
+        tap(onNodeWithTag("add-class"), inScrollPane = false)
+        waitForIdle()
+        assertEquals(before + 1, project.names!!.trainerClasses.size)
+        assertEquals("FOXCLS", project.names!!.trainerClasses[before])
+        assertEquals(before + 1, TrainerClassGenders.load(project).let { (it as FoxResult.Ok).value.genders.size })
+        onNodeWithText("Added class $before", substring = true).assertIsDisplayed()
     }
 
     @Test

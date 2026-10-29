@@ -170,6 +170,32 @@ object HgssLayout {
     /** Overlay and offset (in its decompressed image) of the trainer class prize multiplier table. */
     const val PRIZE_OVERLAY = 12
     const val PRIZE_TABLE_OVERLAY_OFFSET = 0x34C04
+
+    /**
+     * What a new trainer class needs moved (HeartGold English). The gender table is read through one literal pool word in the ARM9 (vanilla
+     * 0x020FFB90, [TRAINER_CLASS_GENDER_ARM9_OFFSET]) with no bound. The prize table is searched by class id in `CalcPrizeMoney` (overlay
+     * [PRIZE_OVERLAY]): two literal pool words (the table and the table + 2) and three `cmp r4, #count` (THUMB, vanilla `81 2C`) whose
+     * immediate is the row count. A class that is not found gets the prize of table row 2.
+     */
+    const val TRAINER_CLASS_GENDER_POINTER_ARM9 = 0x73600
+    const val PRIZE_TABLE_POINTER_OVERLAY = 0x8380
+    const val PRIZE_TABLE_POINTER_PLUS_2_OVERLAY = 0x8384
+    val PRIZE_COUNT_IMMEDIATES_OVERLAY = listOf(0x8310, 0x8314, 0x831C)
+
+    /** The battle code keeps the class in a byte and the count in an 8 bit immediate, so there are at most 255 classes. */
+    const val MAX_TRAINER_CLASSES = 255
+
+    /**
+     * Where foxhg puts the gender table (one byte per class, [MAX_TRAINER_CLASSES] + 1 reserved) and, after it, the prize table (4 bytes a
+     * row) once a class is added: a block of the synthetic overlay between the marts ([MART_AREA]) and the camera routine. It must be empty
+     * (zeros) or hold only those tables.
+     */
+    const val CLASS_TABLE_AREA = 0x5000
+    const val CLASS_TABLE_AREA_PRIZES = CLASS_TABLE_AREA + 0x100
+    const val CLASS_TABLE_AREA_SIZE = 0x500
+
+    /** Front pictures: [TRAINER_FRONT_SPRITES] has this many files per class. */
+    const val FILES_PER_TRAINER_CLASS_PICTURE = 5
 }
 
 /** Indexes of the message archives (files of [HgssLayout.MESSAGES]) that hold the lists editors need names from. */

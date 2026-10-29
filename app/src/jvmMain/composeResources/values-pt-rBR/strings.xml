@@ -1122,4 +1122,13 @@
     <string name="trainer_trigger_18">Dupla, treinador 1: revanche</string>
     <string name="trainer_trigger_19">Dupla, treinador 2: revanche</string>
     <string name="trainer_trigger_20">Jogador perde</string>
+    <string name="trainer_class_add_title">Adicionar uma classe de treinador</string>
+    <string name="trainer_class_add_subtitle">Uma classe nova no fim da lista: o nome, uma cópia da imagem da classe escolhida, um gênero e um multiplicador de prêmio em dinheiro. Precisa do patch de expansão do ARM9 da caixa de ferramentas da ROM (as tabelas de gênero e de prêmio vão para o overlay sintético). A classe toca a música de contato visual do Youngster. Use-a no editor de Treinadores.</string>
+    <string name="trainer_class_add_name">Nome</string>
+    <string name="trainer_class_add_copy">Copiar a imagem de</string>
+    <string name="trainer_class_add_gender">Gênero</string>
+    <string name="trainer_class_add_prize">Multiplicador de prêmio</string>
+    <string name="trainer_class_add_button">Adicionar classe</string>
+    <string name="trainer_class_add_failed_x">Não foi possível adicionar a classe: %1$s</string>
+    <string name="trainer_class_added_x">Classe %1$s adicionada</string>
 </resources>

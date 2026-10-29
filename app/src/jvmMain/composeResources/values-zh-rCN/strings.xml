@@ -1111,4 +1111,13 @@
     <string name="trainer_trigger_18">双打，训练家1：再战</string>
     <string name="trainer_trigger_19">双打，训练家2：再战</string>
     <string name="trainer_trigger_20">玩家落败</string>
+    <string name="trainer_class_add_title">添加训练家职业</string>
+    <string name="trainer_class_add_subtitle">在列表末尾添加新职业：名称、所选职业图片的副本、性别和奖金倍率。需要 ROM 工具箱中的 ARM9 扩展补丁（性别表和奖金表会移到合成 overlay）。该职业使用 Youngster 的对视音乐。请在“训练家”编辑器中使用。</string>
+    <string name="trainer_class_add_name">名称</string>
+    <string name="trainer_class_add_copy">复制其图片的职业</string>
+    <string name="trainer_class_add_gender">性别</string>
+    <string name="trainer_class_add_prize">奖金倍率</string>
+    <string name="trainer_class_add_button">添加职业</string>
+    <string name="trainer_class_add_failed_x">无法添加职业：%1$s</string>
+    <string name="trainer_class_added_x">已添加职业 %1$s</string>
 </resources>

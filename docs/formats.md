@@ -663,7 +663,26 @@ name FOXHG from the grown bank is in RAM while the battle starts). Things found 
 - The class Rival does not take its name from bank 729: the intro reads "You are challenged by Rival !" with an empty name (the rival's name is saved in the save), so a copy of
   trainer 1 shows no name. Copy a trainer of another class.
 - Script file 953 (`a/0/1/2`) holds the trainer scripts of the map objects, 740 entries (dumped from the real ROM, matching the decomp's `scr_seq_0953.s`): `script_1` to `script_739` are labels of one shared body (`std_trainer`: `PlaySE`, `LockAll`, `FacePlayer`, `GetTrainerNum`, `LoadPhoneDat` ...), and `script_740` is the game's own eye-contact script (`GetTrainerEyeType`, `GetEyeTrainerNum` ...), so the engine fixes its id (3000 + 739 = 3739) and it can not move. A script id `3000 + trainer - 1` (and `5000 + trainer - 1`, the same file, for the second trainer of a double battle) runs entry `script_<trainer>`; `GetTrainerNum` reads the trainer from the number of the running script (`ScriptNumToTrainerNum`), so a stub that jumps to the shared body keeps the trainer. Trainers 738 and 739 therefore already have the shared script; trainer 740 collides with the eye-contact script (battle it from a `TrainerBattle` in a script); `NewTrainer.add` appends `script_<trainer>: GoTo script_1` entries at the end of the file for trainers from 741 on (`RealRomNewTrainerTest`). An earlier version of this note said the last three entries differ and have no slot; that was wrong. **[UNVERIFIED]** in game for 741 and up.
-- The beaten flag of a trainer is `0x550 + trainer` (decomp `FLAG_TRAINER`); trainer 738 gets 0x832, a flag the decomp calls unknown. **[UNVERIFIED]** that nothing else uses 0x832 and up.
+- The beaten flag of a trainer is `0x550 + trainer` (decomp `FLAG_TRAINER`); vanilla has 735 trainers (0 to 734), so the trainer block ends at 0x82D and trainer 735 on use flags the decomp calls unknown (0x82E and up). Scanned on the real ROM (`RealRomTrainerFlagScanTest`): no script command with a flag parameter and no overworld object uses a flag from 0x82E to 0x963; the first used flag above is 0x964 (a story flag). So `NewTrainer` stops at 1044 trainers (ids 0 to 1043, last flag 0x963) and refuses the next one. Other users of the flag area (the ARM9 or overlay code, the save's own bit use) were not searched; **[UNVERIFIED]** in game.
+
+## Adding a trainer class (HeartGold English)
+
+`NewTrainerClass.add` appends a class (id 129 on the vanilla ROM; at most 255, the battle code keeps the class in a byte). Facts checked on the real ROM and in the decomp
+(`trainer_data.c`, `battle_command.c`, `field_bgm.c`):
+- Gender table: 128 bytes at ARM9 0xFFB90 (the next table starts at 0xFFC10), read by `TrainerClass_GetGenderOrTrainerCount` with no bound through one literal pool word at
+  ARM9 0x73600 (0x020FFB90). Vanilla has 129 classes, so class 128 reads the first byte after the table; the moved table keeps that byte for class 128.
+- Prize table: `sPrizeMoneyTbl[0x81][2]` at overlay 12 0x34C04 (RAM 0x0226C4C4), searched by class id in `CalcPrizeMoney` (a class that is not found gets row 2). Two literal pool
+  words in the overlay hold the table (0x8380) and the table + 2 (0x8384), and three THUMB `cmp r4, #0x81` (`81 2C` at 0x8310, 0x8314, 0x831C) hold the row count. The rows after the
+  table (0x34E08) are another table, so it can not grow in place. Disassembled with `arm-none-eabi-objdump -Mforce-thumb`.
+- Eye-contact music: `sTrainerEncounterMusicParam` in `field_bgm.c` is searched too; a class that is missing plays the Youngster theme (`SEQ_GS_EYE_J_SHOUNEN`), so a new class
+  needs nothing there. Not edited by foxhg.
+- Class pictures: `a/0/5/8` has 5 files per class in class order, so a new class appends 5 files (a copy of another class's).
+- Where foxhg puts the tables: the synthetic overlay (the ARM9 expansion patch must be applied) at 0x5000 (gender, 0x100 bytes) and 0x5100 (prize rows, 4 bytes each), a block of
+  0x500 bytes between the mart area (0x4000) and the camera routine (0x115B0). The ARM9 word and the two overlay words are set to 0x023C8000 + those offsets and the three
+  immediates to the new row count. The tables are read through those pointers, so the Trainer classes editor keeps working after a class is added.
+- Tests: `RealRomNewTrainerClassTest` (tables, name, pictures, a second class, refusals). In the game (`NewTrainerClassInGameEmulatorTest`): a new trainer of the new class
+  FOXCLS starts a battle without a crash and the class name codes are in RAM while it starts. The class picture, the gender and the prize money in a battle were not
+  checked in game; **[UNVERIFIED]**.
 
 ## HP bar speed (wiki guide "Changing the HP bar Speed"), HeartGold English
 
