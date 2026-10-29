@@ -20,12 +20,14 @@ import kotlin.test.assertTrue
  * FOXCLS (a copy of the Youngster's picture). The game reads the class name from the grown name bank: its codes are in RAM while the battle starts and were not before.
  */
 class NewTrainerClassInGameEmulatorTest {
+    private val world = NewTrainerClassWorld()
+
     @Test
     fun theGameBattlesTheTrainerThatWasAdded() {
         if (!available() || !EmulatorSaves.available("party")) return
         val work = Files.createTempDirectory("foxhg-new-trainer-class")
         try {
-            val (rom, id) = buildRom(work, 20, 0)
+            val (rom, id) = world.buildRom(work, 20, 0)
             val name = (MessageText.encode("FOXCLS") as FoxResult.Ok).value.toList()
             EmulatorSaves.install("party", rom, work.resolve("saves"))
             EmulatorDriver(rom, work.resolve("saves")).use { emu ->
@@ -48,9 +50,13 @@ class NewTrainerClassInGameEmulatorTest {
     }
 
     /** A ROM where the clerk of Cherrygrove's Poke Mart battles trainer 738, a Youngster of the new class FOXCLS with prize multiplier [multiplier]. */
-    private var lastLevel = 0
+}
 
-    private fun buildRom(work: java.nio.file.Path, multiplier: Int, gender: Int): Pair<java.nio.file.Path, Int> {
+/** What the in-game tests of a new trainer class share. One core per test class: a second core in the same process crashes the DeSmuME core in `retro_load_game`. */
+class NewTrainerClassWorld {
+    var lastLevel = 0
+
+    fun buildRom(work: java.nio.file.Path, multiplier: Int, gender: Int): Pair<java.nio.file.Path, Int> {
             var id = -1
             val rom = MartInGame.build(work, "new-trainer-class.nds") { project ->
                 // a Youngster: the Rival's name does not come from the name bank but from the save
@@ -63,8 +69,9 @@ class NewTrainerClassInGameEmulatorTest {
                 id = (NewTrainer.add(project, "FOXHG", template) as FoxResult.Ok).value
                 val table = (TrainerTable.load(project) as FoxResult.Ok).value
                 val made = table.trainers[id]
-                lastLevel = made.party.last().level
-                check(table.with(id, made.copy(header = made.header.copy(trainerClass = classId))).save(project) is FoxResult.Ok)
+                // level 2 Pokémon: the player's Cyndaquil wins in a hit or two whatever the random numbers are, so the prize test does not depend on luck
+                lastLevel = 2
+                check(table.with(id, made.copy(header = made.header.copy(trainerClass = classId), party = made.party.map { it.copy(level = lastLevel) })).save(project) is FoxResult.Ok)
                 check(id == (TrainerTable.load(project) as FoxResult.Ok).value.trainers.size - 1)
                 val scripts = (ScriptEntry.load(project) as FoxResult.Ok).value
                 val file = (scripts.records[851] as ScriptEntry.Script).file
@@ -78,36 +85,4 @@ class NewTrainerClassInGameEmulatorTest {
         return rom to id
     }
 
-    /** Wins the battle against the new class and reads the money in RAM: the prize is the last level times 4 times the class multiplier (times 1 for a single battle). */
-    @Test
-    fun winningPaysThePrizeOfTheNewClass() {
-        if (!available() || !EmulatorSaves.available("party")) return
-        val work = Files.createTempDirectory("foxhg-new-trainer-class-prize")
-        try {
-            val (rom, id) = buildRom(work, 20, 0)
-            val level = lastLevel
-            val player = (io.github.legendaryredfox.foxhg.core.save.PlayerData.read((io.github.legendaryredfox.foxhg.core.save.SaveFile.parse(Files.readAllBytes(EmulatorSaves.cached("party"))) as FoxResult.Ok).value) as FoxResult.Ok).value
-            val playerName = player.nameCodes.takeWhile { it != io.github.legendaryredfox.foxhg.core.save.PlayerData.END } + io.github.legendaryredfox.foxhg.core.save.PlayerData.END
-            EmulatorSaves.install("party", rom, work.resolve("saves"))
-            EmulatorDriver(rom, work.resolve("saves")).use { emu ->
-                emu.run("s1500,START,s200,A*3,s400,A,s200,A*2")
-                val profile = emu.findU16s(playerName).first()
-                val before = emu.readU32(profile + 0x14)
-                var after = before
-                repeat(150) {
-                    if (after == before) {
-                        emu.run("A,s60")
-                        after = emu.readU32(profile + 0x14)
-                    }
-                }
-                Files.createDirectories(MartInGame.shotDir)
-                emu.savePicture(MartInGame.shotDir.resolve("new-class-prize.png"))
-                println("NEWCLASSPRIZE money before $before, after $after, last level $level")
-                assertTrue(after > before, "the player won the battle and was paid")
-                kotlin.test.assertEquals(level * 4 * 20L, after - before, "the prize is the last level times 4 times the multiplier 20 of the new class")
-            }
-        } finally {
-            work.toFile().deleteRecursively()
-        }
-    }
 }
