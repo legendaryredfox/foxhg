@@ -29,6 +29,12 @@ internal object HpBarInGame {
 
     /** The first drain of an HP bar after Tackle was picked, at [shift]; null when the saved game is missing or no bar moved. */
     fun drain(shift: Int, fastPatch: Boolean = false): Drain? {
+        // Tackle can miss (95%) and the random numbers follow the clock of the host: try again a little later in the game, a few times
+        for (attempt in 0..3) drainOnce(shift, fastPatch, attempt * 13)?.let { return it }
+        return null
+    }
+
+    private fun drainOnce(shift: Int, fastPatch: Boolean, delay: Int): Drain? {
         if (!EmulatorSaves.available("party")) return null
         val work = Files.createTempDirectory("foxhg-hpbar")
         try {
@@ -46,7 +52,7 @@ internal object HpBarInGame {
             }
             EmulatorSaves.install("party", rom, work.resolve("saves"))
             EmulatorDriver(rom, work.resolve("saves")).use { emu ->
-                emu.run(EmulatorSaves.OPEN_BUY_LIST_SCRIPT + ",s1200,A,s120,A,s120,A")
+                emu.run(EmulatorSaves.OPEN_BUY_LIST_SCRIPT + ",s${1200 + delay},A,s120,A,s120,A")
                 val seen = ArrayList<List<Int>>().also { it += fills(emu) }
                 val moves = ArrayList<Int>()
                 for (frame in 1..3000) {

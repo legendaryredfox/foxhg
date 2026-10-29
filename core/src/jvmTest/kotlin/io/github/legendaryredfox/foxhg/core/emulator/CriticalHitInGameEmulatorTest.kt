@@ -58,8 +58,15 @@ class CriticalHitInGameEmulatorTest {
             EmulatorDriver(rom, work.resolve("saves")).use { emu ->
                 emu.run(EmulatorSaves.OPEN_BUY_LIST_SCRIPT + ",s1200")
                 val before = emu.enemyBarPixels()
-                emu.run("A,s120,A,s120,A,s400")
-                val after = emu.settled { enemyBarPixels() }
+                // Tackle can miss (95%) and the random numbers follow the clock of the host: from the same state, try again a little later in the game, a few times
+                val state = emu.saveState() ?: error("no save state")
+                var after = Int.MAX_VALUE
+                for (attempt in 0..3) {
+                    if (attempt > 0) { emu.loadState(state); emu.step(attempt * 13) }
+                    emu.run("A,s120,A,s120,A,s400")
+                    after = emu.settled { enemyBarPixels() }
+                    if (after <= 30) break
+                }
                 Files.createDirectories(MartInGame.shotDir)
                 emu.savePicture(MartInGame.shotDir.resolve("critical-hit.png"))
                 println("CRIT enemy HP bar pixels before the turn: $before, after: $after")
