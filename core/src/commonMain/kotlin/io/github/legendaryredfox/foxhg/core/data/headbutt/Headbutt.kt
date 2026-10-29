@@ -2,7 +2,6 @@ package io.github.legendaryredfox.foxhg.core.data.headbutt
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
 
@@ -128,6 +127,6 @@ data class HeadbuttFile(
             return FoxResult.Ok(HeadbuttFile(encounters.subList(0, NORMAL_SLOTS), encounters.subList(NORMAL_SLOTS, encounters.size), normalGroups, specialGroups, headerPadding = padding))
         }
 
-        val SPEC = RecordSpec(HgssLayout.HEADBUTT, ::parse, HeadbuttFile::toBytes)
+        val SPEC = RecordSpec({ it.headbutt }, ::parse, HeadbuttFile::toBytes)
     }
 }

@@ -10,14 +10,13 @@ import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.personal.PersonalData
 import io.github.legendaryredfox.foxhg.core.data.personal.PersonalTable
 import io.github.legendaryredfox.foxhg.core.game.GameNames
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
 /** State of the Personal data editor: the list of species, the selection, and edits written to the project. */
 class PersonalEditorModel(private val project: RomProject, private val onChanged: () -> Unit = {}) {
     private var table: PersonalTable? = null
-    private val original: List<PersonalData> = project.rom.read(HgssLayout.PERSONAL)
+    private val original: List<PersonalData> = project.rom.read(project.layout.personal)
         ?.let { (Narc.parse(it) as? FoxResult.Ok)?.value }
         ?.files?.mapNotNull { (PersonalData.parse(it) as? FoxResult.Ok)?.value }
         ?: emptyList()

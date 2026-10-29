@@ -4,7 +4,6 @@ import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.map.MapFile
 import io.github.legendaryredfox.foxhg.core.data.map.MapUsages
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.u16
@@ -22,9 +21,9 @@ import kotlin.math.min
 class MapScenes(private val project: RomProject) {
     private val usages = MapUsages(project)
     private val maps: List<MapFile> = (NarcRecords.load(project, MapFile.SPEC) as? FoxResult.Ok)?.value?.records ?: emptyList()
-    private val areaData: Narc? by lazy { narc(HgssLayout.AREA_DATA) }
-    private val mapTextures: Narc? by lazy { narc(HgssLayout.MAP_TEXTURES) }
-    private val buildingModels: Narc? by lazy { narc(HgssLayout.BUILDING_MODELS) }
+    private val areaData: Narc? by lazy { narc(project.layout.areaData) }
+    private val mapTextures: Narc? by lazy { narc(project.layout.mapTextures) }
+    private val buildingModels: Narc? by lazy { narc(project.layout.buildingModels) }
 
     private val tilesets = HashMap<Int, Nsbtx?>()
     private val buildings = HashMap<Int, Pair<Nsbmd, Nsbtx?>?>()

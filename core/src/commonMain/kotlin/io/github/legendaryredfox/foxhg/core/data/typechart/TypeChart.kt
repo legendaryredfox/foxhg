@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.data.typechart
 
+import io.github.legendaryredfox.foxhg.core.game.GameLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
 /** One entry of the type table: a [attacker] type hitting a [defender] type for [multiplier] times 10 (0 none, 5 half, 20 double). */
@@ -10,11 +10,11 @@ data class TypeEntry(val attacker: Int, val defender: Int, val multiplier: Int)
 /**
  * The type effectiveness table of overlay 12. It lists only the pairs that are not neutral, in two parts: [main] (always used) and
  * [foresight] (the Ghost immunities of Normal and Fighting, which Foresight, Odd-Eye and Scrappy switch off: the game stops reading at the
- * divider then). Together with the divider the entries fill [HgssLayout.TYPE_CHART_SLOTS] slots, so a new non-neutral pair needs a slot a
+ * divider then). Together with the divider the entries fill [GameLayout.typeChartSlots] slots, so a new non-neutral pair needs a slot a
  * neutral one freed. From the decomp's `sTypeEffectiveness` in `overlay_12_0224E4FC.c`; checked against the ROM.
  */
-data class TypeChart(val main: List<TypeEntry>, val foresight: List<TypeEntry>) {
-    init { require(main.size + foresight.size + 1 <= HgssLayout.TYPE_CHART_SLOTS) { "The type table has room for ${HgssLayout.TYPE_CHART_SLOTS - 1} entries" } }
+data class TypeChart(val main: List<TypeEntry>, val foresight: List<TypeEntry>, val layout: GameLayout) {
+    init { require(main.size + foresight.size + 1 <= layout.typeChartSlots) { "The type table has room for ${layout.typeChartSlots - 1} entries" } }
 
     private val byPair: Map<Pair<Int, Int>, TypeEntry> by lazy { (main + foresight).associateBy { it.attacker to it.defender } }
 
@@ -29,7 +29,7 @@ data class TypeChart(val main: List<TypeEntry>, val foresight: List<TypeEntry>) 
 
     /** Whether [multiplier] for this pair would fit: it already has a slot, is neutral, or a slot is free. */
     fun canSet(attacker: Int, defender: Int, multiplier: Int): Boolean =
-        multiplier in VALID_MULTIPLIERS && attacker in 0 until TYPES && defender in 0 until TYPES && (multiplier == NEUTRAL || (attacker to defender) in byPair || slotsUsed < HgssLayout.TYPE_CHART_SLOTS)
+        multiplier in VALID_MULTIPLIERS && attacker in 0 until TYPES && defender in 0 until TYPES && (multiplier == NEUTRAL || (attacker to defender) in byPair || slotsUsed < layout.typeChartSlots)
 
     /**
      * [attacker] against [defender] set to [multiplier]; unchanged when there is no slot for it. A neutral multiplier removes the entry.
@@ -53,14 +53,14 @@ data class TypeChart(val main: List<TypeEntry>, val foresight: List<TypeEntry>) 
     fun applyTo(overlay: ByteArray): ByteArray = overlay.copyOf().also { out ->
         val entries = main.map { listOf(it.attacker, it.defender, it.multiplier) } + listOf(listOf(FORESIGHT, FORESIGHT, 0)) +
             foresight.map { listOf(it.attacker, it.defender, it.multiplier) }
-        for (slot in 0..HgssLayout.TYPE_CHART_SLOTS) {
+        for (slot in 0..layout.typeChartSlots) {
             val e = entries.getOrElse(slot) { listOf(END, END, 0) }
-            for (b in 0..2) out[HgssLayout.TYPE_CHART_OFFSET + 3 * slot + b] = e[b].toByte()
+            for (b in 0..2) out[layout.typeChartOffset + 3 * slot + b] = e[b].toByte()
         }
     }
 
-    fun save(project: RomProject): FoxResult<Unit> = when (val o = project.readOverlay(HgssLayout.TYPE_CHART_OVERLAY)) {
-        is FoxResult.Ok -> project.writeOverlay(HgssLayout.TYPE_CHART_OVERLAY, applyTo(o.value))
+    fun save(project: RomProject): FoxResult<Unit> = when (val o = project.readOverlay(project.layout.typeChartOverlay)) {
+        is FoxResult.Ok -> project.writeOverlay(project.layout.typeChartOverlay, applyTo(o.value))
         is FoxResult.Err -> o
     }
 
@@ -79,19 +79,19 @@ data class TypeChart(val main: List<TypeEntry>, val foresight: List<TypeEntry>) 
         /** Type numbers 0 to 17; 9 is "???" (no entries). */
         const val TYPES = 18
 
-        fun parse(overlay: ByteArray): FoxResult<TypeChart> {
-            val end = HgssLayout.TYPE_CHART_OFFSET + 3 * (HgssLayout.TYPE_CHART_SLOTS + 1)
-            if (overlay.size < end) return FoxResult.Err("Overlay ${HgssLayout.TYPE_CHART_OVERLAY} is too small for the type table")
+        fun parse(overlay: ByteArray, layout: GameLayout): FoxResult<TypeChart> {
+            val end = layout.typeChartOffset + 3 * (layout.typeChartSlots + 1)
+            if (overlay.size < end) return FoxResult.Err("Overlay ${layout.typeChartOverlay} is too small for the type table")
             val main = ArrayList<TypeEntry>()
             val foresight = ArrayList<TypeEntry>()
             var inForesight = false
-            for (slot in 0..HgssLayout.TYPE_CHART_SLOTS) {
-                val at = HgssLayout.TYPE_CHART_OFFSET + 3 * slot
+            for (slot in 0..layout.typeChartSlots) {
+                val at = layout.typeChartOffset + 3 * slot
                 val a = overlay[at].toInt() and 0xFF
                 val d = overlay[at + 1].toInt() and 0xFF
                 val m = overlay[at + 2].toInt() and 0xFF
                 when {
-                    a == END -> return if (inForesight) FoxResult.Ok(TypeChart(main, foresight)) else FoxResult.Err("The type table has no Foresight divider: this is not the table this editor knows")
+                    a == END -> return if (inForesight) FoxResult.Ok(TypeChart(main, foresight, layout)) else FoxResult.Err("The type table has no Foresight divider: this is not the table this editor knows")
                     a == FORESIGHT -> if (inForesight) return FoxResult.Err("The type table has two Foresight dividers") else inForesight = true
                     a >= TYPES || d >= TYPES -> return FoxResult.Err("Type table entry $slot has type $a against $d")
                     m !in VALID_MULTIPLIERS -> return FoxResult.Err("Type table entry $slot has the multiplier $m: this is not the table this editor knows")
@@ -102,8 +102,8 @@ data class TypeChart(val main: List<TypeEntry>, val foresight: List<TypeEntry>) 
             return FoxResult.Err("The type table has no terminator")
         }
 
-        fun load(project: RomProject): FoxResult<TypeChart> = when (val o = project.readOverlay(HgssLayout.TYPE_CHART_OVERLAY)) {
-            is FoxResult.Ok -> parse(o.value)
+        fun load(project: RomProject): FoxResult<TypeChart> = when (val o = project.readOverlay(project.layout.typeChartOverlay)) {
+            is FoxResult.Ok -> parse(o.value, project.layout)
             is FoxResult.Err -> o
         }
     }

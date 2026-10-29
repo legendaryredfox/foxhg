@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.data.hiddenitem
 
+import io.github.legendaryredfox.foxhg.core.game.GameLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
@@ -34,8 +34,8 @@ data class HiddenItem(val item: Int, val quantity: Int, val unknown3: Int, val u
 }
 
 /**
- * The hidden item table of the ARM9: [HgssLayout.HIDDEN_ITEMS_ARM9_LENGTH] holds how many entries the game reads and
- * [HgssLayout.HIDDEN_ITEMS_ARM9_CAPACITY] how many fit. Layout as in DSPRE's hidden items editor and the HeartGold
+ * The hidden item table of the ARM9: [GameLayout.hiddenItemsArm9Length] holds how many entries the game reads and
+ * [GameLayout.hiddenItemsArm9Capacity] how many fit. Layout as in DSPRE's hidden items editor and the HeartGold
  * decomp's `HiddenItemData`; the offsets are those of HeartGold English.
  */
 data class HiddenItems(val entries: List<HiddenItem>, val capacity: Int) {
@@ -50,35 +50,35 @@ data class HiddenItems(val entries: List<HiddenItem>, val capacity: Int) {
      * Writes the table into a copy of [arm9] and sets the length. Slots a shorter table leaves behind are cleared;
      * whatever follows the length in the ARM9 is otherwise not touched.
      */
-    fun applyTo(arm9: ByteArray): ByteArray {
+    fun applyTo(arm9: ByteArray, layout: GameLayout): ByteArray {
         require(entries.size <= capacity) { "The table holds at most $capacity entries" }
         val out = arm9.copyOf()
-        val oldLength = arm9.u8(HgssLayout.HIDDEN_ITEMS_ARM9_LENGTH)
-        entries.forEachIndexed { i, e -> e.write(out, HgssLayout.HIDDEN_ITEMS_ARM9_TABLE + i * HiddenItem.SIZE) }
-        for (i in entries.size until oldLength) out.fill(0, HgssLayout.HIDDEN_ITEMS_ARM9_TABLE + i * HiddenItem.SIZE, HgssLayout.HIDDEN_ITEMS_ARM9_TABLE + (i + 1) * HiddenItem.SIZE)
-        out[HgssLayout.HIDDEN_ITEMS_ARM9_LENGTH] = entries.size.toByte()
+        val oldLength = arm9.u8(layout.hiddenItemsArm9Length)
+        entries.forEachIndexed { i, e -> e.write(out, layout.hiddenItemsArm9Table + i * HiddenItem.SIZE) }
+        for (i in entries.size until oldLength) out.fill(0, layout.hiddenItemsArm9Table + i * HiddenItem.SIZE, layout.hiddenItemsArm9Table + (i + 1) * HiddenItem.SIZE)
+        out[layout.hiddenItemsArm9Length] = entries.size.toByte()
         return out
     }
 
     companion object {
-        fun parse(arm9: ByteArray): FoxResult<HiddenItems> {
-            val needed = maxOf(HgssLayout.HIDDEN_ITEMS_ARM9_CAPACITY + 1, HgssLayout.HIDDEN_ITEMS_ARM9_TABLE + HiddenItem.SIZE)
+        fun parse(arm9: ByteArray, layout: GameLayout): FoxResult<HiddenItems> {
+            val needed = maxOf(layout.hiddenItemsArm9Capacity + 1, layout.hiddenItemsArm9Table + HiddenItem.SIZE)
             if (arm9.size < needed) return FoxResult.Err("ARM9 is too small for the hidden item table")
-            val length = arm9.u8(HgssLayout.HIDDEN_ITEMS_ARM9_LENGTH)
-            val capacity = arm9.u8(HgssLayout.HIDDEN_ITEMS_ARM9_CAPACITY)
+            val length = arm9.u8(layout.hiddenItemsArm9Length)
+            val capacity = arm9.u8(layout.hiddenItemsArm9Capacity)
             if (length > capacity) return FoxResult.Err("The hidden item table claims $length entries but holds at most $capacity: this is not a HeartGold English ARM9")
-            val end = HgssLayout.HIDDEN_ITEMS_ARM9_TABLE + length * HiddenItem.SIZE
+            val end = layout.hiddenItemsArm9Table + length * HiddenItem.SIZE
             if (arm9.size < end) return FoxResult.Err("ARM9 is too small for $length hidden items")
-            return FoxResult.Ok(HiddenItems(List(length) { HiddenItem.read(arm9, HgssLayout.HIDDEN_ITEMS_ARM9_TABLE + it * HiddenItem.SIZE) }, capacity))
+            return FoxResult.Ok(HiddenItems(List(length) { HiddenItem.read(arm9, layout.hiddenItemsArm9Table + it * HiddenItem.SIZE) }, capacity))
         }
 
         fun load(project: RomProject): FoxResult<HiddenItems> = when (val a = project.readArm9()) {
-            is FoxResult.Ok -> parse(a.value)
+            is FoxResult.Ok -> parse(a.value, project.layout)
             is FoxResult.Err -> a
         }
 
         fun save(project: RomProject, table: HiddenItems): FoxResult<Unit> = when (val a = project.readArm9()) {
-            is FoxResult.Ok -> project.writeArm9(table.applyTo(a.value))
+            is FoxResult.Ok -> project.writeArm9(table.applyTo(a.value, project.layout))
             is FoxResult.Err -> a
         }
     }

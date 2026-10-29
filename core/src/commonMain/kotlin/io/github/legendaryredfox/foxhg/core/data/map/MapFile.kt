@@ -4,7 +4,6 @@ import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.parsing
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.putU32
 import io.github.legendaryredfox.foxhg.core.project.RomProject
@@ -184,7 +183,7 @@ class MapFile(
             return FoxResult.Ok(MapFile(sound, permissions, buildings, model, bdhc))
         }
 
-        val SPEC = RecordSpec(HgssLayout.MAPS, ::parse, MapFile::toBytes)
+        val SPEC = RecordSpec({ it.maps }, ::parse, MapFile::toBytes)
 
         fun load(project: RomProject): FoxResult<NarcRecords<MapFile>> = NarcRecords.load(project, SPEC)
     }

@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.data.trainer
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
 import io.github.legendaryredfox.foxhg.core.project.RomProject
@@ -34,8 +34,8 @@ class RealRomTrainerMessagesTest {
         assertEquals(735, messages.offsets.size)
 
         fun file0(path: String) = (Narc.parse(project.read(path)!!) as FoxResult.Ok).value.files.single()
-        assertContentEquals(file0(HgssLayout.TRAINER_MESSAGE_TABLE), messages.tableBytes())
-        assertContentEquals(file0(HgssLayout.TRAINER_MESSAGE_OFFSETS), messages.offsetBytes())
+        assertContentEquals(file0(HgssEnglishLayout.trainerMessageTable), messages.tableBytes())
+        assertContentEquals(file0(HgssEnglishLayout.trainerMessageOffsets), messages.offsetBytes())
 
         // the game finds every message from its trainer's offset, and a trainer's messages are next to each other
         val found = (0 until messages.offsets.size).flatMap { messages.messagesOf(it) }

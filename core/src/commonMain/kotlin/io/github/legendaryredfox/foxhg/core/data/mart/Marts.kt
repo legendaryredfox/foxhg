@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.data.mart
 
+import io.github.legendaryredfox.foxhg.core.game.GameLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.patch.PatchStatus
 import io.github.legendaryredfox.foxhg.core.patch.PatchTarget
 import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
@@ -28,13 +28,13 @@ enum class MartGrowth {
 
 /**
  * The Poké Marts kept in the ARM9. [specials] are the lists that `SpMartScreen n` opens (n = index): u16 item numbers ended
- * by 0xFFFF, found through the pointer table at [HgssLayout.SPECIAL_MART_POINTERS]. In the game they sit one after another in the
+ * by 0xFFFF, found through the pointer table at [GameLayout.specialMartPointers]. In the game they sit one after another in the
  * ARM9, so a list keeps its place while it has at most [capacity] items. A longer one is moved to the mart area of the synthetic
  * overlay and its pointer set there (the wiki guide "Adding New Poké Marts" does the same by hand); that needs the ARM9 expansion
  * patch ([growth]). [badge] is the standard clerk's list, which grows with the badge count. Item prices are not here but in the item
  * data. Addresses and logic from the decomp's `scrcmd_mart.c`; checked against the ROM.
  */
-data class Marts(val specials: List<List<Int>>, val badge: List<BadgeMartEntry>, val growth: MartGrowth = MartGrowth.NEEDS_EXPANSION) {
+data class Marts(val specials: List<List<Int>>, val badge: List<BadgeMartEntry>, val layout: GameLayout, val growth: MartGrowth = MartGrowth.NEEDS_EXPANSION) {
     init {
         require(specials.size == VANILLA_ADDRESSES.size) { "${VANILLA_ADDRESSES.size} special marts" }
     }
@@ -54,7 +54,7 @@ data class Marts(val specials: List<List<Int>>, val badge: List<BadgeMartEntry>,
         if (size >= MAX_ITEMS) return false
         if (size < capacity[mart]) return true
         if (growth != MartGrowth.AVAILABLE) return false
-        return areaBytes + (if (isMoved(mart)) 2 else 2 * (size + 2)) <= HgssLayout.MART_AREA_SIZE
+        return areaBytes + (if (isMoved(mart)) 2 else 2 * (size + 2)) <= layout.martAreaSize
     }
 
     fun withItem(mart: Int, slot: Int, item: Int): Marts = copy(specials = specials.mapIndexed { m, l -> if (m == mart) l.toMutableList().also { it[slot] = item } else l })
@@ -74,24 +74,24 @@ data class Marts(val specials: List<List<Int>>, val badge: List<BadgeMartEntry>,
     fun applyTo(arm9: ByteArray, synthetic: ByteArray?): Pair<ByteArray, ByteArray?> {
         val outArm9 = arm9.copyOf()
         val outSynth = synthetic?.copyOf()
-        outSynth?.fill(0, HgssLayout.MART_AREA, HgssLayout.MART_AREA + HgssLayout.MART_AREA_SIZE)
-        var next = HgssLayout.MART_AREA
+        outSynth?.fill(0, layout.martArea, layout.martArea + layout.martAreaSize)
+        var next = layout.martArea
         specials.forEachIndexed { m, items ->
-            val pointerAt = HgssLayout.SPECIAL_MART_POINTERS + 4 * m
+            val pointerAt = layout.specialMartPointers + 4 * m
             if (!isMoved(m)) {
                 for (i in 0 until capacity[m] + 1) outArm9.putU16(VANILLA_ADDRESSES[m] + 2 * i, items.getOrElse(i) { END })
-                outArm9.putU32(pointerAt, (HgssLayout.ARM9_BASE + VANILLA_ADDRESSES[m]).toLong())
+                outArm9.putU32(pointerAt, (layout.arm9Base + VANILLA_ADDRESSES[m]).toLong())
             } else {
                 requireNotNull(outSynth) { "A mart outgrew its place but the ROM has no synthetic overlay" }
                 items.forEachIndexed { i, item -> outSynth.putU16(next + 2 * i, item) }
                 outSynth.putU16(next + 2 * items.size, END)
-                outArm9.putU32(pointerAt, (HgssLayout.SYNTHETIC_OVERLAY_ADDRESS + next).toLong())
+                outArm9.putU32(pointerAt, (layout.syntheticOverlayAddress + next).toLong())
                 next += 2 * (items.size + 1)
             }
         }
         badge.forEachIndexed { i, e ->
-            outArm9.putU16(HgssLayout.BADGE_MART + 4 * i, e.item)
-            outArm9.putU16(HgssLayout.BADGE_MART + 4 * i + 2, e.tier)
+            outArm9.putU16(layout.badgeMart + 4 * i, e.item)
+            outArm9.putU16(layout.badgeMart + 4 * i + 2, e.tier)
         }
         return outArm9 to outSynth
     }
@@ -101,7 +101,7 @@ data class Marts(val specials: List<List<Int>>, val badge: List<BadgeMartEntry>,
             is FoxResult.Ok -> a.value
             is FoxResult.Err -> return a
         }
-        val synth = (PatchTarget.SyntheticOverlay.read(project) as? FoxResult.Ok)?.value?.takeIf { it.size >= HgssLayout.SYNTHETIC_OVERLAY_SIZE }
+        val synth = (PatchTarget.SyntheticOverlay.read(project) as? FoxResult.Ok)?.value?.takeIf { it.size >= layout.syntheticOverlaySize }
         if (synth == null && specials.indices.any { isMoved(it) }) return FoxResult.Err("A mart is longer than its place in the ARM9: apply the ARM9 expansion patch in the ROM toolbox first")
         val (newArm9, newSynth) = applyTo(arm9, synth)
         return project.atomically {
@@ -135,16 +135,16 @@ data class Marts(val specials: List<List<Int>>, val badge: List<BadgeMartEntry>,
         fun badgeItems(badge: List<BadgeMartEntry>, badges: Int): List<Int> = badge.filter { tierFor(badges) >= it.tier }.map { it.item }
 
         /** [synthetic] is the synthetic overlay when the ROM has the expanded one (null otherwise). */
-        fun parse(arm9: ByteArray, synthetic: ByteArray? = null): FoxResult<Marts> {
-            val tableEnd = HgssLayout.SPECIAL_MART_POINTERS + 4 * VANILLA_ADDRESSES.size
-            if (arm9.size < tableEnd || arm9.size < HgssLayout.BADGE_MART + 4 * HgssLayout.BADGE_MART_ENTRIES) return FoxResult.Err("The ARM9 is too small for the mart tables")
+        fun parse(arm9: ByteArray, layout: GameLayout, synthetic: ByteArray? = null): FoxResult<Marts> {
+            val tableEnd = layout.specialMartPointers + 4 * VANILLA_ADDRESSES.size
+            if (arm9.size < tableEnd || arm9.size < layout.badgeMart + 4 * layout.badgeMartEntries) return FoxResult.Err("The ARM9 is too small for the mart tables")
             val specials = ArrayList<List<Int>>()
             val used = ArrayList<IntRange>()
             for (m in VANILLA_ADDRESSES.indices) {
-                val pointer = arm9.u32(HgssLayout.SPECIAL_MART_POINTERS + 4 * m).toInt()
-                val inSynth = synthetic != null && pointer >= HgssLayout.SYNTHETIC_OVERLAY_ADDRESS && pointer < HgssLayout.SYNTHETIC_OVERLAY_ADDRESS + synthetic.size
+                val pointer = arm9.u32(layout.specialMartPointers + 4 * m).toInt()
+                val inSynth = synthetic != null && pointer >= layout.syntheticOverlayAddress && pointer < layout.syntheticOverlayAddress + synthetic.size
                 val image = if (inSynth) synthetic!! else arm9
-                val start = if (inSynth) pointer - HgssLayout.SYNTHETIC_OVERLAY_ADDRESS else pointer - HgssLayout.ARM9_BASE
+                val start = if (inSynth) pointer - layout.syntheticOverlayAddress else pointer - layout.arm9Base
                 if (!inSynth && start != VANILLA_ADDRESSES[m]) return FoxResult.Err("Special mart $m points to 0x${pointer.toString(16)}, not to where the game keeps it: not supported")
                 val items = ArrayList<Int>()
                 var at = start
@@ -155,12 +155,12 @@ data class Marts(val specials: List<List<Int>>, val badge: List<BadgeMartEntry>,
             }
             val growth = when {
                 synthetic == null -> MartGrowth.NEEDS_EXPANSION
-                synthetic.size < HgssLayout.MART_AREA + HgssLayout.MART_AREA_SIZE -> MartGrowth.NEEDS_EXPANSION
-                (HgssLayout.MART_AREA until HgssLayout.MART_AREA + HgssLayout.MART_AREA_SIZE).any { synthetic[it].toInt() != 0 && used.none { r -> it in r } } -> MartGrowth.AREA_IN_USE
+                synthetic.size < layout.martArea + layout.martAreaSize -> MartGrowth.NEEDS_EXPANSION
+                (layout.martArea until layout.martArea + layout.martAreaSize).any { synthetic[it].toInt() != 0 && used.none { r -> it in r } } -> MartGrowth.AREA_IN_USE
                 else -> MartGrowth.AVAILABLE
             }
-            val badge = List(HgssLayout.BADGE_MART_ENTRIES) { BadgeMartEntry(arm9.u16(HgssLayout.BADGE_MART + 4 * it), arm9.u16(HgssLayout.BADGE_MART + 4 * it + 2)) }
-            return FoxResult.Ok(Marts(specials, badge, growth))
+            val badge = List(layout.badgeMartEntries) { BadgeMartEntry(arm9.u16(layout.badgeMart + 4 * it), arm9.u16(layout.badgeMart + 4 * it + 2)) }
+            return FoxResult.Ok(Marts(specials, badge, layout, growth))
         }
 
         fun load(project: RomProject): FoxResult<Marts> {
@@ -170,7 +170,7 @@ data class Marts(val specials: List<List<Int>>, val badge: List<BadgeMartEntry>,
             }
             // The synthetic overlay is only loaded by the game once the ARM9 expansion patch is in.
             val synthetic = if (DsprePatches.arm9Expansion.status(project) == PatchStatus.Applied) (PatchTarget.SyntheticOverlay.read(project) as? FoxResult.Ok)?.value else null
-            return parse(arm9, synthetic)
+            return parse(arm9, project.layout, synthetic)
         }
     }
 }

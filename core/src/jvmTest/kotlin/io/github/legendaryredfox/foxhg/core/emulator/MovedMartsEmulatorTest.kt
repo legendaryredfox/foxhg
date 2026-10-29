@@ -1,11 +1,11 @@
 package io.github.legendaryredfox.foxhg.core.emulator
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.mart.Marts
 import io.github.legendaryredfox.foxhg.core.emulator.EmulatorSupport.available
 import io.github.legendaryredfox.foxhg.core.emulator.EmulatorSupport.list
 import io.github.legendaryredfox.foxhg.core.emulator.EmulatorSupport.romPath
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSink
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
 import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
@@ -36,11 +36,11 @@ class MovedMartsEmulatorTest {
             EmulatorDriver(built, dir).use { emu ->
                 emu.step(600)
                 for (m in listOf(0, 28)) {
-                    val pointer = emu.readU32(0x02000000L + HgssLayout.SPECIAL_MART_POINTERS + 4 * m)
-                    assertTrue(pointer >= HgssLayout.SYNTHETIC_OVERLAY_ADDRESS, "mart $m points into the synthetic overlay, got 0x${pointer.toString(16)}")
+                    val pointer = emu.readU32(0x02000000L + HgssEnglishLayout.specialMartPointers + 4 * m)
+                    assertTrue(pointer >= HgssEnglishLayout.syntheticOverlayAddress, "mart $m points into the synthetic overlay, got 0x${pointer.toString(16)}")
                     assertEquals(expected[m], emu.list(pointer), "mart $m as the game reads it from the synthetic overlay")
                 }
-                assertEquals(expected[1], emu.list(emu.readU32(0x02000000L + HgssLayout.SPECIAL_MART_POINTERS + 4)), "an untouched mart is where it was")
+                assertEquals(expected[1], emu.list(emu.readU32(0x02000000L + HgssEnglishLayout.specialMartPointers + 4)), "an untouched mart is where it was")
             }
         } finally {
             dir.toFile().deleteRecursively()

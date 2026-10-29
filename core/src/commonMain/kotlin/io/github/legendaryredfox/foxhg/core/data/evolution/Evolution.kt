@@ -5,7 +5,6 @@ import io.github.legendaryredfox.foxhg.core.data.csv.CsvColumn
 import io.github.legendaryredfox.foxhg.core.data.csv.RecordCsv
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
@@ -89,7 +88,7 @@ data class EvolutionData(val slots: List<EvolutionEntry>, val trailing: ByteArra
             return FoxResult.Ok(EvolutionData(slots, bytes.copyOfRange(SLOTS * ENTRY_SIZE, bytes.size)))
         }
 
-        val SPEC = RecordSpec(HgssLayout.EVOLUTIONS, ::parse, EvolutionData::toBytes)
+        val SPEC = RecordSpec({ it.evolutions }, ::parse, EvolutionData::toBytes)
 
         /** CSV columns: `method`, `param` and `target` of each of the [SLOTS] slots (`method1`, `param1`, `target1`, `method2`, ...). Bytes after the slots stay as they are. */
         val CSV: RecordCsv<EvolutionData> by lazy {

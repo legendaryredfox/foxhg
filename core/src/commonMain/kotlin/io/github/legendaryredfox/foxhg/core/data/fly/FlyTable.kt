@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.data.fly
 
+import io.github.legendaryredfox.foxhg.core.game.GameLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
@@ -65,27 +65,27 @@ data class FlyEntry(
 data class FlyTable(val entries: List<FlyEntry>) {
     fun with(index: Int, entry: FlyEntry): FlyTable = copy(entries = entries.toMutableList().also { it[index] = entry })
 
-    fun applyTo(arm9: ByteArray): ByteArray {
-        require(entries.size == HgssLayout.FLY_TABLE_ENTRIES) { "The fly table has ${HgssLayout.FLY_TABLE_ENTRIES} entries" }
+    fun applyTo(arm9: ByteArray, layout: GameLayout): ByteArray {
+        require(entries.size == layout.flyTableEntries) { "The fly table has ${layout.flyTableEntries} entries" }
         val out = arm9.copyOf()
-        entries.forEachIndexed { i, e -> e.write(out, HgssLayout.FLY_TABLE_ARM9 + i * FlyEntry.SIZE) }
+        entries.forEachIndexed { i, e -> e.write(out, layout.flyTableArm9 + i * FlyEntry.SIZE) }
         return out
     }
 
     companion object {
-        fun parse(arm9: ByteArray): FoxResult<FlyTable> {
-            val end = HgssLayout.FLY_TABLE_ARM9 + HgssLayout.FLY_TABLE_ENTRIES * FlyEntry.SIZE
+        fun parse(arm9: ByteArray, layout: GameLayout): FoxResult<FlyTable> {
+            val end = layout.flyTableArm9 + layout.flyTableEntries * FlyEntry.SIZE
             if (arm9.size < end) return FoxResult.Err("ARM9 is too small for the fly table")
-            return FoxResult.Ok(FlyTable(List(HgssLayout.FLY_TABLE_ENTRIES) { FlyEntry.read(arm9, HgssLayout.FLY_TABLE_ARM9 + it * FlyEntry.SIZE) }))
+            return FoxResult.Ok(FlyTable(List(layout.flyTableEntries) { FlyEntry.read(arm9, layout.flyTableArm9 + it * FlyEntry.SIZE) }))
         }
 
         fun load(project: RomProject): FoxResult<FlyTable> = when (val a = project.readArm9()) {
-            is FoxResult.Ok -> parse(a.value)
+            is FoxResult.Ok -> parse(a.value, project.layout)
             is FoxResult.Err -> a
         }
 
         fun save(project: RomProject, table: FlyTable): FoxResult<Unit> = when (val a = project.readArm9()) {
-            is FoxResult.Ok -> project.writeArm9(table.applyTo(a.value))
+            is FoxResult.Ok -> project.writeArm9(table.applyTo(a.value, project.layout))
             is FoxResult.Err -> a
         }
     }

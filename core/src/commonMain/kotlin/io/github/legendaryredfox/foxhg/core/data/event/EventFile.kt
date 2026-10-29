@@ -5,7 +5,6 @@ import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
 import io.github.legendaryredfox.foxhg.core.data.csv.CsvColumn
 import io.github.legendaryredfox.foxhg.core.data.csv.RecordCsv
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.putU32
@@ -297,7 +296,7 @@ data class EventFile(
             return FoxResult.Ok(EventFile(spawnables, overworlds, warps, triggers, bytes.drop(p).map { it.toInt() and 0xFF }))
         }
 
-        val SPEC = RecordSpec(HgssLayout.EVENTS, ::parse, EventFile::toBytes)
+        val SPEC = RecordSpec({ it.events }, ::parse, EventFile::toBytes)
 
         fun load(project: RomProject): FoxResult<NarcRecords<EventFile>> = NarcRecords.load(project, SPEC)
     }

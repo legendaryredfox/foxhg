@@ -28,7 +28,6 @@ import io.github.legendaryredfox.foxhg.core.data.item.ItemData
 import io.github.legendaryredfox.foxhg.core.data.mart.BadgeMartEntry
 import io.github.legendaryredfox.foxhg.core.data.mart.MartGrowth
 import io.github.legendaryredfox.foxhg.core.data.mart.Marts
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.game.GameNames
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
@@ -132,7 +131,7 @@ private fun SpecialMart(model: MartEditorModel, marts: Marts, mart: Int) {
     SectionCard(
         stringResource(Res.string.editor_items),
         subtitle = "Opened by the script command SpMartScreen $mart. Prices are set per item in the Items editor. " + when {
-            marts.growth == MartGrowth.AVAILABLE -> tr(Res.string.mart_it_holds_x_items_in_the_arm9_more, marts.capacity[mart], marts.areaBytes, HgssLayout.MART_AREA_SIZE)
+            marts.growth == MartGrowth.AVAILABLE -> tr(Res.string.mart_it_holds_x_items_in_the_arm9_more, marts.capacity[mart], marts.areaBytes, marts.layout.martAreaSize)
             marts.growth == MartGrowth.NEEDS_EXPANSION -> tr(Res.string.mart_it_holds_up_to_x_items_x_now_the_l, marts.capacity[mart], list.size)
             else -> tr(Res.string.mart_it_holds_up_to_x_items_the_mart_ar, marts.capacity[mart])
         },

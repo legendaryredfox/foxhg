@@ -2,7 +2,6 @@ package io.github.legendaryredfox.foxhg.core.data.safari
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
 
@@ -146,6 +145,6 @@ data class SafariZoneFile(val groups: List<SafariGroup>, val padding: List<Int> 
             return FoxResult.Ok(SafariZoneFile(groups, List(3) { bytes[GROUPS.size + it].toInt() and 0xFF }))
         }
 
-        val SPEC = RecordSpec(HgssLayout.SAFARI_ZONE, ::parse, SafariZoneFile::toBytes)
+        val SPEC = RecordSpec({ it.safariZone }, ::parse, SafariZoneFile::toBytes)
     }
 }

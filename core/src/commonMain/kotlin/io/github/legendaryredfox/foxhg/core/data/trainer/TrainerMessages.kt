@@ -2,7 +2,6 @@ package io.github.legendaryredfox.foxhg.core.data.trainer
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.csv.Csv
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.project.RomProject
@@ -116,7 +115,7 @@ class TrainerMessages(
             }
             return FoxResult.Ok(Narc(listOf(bytes), narc.nameTable).toBytes())
         }
-        for ((path, bytes) in listOf(HgssLayout.TRAINER_MESSAGE_TABLE to tableBytes(), HgssLayout.TRAINER_MESSAGE_OFFSETS to offsetBytes())) {
+        for ((path, bytes) in listOf(project.layout.trainerMessageTable to tableBytes(), project.layout.trainerMessageOffsets to offsetBytes())) {
             val narc = when (val r = narcOf(path, bytes)) { is FoxResult.Ok -> r.value; is FoxResult.Err -> return@atomically r }
             when (val w = project.write(path, narc)) { is FoxResult.Err -> return@atomically w; is FoxResult.Ok -> Unit }
         }
@@ -177,8 +176,8 @@ class TrainerMessages(
                     is FoxResult.Err -> FoxResult.Err("$path: ${n.message}")
                 }
             }
-            val table = when (val r = file0(HgssLayout.TRAINER_MESSAGE_TABLE)) { is FoxResult.Ok -> r.value; is FoxResult.Err -> return r }
-            val offsets = when (val r = file0(HgssLayout.TRAINER_MESSAGE_OFFSETS)) { is FoxResult.Ok -> r.value; is FoxResult.Err -> return r }
+            val table = when (val r = file0(project.layout.trainerMessageTable)) { is FoxResult.Ok -> r.value; is FoxResult.Err -> return r }
+            val offsets = when (val r = file0(project.layout.trainerMessageOffsets)) { is FoxResult.Ok -> r.value; is FoxResult.Err -> return r }
             val banks = when (val b = TextArchive.load(project)) { is FoxResult.Ok -> b.value; is FoxResult.Err -> return b }
             val texts = banks.records.getOrNull(TextBanks.TRAINER_MESSAGES) ?: return FoxResult.Err("The ROM has no message bank ${TextBanks.TRAINER_MESSAGES}")
             return parse(table, offsets, texts)

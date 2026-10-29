@@ -2,7 +2,6 @@ package io.github.legendaryredfox.foxhg.core.data.starter
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.personal.PersonalTable
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
@@ -71,8 +70,8 @@ data class Starters(val species: List<Int>, val heldItem: Int?, val level: Int?)
             val patched = new.applyToArm9(arm9) ?: return FoxResult.Err("The starter table was not found in the ARM9")
             (project.writeArm9(patched) as? FoxResult.Err)?.let { return it }
 
-            val chooser = (project.readOverlay(HgssLayout.STARTER_CHOOSER_OVERLAY) as? FoxResult.Ok)?.value?.let { new.applyToOverlay(it) }
-                ?.let { project.writeOverlay(HgssLayout.STARTER_CHOOSER_OVERLAY, it) is FoxResult.Ok } ?: false
+            val chooser = (project.readOverlay(project.layout.starterChooserOverlay) as? FoxResult.Ok)?.value?.let { new.applyToOverlay(it) }
+                ?.let { project.writeOverlay(project.layout.starterChooserOverlay, it) is FoxResult.Ok } ?: false
             if (old.sameSpecies(new)) return FoxResult.Ok(Report(0, false, chooser))
             val scripts = RivalScripts.retarget(project, old.species, new.species)
             val text = StarterText.retarget(project, old.species, new.species)
@@ -143,15 +142,15 @@ internal object RivalScripts {
 
     /** Rewrites the comparisons for [old] to [new]; returns how many script files were changed. */
     fun retarget(project: RomProject, old: List<Int>, new: List<Int>): Int {
-        val bytes = project.read(HgssLayout.SCRIPTS) ?: return 0
+        val bytes = project.read(project.layout.scripts) ?: return 0
         val narc = (Narc.parse(bytes) as? FoxResult.Ok)?.value ?: return 0
         var changed = 0
         val files = narc.files.toMutableList()
-        for (id in HgssLayout.RIVAL_SCRIPT_FILES) {
+        for (id in project.layout.rivalScriptFiles) {
             val data = files.getOrNull(id) ?: continue
             patch(data, old, new)?.let { files[id] = it; changed++ }
         }
-        if (changed > 0) project.write(HgssLayout.SCRIPTS, Narc(files, narc.nameTable).toBytes())
+        if (changed > 0) project.write(project.layout.scripts, Narc(files, narc.nameTable).toBytes())
         return changed
     }
 
@@ -182,7 +181,7 @@ internal object StarterText {
         fun speciesName(s: Int) = names.species.getOrNull(s)?.takeIf { it.isNotBlank() }
         fun typeName(s: Int) = personal.records.getOrNull(s)?.let { names.types.getOrNull(it.type1) }?.takeIf { it.isNotBlank() }
         val table = (io.github.legendaryredfox.foxhg.core.text.TextArchive.load(project) as? FoxResult.Ok)?.value ?: return false
-        var archive = table.records.getOrNull(HgssLayout.STARTER_TEXT_BANK) ?: return false
+        var archive = table.records.getOrNull(project.layout.starterTextBank) ?: return false
         var changed = false
         for (i in 0 until 3) {
             for (m in messagesOf(i)) {
@@ -194,7 +193,7 @@ internal object StarterText {
                 if (text != current) (archive.withText(m, text) as? FoxResult.Ok)?.let { archive = it.value; changed = true }
             }
         }
-        if (changed) table.with(HgssLayout.STARTER_TEXT_BANK, archive).save(project)
+        if (changed) table.with(project.layout.starterTextBank, archive).save(project)
         return changed
     }
 }

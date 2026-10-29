@@ -3,7 +3,6 @@ package io.github.legendaryredfox.foxhg.core.text
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.putU32
@@ -71,7 +70,7 @@ class TextArchive(val key: Int, val entries: List<TextEntry>) {
     }
 
     companion object {
-        val SPEC = RecordSpec(HgssLayout.MESSAGES, ::parse, TextArchive::toBytes)
+        val SPEC = RecordSpec({ it.messages }, ::parse, TextArchive::toBytes)
 
         fun load(project: RomProject): FoxResult<NarcRecords<TextArchive>> = NarcRecords.load(project, SPEC)
 

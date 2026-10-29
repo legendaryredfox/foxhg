@@ -1,9 +1,9 @@
 package io.github.legendaryredfox.foxhg.core.data
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.fly.FlyEntry
 import io.github.legendaryredfox.foxhg.core.data.fly.FlyTable
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -14,26 +14,26 @@ class FlyTableTest {
 
     private fun arm9(): ByteArray {
         val bytes = ByteArray(0x110000) { 0x5A }
-        FlyTable(List(HgssLayout.FLY_TABLE_ENTRIES) { entry.copy(flagIndex = it) }).applyTo(bytes).copyInto(bytes)
+        FlyTable(List(HgssEnglishLayout.flyTableEntries) { entry.copy(flagIndex = it) }).applyTo(bytes, HgssEnglishLayout).copyInto(bytes)
         return bytes
     }
 
-    private fun parse(bytes: ByteArray) = (FlyTable.parse(bytes) as FoxResult.Ok).value
+    private fun parse(bytes: ByteArray) = (FlyTable.parse(bytes, HgssEnglishLayout) as FoxResult.Ok).value
 
     @Test
     fun entriesRoundTrip() {
         val bytes = arm9()
         val table = parse(bytes)
-        assertEquals(HgssLayout.FLY_TABLE_ENTRIES, table.entries.size)
+        assertEquals(HgssEnglishLayout.flyTableEntries, table.entries.size)
         assertEquals(entry.copy(flagIndex = 3), table.entries[3])
-        assertContentEquals(bytes, table.applyTo(bytes))
+        assertContentEquals(bytes, table.applyTo(bytes, HgssEnglishLayout))
     }
 
     @Test
     fun anEditTouchesOnlyItsOwnEighteenBytes() {
         val bytes = arm9()
-        val out = parse(bytes).with(2, entry.copy(flagIndex = 2, isFlyPoint = true, flyX = 11)).applyTo(bytes)
-        val start = HgssLayout.FLY_TABLE_ARM9 + 2 * FlyEntry.SIZE
+        val out = parse(bytes).with(2, entry.copy(flagIndex = 2, isFlyPoint = true, flyX = 11)).applyTo(bytes, HgssEnglishLayout)
+        val start = HgssEnglishLayout.flyTableArm9 + 2 * FlyEntry.SIZE
         for (i in bytes.indices) if (i !in start until start + FlyEntry.SIZE) assertEquals(bytes[i], out[i], "byte $i")
         assertEquals(true, parse(out).entries[2].isFlyPoint)
         assertEquals(11, parse(out).entries[2].flyX)
@@ -41,6 +41,6 @@ class FlyTableTest {
 
     @Test
     fun aShortArm9IsRefused() {
-        assertTrue(FlyTable.parse(ByteArray(16)) is FoxResult.Err)
+        assertTrue(FlyTable.parse(ByteArray(16), HgssEnglishLayout) is FoxResult.Err)
     }
 }

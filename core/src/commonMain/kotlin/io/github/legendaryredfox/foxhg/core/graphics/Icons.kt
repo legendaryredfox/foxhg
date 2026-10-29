@@ -2,7 +2,6 @@ package io.github.legendaryredfox.foxhg.core.graphics
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.event.OverworldSprites
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.u16
 import io.github.legendaryredfox.foxhg.core.u32
@@ -13,14 +12,14 @@ import io.github.legendaryredfox.foxhg.core.project.RomProject
  * has edited is what is shown. A missing or unreadable picture is null.
  */
 class Icons(private val project: RomProject) {
-    private val pokemonNarc: Narc? by lazy { narc(HgssLayout.POKEMON_ICONS) }
-    private val itemNarc: Narc? by lazy { narc(HgssLayout.ITEM_ICONS) }
+    private val pokemonNarc: Narc? by lazy { narc(project.layout.pokemonIcons) }
+    private val itemNarc: Narc? by lazy { narc(project.layout.itemIcons) }
     private val pokemonPalette: Nclr? by lazy { pokemonNarc?.files?.firstOrNull()?.let { (Nclr.parse(it) as? FoxResult.Ok)?.value } }
-    private val trainerNarc: Narc? by lazy { narc(HgssLayout.TRAINER_FRONT_SPRITES) }
-    private val battleNarc: Narc? by lazy { narc(HgssLayout.POKEMON_SPRITES) }
-    private val alternateNarc: Narc? by lazy { narc(HgssLayout.ALTERNATE_POKEMON_SPRITES) }
+    private val trainerNarc: Narc? by lazy { narc(project.layout.trainerFrontSprites) }
+    private val battleNarc: Narc? by lazy { narc(project.layout.pokemonSprites) }
+    private val alternateNarc: Narc? by lazy { narc(project.layout.alternatePokemonSprites) }
     private val spriteTable: OverworldSprites? by lazy { (OverworldSprites.load(project) as? FoxResult.Ok)?.value }
-    private val spriteNarc: Narc? by lazy { narc(HgssLayout.OVERWORLD_SPRITES) }
+    private val spriteNarc: Narc? by lazy { narc(project.layout.overworldSprites) }
     private val sprites = HashMap<Int, Nsbtx?>()
     private val cache = HashMap<String, RgbaImage?>()
 

@@ -1,11 +1,13 @@
 package io.github.legendaryredfox.foxhg.core.project
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
+import io.github.legendaryredfox.foxhg.core.game.GameLayout
+import io.github.legendaryredfox.foxhg.core.game.GameLayouts
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.arm9.Arm9
 import io.github.legendaryredfox.foxhg.core.compression.Blz
 import io.github.legendaryredfox.foxhg.core.game.GameNames
 import io.github.legendaryredfox.foxhg.core.game.GameText
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.nds.NdsBuilder
 import io.github.legendaryredfox.foxhg.core.nds.NdsRom
@@ -45,6 +47,9 @@ class RomProject(
     initialArm9: ByteArray? = null,
     initialOverlays: Map<Int, ByteArray> = emptyMap(),
 ) {
+    /** Where this ROM's game and language keep their data. A ROM with no layout opens read-only and has no editors, so it gets the English HGSS one only to have something. */
+    val layout: GameLayout = GameLayouts.of(rom.header.profile) ?: HgssEnglishLayout
+
     private val edits = LinkedHashMap<String, ByteArray>(initialEdits)
     private var arm9Edit: ByteArray? = initialArm9
     private val overlayEdits = LinkedHashMap<Int, ByteArray>(initialOverlays)
@@ -278,7 +283,7 @@ class RomProject(
     val names: GameNames?
         @kotlin.jvm.Synchronized get() {
             if (!namesLoaded) {
-                namesCache = read(HgssLayout.MESSAGES)
+                namesCache = read(layout.messages)
                     ?.let { (Narc.parse(it) as? FoxResult.Ok)?.value }
                     ?.let { GameNames(GameText(it)) }
                 namesLoaded = true
@@ -287,7 +292,7 @@ class RomProject(
         }
 
     private fun messagesChanged(path: String) {
-        if (path.trim('/') == HgssLayout.MESSAGES) namesLoaded = false
+        if (path.trim('/') == layout.messages) namesLoaded = false
     }
 
     @kotlin.jvm.Synchronized

@@ -1,8 +1,8 @@
 package io.github.legendaryredfox.foxhg.core.data.rocksmash
 
+import io.github.legendaryredfox.foxhg.core.game.GameLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
@@ -26,7 +26,7 @@ data class RockSmashSite(val odds: Int, val type: Int) {
             if (bytes.size != SIZE) FoxResult.Err("A Rock Smash record is $SIZE bytes, got ${bytes.size}")
             else FoxResult.Ok(RockSmashSite(bytes.u16(0), bytes.u16(2)))
 
-        val SPEC = RecordSpec(HgssLayout.ROCK_SMASH, ::parse, RockSmashSite::toBytes)
+        val SPEC = RecordSpec({ it.rockSmash }, ::parse, RockSmashSite::toBytes)
     }
 }
 
@@ -41,8 +41,9 @@ data class RockSmashItems(val tables: List<List<Int>>) {
         RockSmashItems(tables.mapIndexed { t, items -> if (t == table) items.toMutableList().also { it[slot] = item } else items })
 
     /** Writes the tables into a copy of [overlay]. */
-    fun applyTo(overlay: ByteArray): ByteArray = overlay.copyOf().also { out ->
-        tables.forEachIndexed { t, items -> items.forEachIndexed { slot, item -> out.putU16(OFFSETS[t] + 2 * slot, item) } }
+    fun applyTo(overlay: ByteArray, layout: GameLayout): ByteArray = overlay.copyOf().also { out ->
+        val offsets = offsets(layout)
+        tables.forEachIndexed { t, items -> items.forEachIndexed { slot, item -> out.putU16(offsets[t] + 2 * slot, item) } }
     }
 
     companion object {
@@ -52,21 +53,22 @@ data class RockSmashItems(val tables: List<List<Int>>) {
         val SLOT_CHANCE = listOf(25, 20, 10, 10, 10, 10, 10, 5)
 
         /** Overlay offsets by table type: default, Ruins of Alph, Cliff Cave. */
-        private val OFFSETS = listOf(HgssLayout.ROCK_SMASH_DEFAULT_TABLE, HgssLayout.ROCK_SMASH_RUINS_TABLE, HgssLayout.ROCK_SMASH_CLIFF_TABLE)
+        private fun offsets(layout: GameLayout) = listOf(layout.rockSmashDefaultTable, layout.rockSmashRuinsTable, layout.rockSmashCliffTable)
 
-        fun parse(overlay: ByteArray): FoxResult<RockSmashItems> {
-            val end = OFFSETS.max() + 2 * SLOTS
-            if (overlay.size < end) return FoxResult.Err("Overlay ${HgssLayout.ROCK_SMASH_ITEMS_OVERLAY} is too small for the Rock Smash item tables")
-            return FoxResult.Ok(RockSmashItems(OFFSETS.map { at -> List(SLOTS) { overlay.u16(at + 2 * it) } }))
+        fun parse(overlay: ByteArray, layout: GameLayout): FoxResult<RockSmashItems> {
+            val offsets = offsets(layout)
+            val end = offsets.max() + 2 * SLOTS
+            if (overlay.size < end) return FoxResult.Err("Overlay ${layout.rockSmashItemsOverlay} is too small for the Rock Smash item tables")
+            return FoxResult.Ok(RockSmashItems(offsets.map { at -> List(SLOTS) { overlay.u16(at + 2 * it) } }))
         }
 
-        fun load(project: RomProject): FoxResult<RockSmashItems> = when (val o = project.readOverlay(HgssLayout.ROCK_SMASH_ITEMS_OVERLAY)) {
-            is FoxResult.Ok -> parse(o.value)
+        fun load(project: RomProject): FoxResult<RockSmashItems> = when (val o = project.readOverlay(project.layout.rockSmashItemsOverlay)) {
+            is FoxResult.Ok -> parse(o.value, project.layout)
             is FoxResult.Err -> o
         }
 
-        fun save(project: RomProject, items: RockSmashItems): FoxResult<Unit> = when (val o = project.readOverlay(HgssLayout.ROCK_SMASH_ITEMS_OVERLAY)) {
-            is FoxResult.Ok -> project.writeOverlay(HgssLayout.ROCK_SMASH_ITEMS_OVERLAY, items.applyTo(o.value))
+        fun save(project: RomProject, items: RockSmashItems): FoxResult<Unit> = when (val o = project.readOverlay(project.layout.rockSmashItemsOverlay)) {
+            is FoxResult.Ok -> project.writeOverlay(project.layout.rockSmashItemsOverlay, items.applyTo(o.value, project.layout))
             is FoxResult.Err -> o
         }
     }

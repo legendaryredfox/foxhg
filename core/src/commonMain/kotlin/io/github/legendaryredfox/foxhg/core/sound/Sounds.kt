@@ -1,7 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.sound
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
 /**
@@ -9,7 +8,7 @@ import io.github.legendaryredfox.foxhg.core.project.RomProject
  * editable here) and keeps the rendered clips of the sounds it was asked for.
  */
 class Sounds(project: RomProject) {
-    val sdat: Sdat? = project.read(HgssLayout.SOUND_ARCHIVE)?.let { (Sdat.parse(it) as? FoxResult.Ok)?.value }
+    val sdat: Sdat? = project.read(project.layout.soundArchive)?.let { (Sdat.parse(it) as? FoxResult.Ok)?.value }
     private val synth = sdat?.let { Synth(it) }
     private val cache = HashMap<String, PcmClip?>()
 

@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.data
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
 import io.github.legendaryredfox.foxhg.core.patch.BattleBugFixPatches
@@ -69,7 +69,7 @@ class PatchToolboxRealRomTest {
             assertTrue(patch.apply(project) is FoxResult.Err, "${patch.id}: applying twice is refused")
             val after = images(project)
             if (patch !is BytePatch) {
-                val a = Narc.parse(project.read(HgssLayout.AREA_DATA)!!).let { (it as FoxResult.Ok).value.files }
+                val a = Narc.parse(project.read(HgssEnglishLayout.areaData)!!).let { (it as FoxResult.Ok).value.files }
                 assertTrue(a.all { it[4] == 0xFF.toByte() && it[5] == 0xFF.toByte() }, "every area data file has no dynamic texture")
                 continue
             }
@@ -80,7 +80,7 @@ class PatchToolboxRealRomTest {
                 for (i in image.indices) if (ranges.none { i in it }) assertEquals(image[i], after.getValue(target)[i], "${patch.id}: $target byte $i")
             }
         }
-        assertEquals(HgssLayout.SYNTHETIC_OVERLAY_SIZE, images(project).getValue(PatchTarget.SyntheticOverlay).size)
+        assertEquals(HgssEnglishLayout.syntheticOverlaySize, images(project).getValue(PatchTarget.SyntheticOverlay).size)
         while (project.canUndo) project.undo()
         val restored = images(project)
         for ((target, bytes) in vanilla) assertContentEquals(bytes, restored.getValue(target), "$target after undoing everything")

@@ -1,7 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.data.trainer
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
@@ -17,8 +16,8 @@ class TrainerTable(val trainers: List<Trainer>, private val headerNames: ByteArr
         val headers = Narc(trainers.map { it.header.toBytes() }, headerNames).toBytes()
         val parties = Narc(trainers.map { it.partyBytes() }, partyNames).toBytes()
         return project.atomically {
-            (project.write(HgssLayout.TRAINER_DATA, headers) as? FoxResult.Err)?.let { return@atomically it }
-            project.write(HgssLayout.TRAINER_PARTIES, parties)
+            (project.write(project.layout.trainerData, headers) as? FoxResult.Err)?.let { return@atomically it }
+            project.write(project.layout.trainerParties, parties)
         }
     }
 
@@ -30,8 +29,8 @@ class TrainerTable(val trainers: List<Trainer>, private val headerNames: ByteArr
             (read(project) { path -> project.rom.read(path) } as? FoxResult.Ok)?.value?.trainers ?: emptyList()
 
         private fun read(project: RomProject, bytesOf: (String) -> ByteArray?): FoxResult<TrainerTable> {
-            val headers = narc(HgssLayout.TRAINER_DATA, bytesOf) ?: return FoxResult.Err("The ROM has no ${HgssLayout.TRAINER_DATA}")
-            val parties = narc(HgssLayout.TRAINER_PARTIES, bytesOf) ?: return FoxResult.Err("The ROM has no ${HgssLayout.TRAINER_PARTIES}")
+            val headers = narc(project.layout.trainerData, bytesOf) ?: return FoxResult.Err("The ROM has no ${project.layout.trainerData}")
+            val parties = narc(project.layout.trainerParties, bytesOf) ?: return FoxResult.Err("The ROM has no ${project.layout.trainerParties}")
             if (headers.files.size != parties.files.size) {
                 return FoxResult.Err("${headers.files.size} trainer headers but ${parties.files.size} parties")
             }

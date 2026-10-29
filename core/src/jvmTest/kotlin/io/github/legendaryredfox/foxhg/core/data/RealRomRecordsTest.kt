@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.data
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.eggmove.EggMoveGroup
 import io.github.legendaryredfox.foxhg.core.data.eggmove.EggMoves
@@ -63,7 +64,6 @@ import io.github.legendaryredfox.foxhg.core.data.safari.SafariEncounter
 import io.github.legendaryredfox.foxhg.core.data.safari.SafariZoneFile
 import io.github.legendaryredfox.foxhg.core.data.rocksmash.RockSmashSite
 import io.github.legendaryredfox.foxhg.core.data.starter.Starters
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.data.trainerclass.TrainerClassGenders
 import io.github.legendaryredfox.foxhg.core.script.ScriptEntry
@@ -180,7 +180,7 @@ class RealRomRecordsTest {
         assertEquals("Focus Punch", moves[table.moves[0]], "TM01")
         assertEquals("Cut", moves[table.moves[92]], "HM01")
         val plain = project.readArm9().ok()
-        assertContentEquals(plain, table.applyTo(plain), "unchanged table must not touch the ARM9")
+        assertContentEquals(plain, table.applyTo(plain, HgssEnglishLayout), "unchanged table must not touch the ARM9")
         TmHmTable.save(project, table.with(0, 1)).ok()
         assertEquals(1, TmHmTable.load(project).ok().moves[0])
         assertTrue(project.editedArm9 != null)
@@ -205,7 +205,7 @@ class RealRomRecordsTest {
         assertEquals(128, table.genders.size)
         assertEquals(listOf("Youngster" to 0, "Lass" to 1), listOf(2, 3).map { names[it] to table.genders[it] })
         val plain = project.readArm9().ok()
-        assertContentEquals(plain, table.applyTo(plain))
+        assertContentEquals(plain, table.applyTo(plain, HgssEnglishLayout))
         TrainerClassGenders.save(project, table.with(2, 1)).ok()
         assertEquals(1, TrainerClassGenders.load(project).ok().genders[2])
     }
@@ -222,7 +222,7 @@ class RealRomRecordsTest {
         assertEquals(24, table.entries.count { it.isFlyPoint && it.flyHeader == it.unlockHeader && it.flyX == it.unlockX }, "most towns unlock where Fly lands")
         assertTrue(table.entries.all { it.flyHeader < headers.size && it.blackoutHeader < headers.size && it.unlockHeader < headers.size })
         val plain = project.readArm9().ok()
-        assertContentEquals(plain, table.applyTo(plain), "an unedited table writes back the same ARM9")
+        assertContentEquals(plain, table.applyTo(plain, HgssEnglishLayout), "an unedited table writes back the same ARM9")
 
         FlyTable.save(project, table.with(0, table.entries[0].copy(flyX = 700, isFlyPoint = false))).ok()
         assertEquals(700 to false, FlyTable.load(project).ok().entries[0].let { it.flyX to it.isFlyPoint })
@@ -240,7 +240,7 @@ class RealRomRecordsTest {
         assertEquals(231, table.entries.map { it.index }.toSet().size, "every spot has its own index")
         assertTrue(table.entries.all { it.quantity >= 1 && it.unknown3 == 0 && it.unknown4 == 0 })
         val plain = project.readArm9().ok()
-        assertContentEquals(plain, table.applyTo(plain), "an unedited table writes back the same ARM9")
+        assertContentEquals(plain, table.applyTo(plain, HgssEnglishLayout), "an unedited table writes back the same ARM9")
 
         HiddenItems.save(project, table.with(0, table.entries[0].copy(item = 3, quantity = 5))).ok()
         assertEquals(3 to 5, HiddenItems.load(project).ok().entries[0].let { it.item to it.quantity })
@@ -265,7 +265,7 @@ class RealRomRecordsTest {
         assertTrue(report.textPatched && report.chooserPatched)
 
         val scripts = Narc.parse(project.read("a/0/1/2")!!).ok().files
-        for (id in HgssLayout.RIVAL_SCRIPT_FILES) {
+        for (id in HgssEnglishLayout.rivalScriptFiles) {
             val d = scripts[id]
             val at = (0..d.size - 13).first { i -> d[i] == 0xCE.toByte() && d[i + 1] == 0.toByte() && d[i + 2] == 0x0C.toByte() && d[i + 3] == 0x80.toByte() && d[i + 8] == 1.toByte() }
             assertEquals(4, d[at + 17 + (d[at + 13].toInt() and 0xFF) + 4].toInt(), "script $id compares the second branch with the new second species")
@@ -332,14 +332,14 @@ class RealRomRecordsTest {
 
     @Test
     fun battleDisplayRoundTripsAndEditsSaveBack() = withProject { project ->
-        val rawOffsets = project.read(BattleDisplayTable.OFFSETS_PATH)!!
-        val rawHeights = project.read(BattleDisplayTable.HEIGHTS_PATH)!!
+        val rawOffsets = project.read(project.layout.battleDisplay)!!
+        val rawHeights = project.read(project.layout.pokemonHeights)!!
         val table = BattleDisplayTable.load(project).ok()
         assertEquals(494, table.count, "one record per species, egg slot included")
         table.save(project).ok()
         assertTrue(!project.isDirty, "an unedited table writes back the same bytes")
-        assertContentEquals(rawOffsets, project.read(BattleDisplayTable.OFFSETS_PATH)!!)
-        assertContentEquals(rawHeights, project.read(BattleDisplayTable.HEIGHTS_PATH)!!)
+        assertContentEquals(rawOffsets, project.read(project.layout.battleDisplay)!!)
+        assertContentEquals(rawHeights, project.read(project.layout.pokemonHeights)!!)
         val all = List(table.count) { table.get(it) }
         println("battle display: y=${all.minOf { it.spriteY }}..${all.maxOf { it.spriteY }} shadowX=${all.minOf { it.shadowX }}..${all.maxOf { it.shadowX }} size=${all.map { it.shadowSize }.toSet()} movement=${all.map { it.movement }.toSet()}")
         println("battle display: bulbasaur=${all[1]} pikachu=${all[25]} mew=${all[151]}")
@@ -501,7 +501,7 @@ class RealRomRecordsTest {
 
         val written = added.applyTo(arm9, null).first
         val changed = arm9.indices.filter { arm9[it] != written[it] }
-        assertTrue(changed.isNotEmpty() && changed.all { it in 0xFBA54..0xFBC80 || it in HgssLayout.BADGE_MART until HgssLayout.BADGE_MART + 4 * 19 }, "only the mart bytes change")
+        assertTrue(changed.isNotEmpty() && changed.all { it in 0xFBA54..0xFBC80 || it in HgssEnglishLayout.badgeMart until HgssEnglishLayout.badgeMart + 4 * 19 }, "only the mart bytes change")
         added.save(project).ok()
         assertEquals(added.specials, Marts.load(project).ok().specials)
         assertEquals(added.badge, Marts.load(project).ok().badge)
@@ -533,8 +533,8 @@ class RealRomRecordsTest {
         assertEquals(grown.specials, loaded.specials, "the moved lists read back through the repointed table")
         assertEquals(MartGrowth.AVAILABLE, loaded.growth)
         val arm9 = (project.readArm9() as FoxResult.Ok).value
-        assertEquals(HgssLayout.SYNTHETIC_OVERLAY_ADDRESS + HgssLayout.MART_AREA, arm9.u32(HgssLayout.SPECIAL_MART_POINTERS).toInt(), "mart 0 now points into the synthetic overlay")
-        assertEquals(HgssLayout.ARM9_BASE + Marts.VANILLA_ADDRESSES[1], arm9.u32(HgssLayout.SPECIAL_MART_POINTERS + 4).toInt(), "an untouched mart keeps its pointer")
+        assertEquals(HgssEnglishLayout.syntheticOverlayAddress + HgssEnglishLayout.martArea, arm9.u32(HgssEnglishLayout.specialMartPointers).toInt(), "mart 0 now points into the synthetic overlay")
+        assertEquals(HgssEnglishLayout.arm9Base + Marts.VANILLA_ADDRESSES[1], arm9.u32(HgssEnglishLayout.specialMartPointers + 4).toInt(), "an untouched mart keeps its pointer")
 
         // Cut them back to their old size: the pointers return to the ARM9 and the mart area is empty again.
         var shrunk = loaded
@@ -549,13 +549,13 @@ class RealRomRecordsTest {
 
     @Test
     fun typeChartRoundTripsAndMatchesTheGame() = withProject { project ->
-        val overlay = (project.readOverlay(HgssLayout.TYPE_CHART_OVERLAY) as FoxResult.Ok).value
+        val overlay = (project.readOverlay(HgssEnglishLayout.typeChartOverlay) as FoxResult.Ok).value
         val chart = TypeChart.load(project).ok()
         assertContentEquals(overlay, chart.applyTo(overlay), "an unedited table writes back the same bytes")
         println("type chart: main=${chart.main.size} foresight=${chart.foresight.size} slots=${chart.slotsUsed}")
         assertEquals(108, chart.main.size)
         assertEquals(listOf(TypeEntry(0, 7, 0), TypeEntry(1, 7, 0)), chart.foresight, "Normal and Fighting against Ghost")
-        assertEquals(HgssLayout.TYPE_CHART_SLOTS, chart.slotsUsed, "the table is full")
+        assertEquals(HgssEnglishLayout.typeChartSlots, chart.slotsUsed, "the table is full")
         val types = project.names!!.types
         fun type(name: String) = types.indexOfFirst { it.equals(name, ignoreCase = true) }.also { assertTrue(it >= 0, "no type $name in $types") }
         assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17), listOf("Normal", "Fighting", "Flying", "Poison", "Ground", "Rock", "Bug", "Ghost", "Steel", "Fire", "Water", "Grass", "Electric", "Psychic", "Ice", "Dragon", "Dark").map { type(it) }, "the type numbers of the decomp")
@@ -572,7 +572,7 @@ class RealRomRecordsTest {
         assertEquals(chart, chart.with(type("Normal"), type("Fire"), 20), "no free slot")
         val freed = chart.with(fire, grass, 10)
         assertEquals(10, freed.multiplier(fire, grass))
-        assertEquals(HgssLayout.TYPE_CHART_SLOTS - 1, freed.slotsUsed)
+        assertEquals(HgssEnglishLayout.typeChartSlots - 1, freed.slotsUsed)
         val moved = freed.with(type("Normal"), type("Fire"), 5).with(fighting, type("Ghost"), 20).with(fighting, type("Ghost"), 0)
         assertEquals(5, moved.multiplier(type("Normal"), type("Fire")))
         val electricImmuneGhost = freed.with(type("Electric"), type("Ghost"), 0)
@@ -581,7 +581,7 @@ class RealRomRecordsTest {
         assertTrue(moved.isForesightPart(fighting, type("Ghost")), "a Ghost immunity returns to the Foresight part")
         val written = moved.applyTo(overlay)
         val changed = overlay.indices.filter { overlay[it] != written[it] }
-        assertTrue(changed.isNotEmpty() && changed.all { it in HgssLayout.TYPE_CHART_OFFSET until HgssLayout.TYPE_CHART_OFFSET + 3 * (HgssLayout.TYPE_CHART_SLOTS + 1) }, "only the table changes")
+        assertTrue(changed.isNotEmpty() && changed.all { it in HgssEnglishLayout.typeChartOffset until HgssEnglishLayout.typeChartOffset + 3 * (HgssEnglishLayout.typeChartSlots + 1) }, "only the table changes")
         moved.save(project).ok()
         assertEquals(moved, TypeChart.load(project).ok())
         project.revertAll()
@@ -695,9 +695,9 @@ class RealRomRecordsTest {
 
     @Test
     fun pickupRoundTripsAndEditsSaveBack() = withProject { project ->
-        val overlay = (project.readOverlay(HgssLayout.PICKUP_OVERLAY) as FoxResult.Ok).value
+        val overlay = (project.readOverlay(HgssEnglishLayout.pickupOverlay) as FoxResult.Ok).value
         val table = PickupTable.load(project).ok()
-        assertContentEquals(overlay, table.applyTo(overlay), "an unedited table writes back the same bytes")
+        assertContentEquals(overlay, table.applyTo(overlay, HgssEnglishLayout), "an unedited table writes back the same bytes")
         val items = project.names!!.items
         println("pickup: divisor=${table.divisor} weights=${table.weights} common=${table.common.map { items[it] }} rare=${table.rare.map { items[it] }}")
         assertTrue((table.common + table.rare).all { it in 1 until items.size }, "every entry is a real item")
@@ -716,7 +716,7 @@ class RealRomRecordsTest {
 
     @Test
     fun bugContestMatchesTheGuideAndSavesBack() = withProject { project ->
-        val raw = project.read(BugContestTable.PATH)!!
+        val raw = project.read(project.layout.bugContest)!!
         val table = BugContestTable.load(project).ok()
         assertContentEquals(raw, table.toBytes(), "an unedited table writes back the same bytes")
         val names = project.names!!.species
@@ -754,7 +754,7 @@ class RealRomRecordsTest {
         assertEquals(listOf("Red Shard", "Yellow Shard", "Helix Fossil", "Max Ether", "Blue Shard", "Green Shard", "Old Amber", "Max Revive"), table(RockSmashSite.RUINS_OF_ALPH), "HeartGold's table")
         assertEquals(listOf("Max Ether", "Pearl", "Big Pearl", "Red Shard", "Yellow Shard", "Claw Fossil", "Claw Fossil", "Rare Bone"), table(RockSmashSite.CLIFF_CAVE))
         val plain = project.readOverlay(1).ok()
-        assertContentEquals(plain, items.applyTo(plain))
+        assertContentEquals(plain, items.applyTo(plain, HgssEnglishLayout))
 
         sites.with(5, RockSmashSite(77, RockSmashSite.CLIFF_CAVE)).save(project).ok()
         RockSmashItems.save(project, items.with(RockSmashSite.DEFAULT, 0, 3)).ok()
@@ -771,7 +771,7 @@ class RealRomRecordsTest {
         assertEquals(129, table.entries.size)
         assertEquals(listOf(4, 40, 15), listOf(2, 32, 24).map { table.multiplierOf(it) }, "Youngster, Rich Boy, Ace Trainer")
         val plain = project.readOverlay(12).ok()
-        assertContentEquals(plain, table.applyTo(plain))
+        assertContentEquals(plain, table.applyTo(plain, HgssEnglishLayout))
         TrainerClassPrizes.save(project, table.withEntry(2, 9)).ok()
         assertEquals(9, TrainerClassPrizes.load(project).ok().entries[2].multiplier)
         assertEquals(setOf(12), project.editedOverlays)
@@ -939,7 +939,7 @@ class RealRomRecordsTest {
         val missing = table.entries.keys.filter { icons.overworld(it, 1) == null }
         assertTrue(missing.size < 20, "nearly every sprite entry decodes, ${missing.size} do not: ${missing.take(10)}")
         // Every sprite file the table names exists.
-        val files = (Narc.parse(project.read(HgssLayout.OVERWORLD_SPRITES)!!) as FoxResult.Ok).value.files.size
+        val files = (Narc.parse(project.read(HgssEnglishLayout.overworldSprites)!!) as FoxResult.Ok).value.files.size
         assertTrue(table.entries.values.all { it.spriteFile < files })
     }
 

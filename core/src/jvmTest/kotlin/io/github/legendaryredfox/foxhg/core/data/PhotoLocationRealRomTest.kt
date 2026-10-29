@@ -21,7 +21,7 @@ class PhotoLocationRealRomTest {
         if (!Files.exists(romPath)) { println("SKIPPED: no ROM at ${romPath.toAbsolutePath()}"); return }
         FileRomSource(romPath).use { source ->
             val project = (RomProject.open(source) as FoxResult.Ok).value
-            val narc = (Narc.parse(project.read(PhotoLocation.SPEC.path)!!) as FoxResult.Ok).value
+            val narc = (Narc.parse(project.read(PhotoLocation.SPEC.path(project.layout))!!) as FoxResult.Ok).value
             val records = (PhotoLocation.load(project) as FoxResult.Ok).value
             println("PHOTO locations ${records.records.size}")
             assertEquals(narc.files.size, records.records.size)

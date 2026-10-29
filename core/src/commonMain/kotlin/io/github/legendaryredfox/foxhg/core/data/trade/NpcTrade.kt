@@ -3,7 +3,6 @@ package io.github.legendaryredfox.foxhg.core.data.trade
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU32
 import io.github.legendaryredfox.foxhg.core.u32
@@ -68,7 +67,7 @@ data class NpcTrade(
             )
         }
 
-        val SPEC = RecordSpec(HgssLayout.NPC_TRADES, ::parse, NpcTrade::toBytes)
+        val SPEC = RecordSpec({ it.npcTrades }, ::parse, NpcTrade::toBytes)
 
         fun load(project: RomProject): FoxResult<NarcRecords<NpcTrade>> = NarcRecords.load(project, SPEC)
     }

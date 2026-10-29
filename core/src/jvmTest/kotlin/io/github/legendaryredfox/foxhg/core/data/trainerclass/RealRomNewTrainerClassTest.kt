@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.data.trainerclass
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
@@ -31,7 +31,7 @@ class RealRomNewTrainerClassTest {
     }
 
     private fun names(project: RomProject) = TextArchive.load(project).ok().records[TextBanks.TRAINER_CLASSES]
-    private fun pictures(project: RomProject) = Narc.parse(project.read(HgssLayout.TRAINER_FRONT_SPRITES)!!).ok().files
+    private fun pictures(project: RomProject) = Narc.parse(project.read(HgssEnglishLayout.trainerFrontSprites)!!).ok().files
 
     @Test
     fun aClassNeedsTheSyntheticOverlay() = withProject { project ->
@@ -65,8 +65,8 @@ class RealRomNewTrainerClassTest {
         assertEquals(77, p.multiplierOf(id))
 
         val after = pictures(project)
-        assertEquals(before.size + HgssLayout.FILES_PER_TRAINER_CLASS_PICTURE, after.size)
-        for (i in 0 until HgssLayout.FILES_PER_TRAINER_CLASS_PICTURE) {
+        assertEquals(before.size + HgssEnglishLayout.filesPerTrainerClassPicture, after.size)
+        for (i in 0 until HgssEnglishLayout.filesPerTrainerClassPicture) {
             assertContentEquals(before[5 + i], after[count * 5 + i], "picture file $i is a copy of class 1")
             assertContentEquals(before[i], after[i])
         }
@@ -97,7 +97,7 @@ class RealRomNewTrainerClassTest {
     fun aClassWithEyeContactMusicGetsARowAndTheTableMovesOnce() = withProject { project ->
         check(DsprePatches.arm9Expansion.apply(project) is FoxResult.Ok)
         val vanilla = TrainerEncounterMusic.load(project).ok()
-        assertEquals(HgssLayout.ENCOUNTER_MUSIC_VANILLA_ROWS, vanilla.rows.size)
+        assertEquals(HgssEnglishLayout.encounterMusicVanillaRows, vanilla.rows.size)
         assertEquals(EncounterMusicRow(2, 1108, 1108), vanilla.rows[0], "the Youngster row")
         val count = names(project).entries.size
 

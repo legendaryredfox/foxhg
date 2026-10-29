@@ -2,7 +2,6 @@ package io.github.legendaryredfox.foxhg.core.data.battletower
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
 
@@ -33,7 +32,7 @@ data class BattleTowerTrainer(val trainerClass: Int, val setIds: List<Int>) {
             return FoxResult.Ok(BattleTowerTrainer(bytes.u16(0), List(count) { bytes.u16(4 + 2 * it) }))
         }
 
-        val SPEC = RecordSpec(HgssLayout.BATTLE_TOWER_TRAINERS, ::parse, BattleTowerTrainer::toBytes)
+        val SPEC = RecordSpec({ it.battleTowerTrainers }, ::parse, BattleTowerTrainer::toBytes)
     }
 }
 
@@ -75,6 +74,6 @@ data class BattleTowerSet(val species: Int, val moves: List<Int>, val evFlags: I
             )
         }
 
-        val SPEC = RecordSpec(HgssLayout.BATTLE_TOWER_SETS, ::parse, BattleTowerSet::toBytes)
+        val SPEC = RecordSpec({ it.battleTowerSets }, ::parse, BattleTowerSet::toBytes)
     }
 }

@@ -3,7 +3,6 @@ package io.github.legendaryredfox.foxhg.core.script
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
 /** A place code can jump to: script `N` (header entry), a function (any other jump target) or a movement list, numbered from 1. */
@@ -296,7 +295,7 @@ data class ScriptFile(val items: List<ScriptItem>) {
             return Walk.Done(items)
         }
 
-        val SPEC = RecordSpec(HgssLayout.SCRIPTS, ::parse, ScriptFile::toBytes)
+        val SPEC = RecordSpec({ it.scripts }, ::parse, ScriptFile::toBytes)
     }
 }
 
@@ -354,7 +353,7 @@ sealed interface ScriptEntry {
             },
         )
 
-        val SPEC = RecordSpec(HgssLayout.SCRIPTS, ::parse, ScriptEntry::toBytes)
+        val SPEC = RecordSpec({ it.scripts }, ::parse, ScriptEntry::toBytes)
 
         fun load(project: RomProject): FoxResult<NarcRecords<ScriptEntry>> = NarcRecords.load(project, SPEC)
     }

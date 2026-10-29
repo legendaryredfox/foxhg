@@ -32,7 +32,6 @@ import io.github.legendaryredfox.foxhg.core.data.battletower.BattleTowerSet
 import io.github.legendaryredfox.foxhg.core.data.growth.GrowthCurve
 import io.github.legendaryredfox.foxhg.core.data.personal.PersonalData
 import io.github.legendaryredfox.foxhg.core.game.GameNames
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.save.PcStorageData
@@ -55,7 +54,7 @@ class SaveRules(private val personal: List<PersonalData>, private val curves: Li
 
     companion object {
         fun load(project: RomProject): SaveRules? {
-            val personal = project.rom.read(HgssLayout.PERSONAL)?.let { (Narc.parse(it) as? FoxResult.Ok)?.value }
+            val personal = project.rom.read(project.layout.personal)?.let { (Narc.parse(it) as? FoxResult.Ok)?.value }
                 ?.files?.map { (PersonalData.parse(it) as? FoxResult.Ok)?.value } ?: return null
             if (personal.any { it == null }) return null
             val curves = (NarcRecords.load(project, GrowthCurve.SPEC) as? FoxResult.Ok)?.value?.records ?: return null

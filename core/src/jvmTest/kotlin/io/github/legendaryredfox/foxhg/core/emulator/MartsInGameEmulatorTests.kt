@@ -1,11 +1,11 @@
 package io.github.legendaryredfox.foxhg.core.emulator
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.data.item.ItemData
 import io.github.legendaryredfox.foxhg.core.data.mart.BadgeMartEntry
 import io.github.legendaryredfox.foxhg.core.data.mart.Marts
 import io.github.legendaryredfox.foxhg.core.emulator.EmulatorSupport.available
 import io.github.legendaryredfox.foxhg.core.emulator.EmulatorSupport.romPath
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
 import java.nio.file.Files
 import kotlin.test.Test
@@ -52,8 +52,8 @@ class MovedSpecialMartInGameEmulatorTest {
             assertEquals(6, expected.size)
             MartInGame.withBuyListOpen("viridian", rom, "viridian-moved26.png") { emu ->
                 val found = emu.findU16s(expected)
-                assertTrue(found.any { it >= HgssLayout.SYNTHETIC_OVERLAY_ADDRESS && it < HgssLayout.SYNTHETIC_OVERLAY_ADDRESS + HgssLayout.SYNTHETIC_OVERLAY_SIZE }, "the moved list is in the synthetic overlay, found at ${found.map { it.toString(16) }}")
-                assertTrue(found.any { it < HgssLayout.SYNTHETIC_OVERLAY_ADDRESS || it >= HgssLayout.SYNTHETIC_OVERLAY_ADDRESS + HgssLayout.SYNTHETIC_OVERLAY_SIZE }, "and the shop copied it, found at ${found.map { it.toString(16) }}")
+                assertTrue(found.any { it >= HgssEnglishLayout.syntheticOverlayAddress && it < HgssEnglishLayout.syntheticOverlayAddress + HgssEnglishLayout.syntheticOverlaySize }, "the moved list is in the synthetic overlay, found at ${found.map { it.toString(16) }}")
+                assertTrue(found.any { it < HgssEnglishLayout.syntheticOverlayAddress || it >= HgssEnglishLayout.syntheticOverlayAddress + HgssEnglishLayout.syntheticOverlaySize }, "and the shop copied it, found at ${found.map { it.toString(16) }}")
             }
         } finally {
             dir.toFile().deleteRecursively()

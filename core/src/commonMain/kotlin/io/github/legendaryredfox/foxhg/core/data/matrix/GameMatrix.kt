@@ -3,7 +3,6 @@ package io.github.legendaryredfox.foxhg.core.data.matrix
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
@@ -125,7 +124,7 @@ class GameMatrix(
             return FoxResult.Ok(GameMatrix(width, height, nameBytes, headers, altitudes, maps, bytes.copyOfRange(p, bytes.size)))
         }
 
-        val SPEC = RecordSpec(HgssLayout.MATRICES, ::parse, GameMatrix::toBytes)
+        val SPEC = RecordSpec({ it.matrices }, ::parse, GameMatrix::toBytes)
 
         fun load(project: RomProject): FoxResult<NarcRecords<GameMatrix>> = NarcRecords.load(project, SPEC)
     }

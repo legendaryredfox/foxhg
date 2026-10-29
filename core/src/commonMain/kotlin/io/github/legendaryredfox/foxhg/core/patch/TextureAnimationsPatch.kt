@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.patch
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
@@ -18,10 +18,10 @@ object TextureAnimationsPatch : RomPatch {
     override val id = "disable-texture-animations"
     override val title = "Disable texture animations"
     override val description = "Sets the dynamic texture field of every area data file to none, so no map plays animated textures (water, flowers)."
-    override val changes = listOf("${HgssLayout.AREA_DATA}: u16 at offset $FIELD of every file -> 0xFFFF")
+    override val changes = listOf("${HgssEnglishLayout.areaData}: u16 at offset $FIELD of every file -> 0xFFFF")
 
     private fun narc(project: RomProject): FoxResult<Narc> {
-        val bytes = project.read(HgssLayout.AREA_DATA) ?: return FoxResult.Err("The ROM has no ${HgssLayout.AREA_DATA}")
+        val bytes = project.read(project.layout.areaData) ?: return FoxResult.Err("The ROM has no ${project.layout.areaData}")
         return Narc.parse(bytes)
     }
 
@@ -42,6 +42,6 @@ object TextureAnimationsPatch : RomPatch {
         }
         val n = (narc(project) as FoxResult.Ok).value
         val files = n.files.map { f -> f.copyOf().also { it.putU16(FIELD, NONE) } }
-        return project.write(HgssLayout.AREA_DATA, Narc(files, n.nameTable).toBytes())
+        return project.write(project.layout.areaData, Narc(files, n.nameTable).toBytes())
     }
 }

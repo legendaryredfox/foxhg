@@ -3,7 +3,6 @@ package io.github.legendaryredfox.foxhg.core.data.learnset
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
@@ -49,7 +48,7 @@ data class Learnset(val entries: List<LearnsetEntry>, val trailing: ByteArray = 
             return FoxResult.Ok(Learnset(entries, bytes.copyOfRange(p, bytes.size)))
         }
 
-        val SPEC = RecordSpec(HgssLayout.LEARNSETS, ::parse, Learnset::toBytes)
+        val SPEC = RecordSpec({ it.learnsets }, ::parse, Learnset::toBytes)
 
         fun load(project: RomProject): FoxResult<NarcRecords<Learnset>> = NarcRecords.load(project, SPEC)
     }

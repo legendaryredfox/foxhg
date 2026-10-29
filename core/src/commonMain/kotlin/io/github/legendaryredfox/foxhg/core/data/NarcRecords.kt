@@ -2,10 +2,11 @@ package io.github.legendaryredfox.foxhg.core.data
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.narc.Narc
+import io.github.legendaryredfox.foxhg.core.game.GameLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
 /** How to read and write the records of one NARC. */
-class RecordSpec<T>(val path: String, val parse: (ByteArray) -> FoxResult<T>, val serialize: (T) -> ByteArray)
+class RecordSpec<T>(val path: (GameLayout) -> String, val parse: (ByteArray) -> FoxResult<T>, val serialize: (T) -> ByteArray)
 
 /**
  * The records of one NARC (one file per record) parsed into [T]. Writing it back keeps the archive's name table, and
@@ -28,11 +29,11 @@ class NarcRecords<T>(
 
     companion object {
         fun <T> load(project: RomProject, spec: RecordSpec<T>): FoxResult<NarcRecords<T>> =
-            load(project, spec.path, spec.parse, spec.serialize)
+            load(project, spec.path(project.layout), spec.parse, spec.serialize)
 
         /** The records as the ROM originally has them, ignoring the project's edits. */
         fun <T> original(project: RomProject, spec: RecordSpec<T>): List<T> {
-            val bytes = project.rom.read(spec.path) ?: return emptyList()
+            val bytes = project.rom.read(spec.path(project.layout)) ?: return emptyList()
             val narc = (Narc.parse(bytes) as? FoxResult.Ok)?.value ?: return emptyList()
             return narc.files.mapNotNull { (spec.parse(it) as? FoxResult.Ok)?.value }
         }

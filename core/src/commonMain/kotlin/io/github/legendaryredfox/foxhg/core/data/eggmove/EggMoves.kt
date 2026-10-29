@@ -4,7 +4,6 @@ import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
 import io.github.legendaryredfox.foxhg.core.data.csv.Csv
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
@@ -87,7 +86,7 @@ data class EggMoves(val groups: List<EggMoveGroup>, val trailing: ByteArray = By
             return FoxResult.Ok(EggMoves(groups, bytes.copyOfRange(p, bytes.size)))
         }
 
-        val SPEC = RecordSpec(HgssLayout.EGG_MOVES, ::parse, EggMoves::toBytes)
+        val SPEC = RecordSpec({ it.eggMoves }, ::parse, EggMoves::toBytes)
 
         /** Species numbers the CSV accepts: a header is `20000 + species` in a u16. */
         private val CSV_SPECIES = 1..1023

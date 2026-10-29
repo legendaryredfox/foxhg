@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.data.pickup
 
+import io.github.legendaryredfox.foxhg.core.game.GameLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
@@ -52,15 +52,15 @@ data class PickupTable(val common: List<Int>, val rare: List<Int>, val divisor: 
     fun withWeight(index: Int, weight: Int) = copy(weights = weights.toMutableList().also { it[index] = weight })
 
     /** Writes the table into a copy of [overlay]. */
-    fun applyTo(overlay: ByteArray): ByteArray = overlay.copyOf().also { out ->
-        common.forEachIndexed { i, item -> out.putU16(HgssLayout.PICKUP_COMMON_ITEMS + 2 * i, item) }
-        rare.forEachIndexed { i, item -> out.putU16(HgssLayout.PICKUP_RARE_ITEMS + 2 * i, item) }
-        out[HgssLayout.PICKUP_DIVISOR] = divisor.toByte()
-        weights.forEachIndexed { i, w -> out[HgssLayout.PICKUP_WEIGHTS + i] = w.toByte() }
+    fun applyTo(overlay: ByteArray, layout: GameLayout): ByteArray = overlay.copyOf().also { out ->
+        common.forEachIndexed { i, item -> out.putU16(layout.pickupCommonItems + 2 * i, item) }
+        rare.forEachIndexed { i, item -> out.putU16(layout.pickupRareItems + 2 * i, item) }
+        out[layout.pickupDivisor] = divisor.toByte()
+        weights.forEachIndexed { i, w -> out[layout.pickupWeights + i] = w.toByte() }
     }
 
-    fun save(project: RomProject): FoxResult<Unit> = when (val o = project.readOverlay(HgssLayout.PICKUP_OVERLAY)) {
-        is FoxResult.Ok -> project.writeOverlay(HgssLayout.PICKUP_OVERLAY, applyTo(o.value))
+    fun save(project: RomProject): FoxResult<Unit> = when (val o = project.readOverlay(project.layout.pickupOverlay)) {
+        is FoxResult.Ok -> project.writeOverlay(project.layout.pickupOverlay, applyTo(o.value, project.layout))
         is FoxResult.Err -> o
     }
 
@@ -73,21 +73,21 @@ data class PickupTable(val common: List<Int>, val rare: List<Int>, val divisor: 
         /** "1-10", "11-20", ... "91-100". */
         fun levelRange(bracket: Int): String = "${bracket * 10 + 1}-${(bracket + 1) * 10}"
 
-        fun parse(overlay: ByteArray): FoxResult<PickupTable> {
-            val end = maxOf(HgssLayout.PICKUP_COMMON_ITEMS + 2 * COMMON, HgssLayout.PICKUP_RARE_ITEMS + 2 * RARE, HgssLayout.PICKUP_WEIGHTS + SLOTS, HgssLayout.PICKUP_DIVISOR + 1)
-            if (overlay.size < end) return FoxResult.Err("Overlay ${HgssLayout.PICKUP_OVERLAY} is too small for the Pickup tables")
+        fun parse(overlay: ByteArray, layout: GameLayout): FoxResult<PickupTable> {
+            val end = maxOf(layout.pickupCommonItems + 2 * COMMON, layout.pickupRareItems + 2 * RARE, layout.pickupWeights + SLOTS, layout.pickupDivisor + 1)
+            if (overlay.size < end) return FoxResult.Err("Overlay ${layout.pickupOverlay} is too small for the Pickup tables")
             return FoxResult.Ok(
                 PickupTable(
-                    List(COMMON) { overlay.u16(HgssLayout.PICKUP_COMMON_ITEMS + 2 * it) },
-                    List(RARE) { overlay.u16(HgssLayout.PICKUP_RARE_ITEMS + 2 * it) },
-                    overlay[HgssLayout.PICKUP_DIVISOR].toInt() and 0xFF,
-                    List(SLOTS) { overlay[HgssLayout.PICKUP_WEIGHTS + it].toInt() and 0xFF },
+                    List(COMMON) { overlay.u16(layout.pickupCommonItems + 2 * it) },
+                    List(RARE) { overlay.u16(layout.pickupRareItems + 2 * it) },
+                    overlay[layout.pickupDivisor].toInt() and 0xFF,
+                    List(SLOTS) { overlay[layout.pickupWeights + it].toInt() and 0xFF },
                 ),
             )
         }
 
-        fun load(project: RomProject): FoxResult<PickupTable> = when (val o = project.readOverlay(HgssLayout.PICKUP_OVERLAY)) {
-            is FoxResult.Ok -> parse(o.value)
+        fun load(project: RomProject): FoxResult<PickupTable> = when (val o = project.readOverlay(project.layout.pickupOverlay)) {
+            is FoxResult.Ok -> parse(o.value, project.layout)
             is FoxResult.Err -> o
         }
     }

@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.patch
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU32
@@ -37,13 +37,13 @@ data class ShinyRates(val wild: Int, val scripted: Int, val gift: Int, val train
 
 /** Where the shiny rate code goes and what it hooks (addresses are runtime addresses of HeartGold English). */
 private object ShinyHooks {
-    private const val SYNTH = HgssLayout.SYNTHETIC_OVERLAY_ADDRESS
+    private val SYNTH = HgssEnglishLayout.syntheticOverlayAddress
     const val TABLE_OFFSET = 0x11D00
     const val CODE_OFFSET = 0x11D20
-    private const val CODE_ADDRESS = SYNTH + CODE_OFFSET
-    private const val WILD_ENTRY = CODE_ADDRESS
-    private const val STATIC_ENTRY = CODE_ADDRESS + 6
-    private const val PARTY_ENTRY = CODE_ADDRESS + 0x46
+    private val CODE_ADDRESS = SYNTH + CODE_OFFSET
+    private val WILD_ENTRY = CODE_ADDRESS
+    private val STATIC_ENTRY = CODE_ADDRESS + 6
+    private val PARTY_ENTRY = CODE_ADDRESS + 0x46
     private const val ARM9_STUB = 0x110350
     private const val PARTY_ADD = 0x02074524
     private const val NONSHINY_GENERATOR = 0x02247A18

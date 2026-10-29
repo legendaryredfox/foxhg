@@ -3,7 +3,6 @@ package io.github.legendaryredfox.foxhg.core.data.photo
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
@@ -34,7 +33,7 @@ data class PhotoLocation(
             return FoxResult.Ok(PhotoLocation(w(0), w(1), w(2), w(3), w(4), w(5), w(6), w(7)))
         }
 
-        val SPEC = RecordSpec(HgssLayout.PHOTO_LOCATIONS, ::parse, PhotoLocation::toBytes)
+        val SPEC = RecordSpec({ it.photoLocations }, ::parse, PhotoLocation::toBytes)
 
         fun load(project: RomProject): FoxResult<NarcRecords<PhotoLocation>> = NarcRecords.load(project, SPEC)
     }

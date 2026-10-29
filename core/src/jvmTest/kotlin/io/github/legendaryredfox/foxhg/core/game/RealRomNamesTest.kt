@@ -20,7 +20,7 @@ class RealRomNamesTest {
         }
         FileRomSource(romPath).use { source ->
             val rom = (NdsRom.open(source) as FoxResult.Ok).value
-            val names = GameNames((GameText.open(rom) as FoxResult.Ok).value)
+            val names = GameNames((GameText.open(rom, HgssEnglishLayout) as FoxResult.Ok).value)
             assertEquals(496, names.species.size)
             assertEquals("BULBASAUR", names.species[1])
             assertEquals("PIKACHU", names.species[25])

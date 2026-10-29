@@ -2,7 +2,6 @@ package io.github.legendaryredfox.foxhg.core.data.battledisplay
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
 /**
@@ -73,25 +72,25 @@ class BattleDisplayTable private constructor(
     }
 
     companion object {
-        const val OFFSETS_PATH = HgssLayout.BATTLE_DISPLAY
-        const val HEIGHTS_PATH = HgssLayout.POKEMON_HEIGHTS
         const val RECORD = 89
         const val MOVEMENT = 1
 
         private val raw: (ByteArray) -> FoxResult<ByteArray> = { FoxResult.Ok(it) }
 
         fun load(project: RomProject): FoxResult<BattleDisplayTable> {
-            val offsets = when (val r = NarcRecords.load(project, OFFSETS_PATH, raw) { it }) {
+            val offsetsPath = project.layout.battleDisplay
+            val heightsPath = project.layout.pokemonHeights
+            val offsets = when (val r = NarcRecords.load(project, offsetsPath, raw) { it }) {
                 is FoxResult.Ok -> r.value
                 is FoxResult.Err -> return r
             }
-            val heights = when (val r = NarcRecords.load(project, HEIGHTS_PATH, raw) { it }) {
+            val heights = when (val r = NarcRecords.load(project, heightsPath, raw) { it }) {
                 is FoxResult.Ok -> r.value
                 is FoxResult.Err -> return r
             }
-            if (offsets.records.size != 1 || offsets.records[0].size % RECORD != 0) return FoxResult.Err("$OFFSETS_PATH is not a list of $RECORD byte records")
+            if (offsets.records.size != 1 || offsets.records[0].size % RECORD != 0) return FoxResult.Err("$offsetsPath is not a list of $RECORD byte records")
             val count = offsets.records[0].size / RECORD
-            if (heights.records.size != count * BattleDisplay.HEIGHT_SLOTS) return FoxResult.Err("$HEIGHTS_PATH has ${heights.records.size} members, expected ${count * BattleDisplay.HEIGHT_SLOTS}")
+            if (heights.records.size != count * BattleDisplay.HEIGHT_SLOTS) return FoxResult.Err("$heightsPath has ${heights.records.size} members, expected ${count * BattleDisplay.HEIGHT_SLOTS}")
             return FoxResult.Ok(BattleDisplayTable(offsets, heights))
         }
     }

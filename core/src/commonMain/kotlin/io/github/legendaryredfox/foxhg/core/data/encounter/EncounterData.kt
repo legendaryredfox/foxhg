@@ -3,7 +3,6 @@ package io.github.legendaryredfox.foxhg.core.data.encounter
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
@@ -90,8 +89,8 @@ data class EncounterData(
             )
         }
 
-        val HEARTGOLD = RecordSpec(HgssLayout.ENCOUNTERS_HEARTGOLD, ::parse, EncounterData::toBytes)
-        val SOULSILVER = RecordSpec(HgssLayout.ENCOUNTERS_SOULSILVER, ::parse, EncounterData::toBytes)
+        val HEARTGOLD = RecordSpec({ it.encountersHeartgold }, ::parse, EncounterData::toBytes)
+        val SOULSILVER = RecordSpec({ it.encountersSoulsilver }, ::parse, EncounterData::toBytes)
 
         fun loadHeartGold(project: RomProject): FoxResult<NarcRecords<EncounterData>> = NarcRecords.load(project, HEARTGOLD)
         fun loadSoulSilver(project: RomProject): FoxResult<NarcRecords<EncounterData>> = NarcRecords.load(project, SOULSILVER)

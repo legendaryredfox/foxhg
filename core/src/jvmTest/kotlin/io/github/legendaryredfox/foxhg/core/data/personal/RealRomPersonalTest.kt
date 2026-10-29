@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.data.personal
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
 import io.github.legendaryredfox.foxhg.core.nds.NdsRom
@@ -22,7 +22,7 @@ class RealRomPersonalTest {
         }
         FileRomSource(romPath).use { source ->
             val rom = (NdsRom.open(source) as FoxResult.Ok).value
-            val narc = (Narc.parse(rom.read(HgssLayout.PERSONAL)!!) as FoxResult.Ok).value
+            val narc = (Narc.parse(rom.read(HgssEnglishLayout.personal)!!) as FoxResult.Ok).value
             block(narc.files.map { (PersonalData.parse(it) as FoxResult.Ok).value }, narc)
         }
     }

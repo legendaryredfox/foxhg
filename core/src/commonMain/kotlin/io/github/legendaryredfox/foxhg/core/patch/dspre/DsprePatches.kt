@@ -9,8 +9,8 @@
  */
 package io.github.legendaryredfox.foxhg.core.patch.dspre
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.patch.ByteEdit
 import io.github.legendaryredfox.foxhg.core.patch.BattleBugFixPatches
 import io.github.legendaryredfox.foxhg.core.patch.BattleTweakPatches
@@ -29,7 +29,7 @@ import io.github.legendaryredfox.foxhg.core.u32
 
 /** The ROM toolbox patches for HeartGold English. ARM9 offsets are file offsets of the decompressed ARM9 (runtime address 0x02000000 + offset). */
 object DsprePatches {
-    private const val SYNTH = HgssLayout.SYNTHETIC_OVERLAY_ADDRESS
+    private val SYNTH = HgssEnglishLayout.syntheticOverlayAddress
 
     /**
      * Makes room for new code: a branch at ARM9 0xCD0 runs a small routine written into free space at the end of the ARM9 (0x110334), which
@@ -52,14 +52,14 @@ object DsprePatches {
         ),
     ) {
         override val changes: List<String>
-            get() = super.changes + "synthetic overlay: member 0 of ${HgssLayout.SYNTHETIC_OVERLAY} becomes ${HgssLayout.SYNTHETIC_OVERLAY_SIZE} empty bytes (unless it already is that big)"
+            get() = super.changes + "synthetic overlay: member 0 of ${HgssEnglishLayout.syntheticOverlay} becomes ${HgssEnglishLayout.syntheticOverlaySize} empty bytes (unless it already is that big)"
 
         override fun apply(project: RomProject): FoxResult<Unit> {
             val applied = super.apply(project)
             if (applied is FoxResult.Err) return applied
             val current = PatchTarget.SyntheticOverlay.read(project)
-            if (current is FoxResult.Ok && current.value.size < HgssLayout.SYNTHETIC_OVERLAY_SIZE) {
-                return PatchTarget.SyntheticOverlay.write(project, ByteArray(HgssLayout.SYNTHETIC_OVERLAY_SIZE))
+            if (current is FoxResult.Ok && current.value.size < project.layout.syntheticOverlaySize) {
+                return PatchTarget.SyntheticOverlay.write(project, ByteArray(project.layout.syntheticOverlaySize))
             }
             return current.let { if (it is FoxResult.Err) it else FoxResult.Ok(Unit) }
         }

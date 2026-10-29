@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.data.trainerclass
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
 import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
 import io.github.legendaryredfox.foxhg.core.project.RomProject
@@ -31,7 +31,7 @@ class RealRomEncounterMusicTest {
     @Test
     fun anUneditedTableWritesBackTheSameArm9() = withProject { project ->
         val table = TrainerEncounterMusic.load(project).ok()
-        assertEquals(HgssLayout.ENCOUNTER_MUSIC_VANILLA_ROWS, table.rows.size)
+        assertEquals(HgssEnglishLayout.encounterMusicVanillaRows, table.rows.size)
         TrainerEncounterMusic.save(project, table).ok()
         assertFalse(project.isDirty, "the same bytes are not an edit")
     }

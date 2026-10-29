@@ -2,7 +2,6 @@ package io.github.legendaryredfox.foxhg.core.data.growth
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.putU32
 import io.github.legendaryredfox.foxhg.core.u32
 
@@ -47,6 +46,6 @@ data class GrowthCurve(val exp: List<Int>) {
             return FoxResult.Ok(GrowthCurve(List(LEVELS + 1) { bytes.u32(it * 4).toInt() }))
         }
 
-        val SPEC = RecordSpec(HgssLayout.GROWTH_RATES, ::parse, GrowthCurve::toBytes)
+        val SPEC = RecordSpec({ it.growthRates }, ::parse, GrowthCurve::toBytes)
     }
 }

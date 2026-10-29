@@ -1,8 +1,8 @@
 package io.github.legendaryredfox.foxhg.core.data
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.townmap.TownMap
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import java.nio.file.Files
@@ -21,9 +21,9 @@ class TownMapRealRomTest {
         if (!Files.exists(romPath)) { println("SKIPPED: no ROM at ${romPath.toAbsolutePath()}"); return }
         FileRomSource(romPath).use { source ->
             val project = (RomProject.open(source) as FoxResult.Ok).value
-            val overlay = (project.readOverlay(HgssLayout.TOWN_MAP_OVERLAY) as FoxResult.Ok).value
-            val map = (TownMap.parse(overlay) as FoxResult.Ok).value
-            assertContentEquals(overlay, (map.applyTo(overlay) as FoxResult.Ok).value, "parse then write reproduces overlay 101")
+            val overlay = (project.readOverlay(HgssEnglishLayout.townMapOverlay) as FoxResult.Ok).value
+            val map = (TownMap.parse(overlay, HgssEnglishLayout) as FoxResult.Ok).value
+            assertContentEquals(overlay, (map.applyTo(overlay, HgssEnglishLayout) as FoxResult.Ok).value, "parse then write reproduces overlay 101")
             assertEquals(27, map.spots.size)
             assertEquals(100, map.selections.size)
             // wiki: entry 0 is Pallet Town (map header 0x31, red 0x20,0x0B, gray 0x00,0x14), entry 0x0D Violet City (0x49)

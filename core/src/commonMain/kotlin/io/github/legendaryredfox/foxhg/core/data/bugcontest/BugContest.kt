@@ -1,7 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.data.bugcontest
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
@@ -39,10 +38,9 @@ data class BugContestTable(val sets: List<List<BugContestEncounter>>) {
         return out
     }
 
-    fun save(project: RomProject): FoxResult<Unit> = project.write(PATH, toBytes())
+    fun save(project: RomProject): FoxResult<Unit> = project.write(project.layout.bugContest, toBytes())
 
     companion object {
-        const val PATH = HgssLayout.BUG_CONTEST
         const val SETS = 4
         const val PER_SET = 10
         const val ENTRY = 8
@@ -88,6 +86,6 @@ data class BugContestTable(val sets: List<List<BugContestEncounter>>) {
         }
 
         fun load(project: RomProject): FoxResult<BugContestTable> =
-            project.read(PATH)?.let(::parse) ?: FoxResult.Err("The ROM has no $PATH")
+            project.read(project.layout.bugContest)?.let(::parse) ?: FoxResult.Err("The ROM has no ${project.layout.bugContest}")
     }
 }

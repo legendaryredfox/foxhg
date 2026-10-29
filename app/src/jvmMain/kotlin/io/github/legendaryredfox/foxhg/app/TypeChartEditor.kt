@@ -29,7 +29,6 @@ import io.github.legendaryredfox.foxhg.app.ui.SectionCard
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.typechart.TypeChart
 import io.github.legendaryredfox.foxhg.core.game.GameNames
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
 /** The type effectiveness table of overlay 12: click a cell to cycle the multiplier, written straight into the project. */
@@ -80,7 +79,7 @@ fun TypeChartEditor(model: TypeChartEditorModel, modifier: Modifier = Modifier) 
         Text(stringResource(Res.string.editor_type_chart), style = MaterialTheme.typography.headlineSmall)
         SectionCard(
             stringResource(Res.string.type_chart_effectiveness),
-            subtitle = stringResource(Res.string.type_chart_rows_attack_columns_defend_click_a, HgssLayout.TYPE_CHART_SLOTS - 1, chart.slotsUsed - 1),
+            subtitle = stringResource(Res.string.type_chart_rows_attack_columns_defend_click_a, chart.layout.typeChartSlots - 1, chart.slotsUsed - 1),
         ) {
             Row(Modifier.padding(start = 96.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 model.types.forEach { d -> Text(model.typeName(d).take(3), Modifier.width(38.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }

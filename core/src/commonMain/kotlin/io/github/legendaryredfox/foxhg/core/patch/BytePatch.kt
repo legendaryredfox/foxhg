@@ -1,7 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.patch
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
@@ -24,20 +23,20 @@ sealed interface PatchTarget {
         override fun toString() = "overlay $id"
     }
 
-    /** Member 0 of [HgssLayout.SYNTHETIC_OVERLAY]; offsets are file offsets (the runtime address is [HgssLayout.SYNTHETIC_OVERLAY_ADDRESS] + offset). */
+    /** Member 0 of [GameLayout.syntheticOverlay]; offsets are file offsets (the runtime address is [GameLayout.syntheticOverlayAddress] + offset). */
     data object SyntheticOverlay : PatchTarget {
         private fun narc(project: RomProject): FoxResult<Narc> {
-            val bytes = project.read(HgssLayout.SYNTHETIC_OVERLAY) ?: return FoxResult.Err("The ROM has no ${HgssLayout.SYNTHETIC_OVERLAY}")
+            val bytes = project.read(project.layout.syntheticOverlay) ?: return FoxResult.Err("The ROM has no ${project.layout.syntheticOverlay}")
             return Narc.parse(bytes)
         }
 
         override fun read(project: RomProject): FoxResult<ByteArray> = when (val n = narc(project)) {
-            is FoxResult.Ok -> n.value.files.firstOrNull()?.let { FoxResult.Ok(it.copyOf()) } ?: FoxResult.Err("${HgssLayout.SYNTHETIC_OVERLAY} has no files")
+            is FoxResult.Ok -> n.value.files.firstOrNull()?.let { FoxResult.Ok(it.copyOf()) } ?: FoxResult.Err("${project.layout.syntheticOverlay} has no files")
             is FoxResult.Err -> n
         }
 
         override fun write(project: RomProject, bytes: ByteArray): FoxResult<Unit> = when (val n = narc(project)) {
-            is FoxResult.Ok -> project.write(HgssLayout.SYNTHETIC_OVERLAY, Narc(n.value.files.toMutableList().also { it[0] = bytes }, n.value.nameTable).toBytes())
+            is FoxResult.Ok -> project.write(project.layout.syntheticOverlay, Narc(n.value.files.toMutableList().also { it[0] = bytes }, n.value.nameTable).toBytes())
             is FoxResult.Err -> n
         }
 

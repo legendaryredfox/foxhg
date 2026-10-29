@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.data.townmap
 
+import io.github.legendaryredfox.foxhg.core.game.GameLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
@@ -97,36 +97,36 @@ data class TownMap(val spots: List<TownMapSpot>, val selections: List<TownMapSel
     fun withSelection(index: Int, selection: TownMapSelection) = copy(selections = selections.toMutableList().also { it[index] = selection })
 
     /** Writes both tables into a copy of [overlay]. */
-    fun applyTo(overlay: ByteArray): FoxResult<ByteArray> {
-        if (spots.size != HgssLayout.TOWN_MAP_SPOTS || selections.size != HgssLayout.TOWN_MAP_SELECTIONS) return FoxResult.Err("The town map tables have a fixed length")
-        if (overlay.size < END) return FoxResult.Err("Overlay ${HgssLayout.TOWN_MAP_OVERLAY} is too short for the town map tables")
+    fun applyTo(overlay: ByteArray, layout: GameLayout): FoxResult<ByteArray> {
+        if (spots.size != layout.townMapSpots || selections.size != layout.townMapSelections) return FoxResult.Err("The town map tables have a fixed length")
+        if (overlay.size < end(layout)) return FoxResult.Err("Overlay ${layout.townMapOverlay} is too short for the town map tables")
         spots.forEachIndexed { i, s -> s.check()?.let { return FoxResult.Err("Town $i: $it") } }
         selections.forEachIndexed { i, s -> s.check()?.let { return FoxResult.Err("Selection $i: $it") } }
         val out = overlay.copyOf()
-        spots.forEachIndexed { i, s -> s.write(out, HgssLayout.TOWN_MAP_SPOTS_OFFSET + i * TownMapSpot.SIZE) }
-        selections.forEachIndexed { i, s -> s.write(out, HgssLayout.TOWN_MAP_SELECTIONS_OFFSET + i * TownMapSelection.SIZE) }
+        spots.forEachIndexed { i, s -> s.write(out, layout.townMapSpotsOffset + i * TownMapSpot.SIZE) }
+        selections.forEachIndexed { i, s -> s.write(out, layout.townMapSelectionsOffset + i * TownMapSelection.SIZE) }
         return FoxResult.Ok(out)
     }
 
     companion object {
-        private const val END = HgssLayout.TOWN_MAP_SPOTS_OFFSET + HgssLayout.TOWN_MAP_SPOTS * TownMapSpot.SIZE
+        private fun end(layout: GameLayout) = layout.townMapSpotsOffset + layout.townMapSpots * TownMapSpot.SIZE
 
-        fun parse(overlay: ByteArray): FoxResult<TownMap> {
-            if (overlay.size < END) return FoxResult.Err("Overlay ${HgssLayout.TOWN_MAP_OVERLAY} is too short for the town map tables")
+        fun parse(overlay: ByteArray, layout: GameLayout): FoxResult<TownMap> {
+            if (overlay.size < end(layout)) return FoxResult.Err("Overlay ${layout.townMapOverlay} is too short for the town map tables")
             return FoxResult.Ok(TownMap(
-                List(HgssLayout.TOWN_MAP_SPOTS) { TownMapSpot.read(overlay, HgssLayout.TOWN_MAP_SPOTS_OFFSET + it * TownMapSpot.SIZE) },
-                List(HgssLayout.TOWN_MAP_SELECTIONS) { TownMapSelection.read(overlay, HgssLayout.TOWN_MAP_SELECTIONS_OFFSET + it * TownMapSelection.SIZE) },
+                List(layout.townMapSpots) { TownMapSpot.read(overlay, layout.townMapSpotsOffset + it * TownMapSpot.SIZE) },
+                List(layout.townMapSelections) { TownMapSelection.read(overlay, layout.townMapSelectionsOffset + it * TownMapSelection.SIZE) },
             ))
         }
 
-        fun load(project: RomProject): FoxResult<TownMap> = when (val o = project.readOverlay(HgssLayout.TOWN_MAP_OVERLAY)) {
-            is FoxResult.Ok -> parse(o.value)
+        fun load(project: RomProject): FoxResult<TownMap> = when (val o = project.readOverlay(project.layout.townMapOverlay)) {
+            is FoxResult.Ok -> parse(o.value, project.layout)
             is FoxResult.Err -> o
         }
 
-        fun save(project: RomProject, map: TownMap): FoxResult<Unit> = when (val o = project.readOverlay(HgssLayout.TOWN_MAP_OVERLAY)) {
-            is FoxResult.Ok -> when (val patched = map.applyTo(o.value)) {
-                is FoxResult.Ok -> project.writeOverlay(HgssLayout.TOWN_MAP_OVERLAY, patched.value)
+        fun save(project: RomProject, map: TownMap): FoxResult<Unit> = when (val o = project.readOverlay(project.layout.townMapOverlay)) {
+            is FoxResult.Ok -> when (val patched = map.applyTo(o.value, project.layout)) {
+                is FoxResult.Ok -> project.writeOverlay(project.layout.townMapOverlay, patched.value)
                 is FoxResult.Err -> patched
             }
             is FoxResult.Err -> o

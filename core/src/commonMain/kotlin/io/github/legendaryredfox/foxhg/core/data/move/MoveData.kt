@@ -5,7 +5,6 @@ import io.github.legendaryredfox.foxhg.core.data.NarcRecords
 import io.github.legendaryredfox.foxhg.core.data.RecordSpec
 import io.github.legendaryredfox.foxhg.core.data.csv.CsvColumn
 import io.github.legendaryredfox.foxhg.core.data.csv.RecordCsv
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
 import io.github.legendaryredfox.foxhg.core.u16
@@ -80,7 +79,7 @@ data class MoveData(
             ),
         )
 
-        val SPEC = RecordSpec(HgssLayout.MOVES, ::parse, MoveData::toBytes)
+        val SPEC = RecordSpec({ it.moves }, ::parse, MoveData::toBytes)
 
         fun load(project: RomProject): FoxResult<NarcRecords<MoveData>> = NarcRecords.load(project, SPEC)
     }

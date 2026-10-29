@@ -1,7 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.data.personal
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 
@@ -16,14 +15,14 @@ class PersonalTable(val records: List<PersonalData>, private val nameTable: Byte
     fun toNarc(): Narc = Narc(records.map { it.toBytes() }, nameTable)
 
     /** Stores the table as the project's personal NARC; unchanged tables leave the project clean. */
-    fun save(project: RomProject): FoxResult<Unit> = project.write(HgssLayout.PERSONAL, toNarc().toBytes())
+    fun save(project: RomProject): FoxResult<Unit> = project.write(project.layout.personal, toNarc().toBytes())
 
     companion object {
         fun load(project: RomProject): FoxResult<PersonalTable> {
-            val bytes = project.read(HgssLayout.PERSONAL) ?: return FoxResult.Err("The ROM has no ${HgssLayout.PERSONAL}")
+            val bytes = project.read(project.layout.personal) ?: return FoxResult.Err("The ROM has no ${project.layout.personal}")
             val narc = when (val n = Narc.parse(bytes)) {
                 is FoxResult.Ok -> n.value
-                is FoxResult.Err -> return FoxResult.Err("${HgssLayout.PERSONAL}: ${n.message}")
+                is FoxResult.Err -> return FoxResult.Err("${project.layout.personal}: ${n.message}")
             }
             val records = ArrayList<PersonalData>(narc.files.size)
             for ((i, file) in narc.files.withIndex()) {

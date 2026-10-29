@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.game
 
+import io.github.legendaryredfox.foxhg.core.game.GameLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.nds.NdsRom
@@ -27,11 +28,11 @@ class GameText(private val narc: Narc) {
     }
 
     companion object {
-        fun open(rom: NdsRom): FoxResult<GameText> {
-            val bytes = rom.read(HgssLayout.MESSAGES) ?: return FoxResult.Err("The ROM has no ${HgssLayout.MESSAGES} (message archives)")
+        fun open(rom: NdsRom, layout: GameLayout): FoxResult<GameText> {
+            val bytes = rom.read(layout.messages) ?: return FoxResult.Err("The ROM has no ${layout.messages} (message archives)")
             return when (val narc = Narc.parse(bytes)) {
                 is FoxResult.Ok -> FoxResult.Ok(GameText(narc.value))
-                is FoxResult.Err -> FoxResult.Err("${HgssLayout.MESSAGES}: ${narc.message}")
+                is FoxResult.Err -> FoxResult.Err("${layout.messages}: ${narc.message}")
             }
         }
     }

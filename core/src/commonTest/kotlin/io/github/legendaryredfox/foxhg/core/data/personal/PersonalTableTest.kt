@@ -1,7 +1,7 @@
 package io.github.legendaryredfox.foxhg.core.data.personal
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.HgssLayout
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.nds.ByteArrayRomSource
 import io.github.legendaryredfox.foxhg.core.project.RomProject
@@ -35,6 +35,6 @@ class PersonalTableTest {
         assertIs<FoxResult.Ok<Unit>>(edited.save(p))
         assertTrue(p.isDirty)
         assertEquals(120, (PersonalTable.load(p) as FoxResult.Ok).value.records[1].baseHp)
-        assertEquals(setOf(HgssLayout.PERSONAL), p.editedPaths)
+        assertEquals(setOf(HgssEnglishLayout.personal), p.editedPaths)
     }
 }
