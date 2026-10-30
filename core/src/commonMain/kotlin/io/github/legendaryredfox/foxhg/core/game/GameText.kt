@@ -39,18 +39,18 @@ class GameText(private val narc: Narc) {
 }
 
 /** Display names for ids, read from the ROM's own text. An id outside the list is shown as `#id`. */
-class GameNames(text: GameText) {
-    val species: List<String> = load(text, TextBanks.SPECIES)
-    val moves: List<String> = load(text, TextBanks.MOVES)
-    val items: List<String> = load(text, TextBanks.ITEMS)
-    val abilities: List<String> = load(text, TextBanks.ABILITIES)
-    val types: List<String> = load(text, TextBanks.TYPES)
-    val trainerClasses: List<String> = load(text, TextBanks.TRAINER_CLASSES)
-    val trainerNames: List<String> = load(text, TextBanks.TRAINER_NAMES)
-    val locations: List<String> = load(text, TextBanks.LOCATIONS)
-    val tradeNames: List<String> = load(text, TextBanks.TRADE_NAMES)
-    val battleTowerNames: List<String> = load(text, TextBanks.BATTLE_TOWER_NAMES)
-    val battleTowerMessages: List<String> = load(text, TextBanks.BATTLE_TOWER_MESSAGES)
+class GameNames(text: GameText, banks: TextBanks) {
+    val species: List<String> = load(text, banks.species)
+    val moves: List<String> = load(text, banks.moves)
+    val items: List<String> = load(text, banks.items)
+    val abilities: List<String> = load(text, banks.abilities)
+    val types: List<String> = load(text, banks.types)
+    val trainerClasses: List<String> = load(text, banks.trainerClasses)
+    val trainerNames: List<String> = load(text, banks.trainerNames)
+    val locations: List<String> = load(text, banks.locations)
+    val tradeNames: List<String> = load(text, banks.tradeNames)
+    val battleTowerNames: List<String> = load(text, banks.battleTowerNames)
+    val battleTowerMessages: List<String> = load(text, banks.battleTowerMessages)
 
     companion object {
         /** The charmap spells the "PK" and "MN" glyphs of "Pokémon" as two currency signs; names show them as letters. */

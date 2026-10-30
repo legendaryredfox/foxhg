@@ -1,12 +1,13 @@
 package io.github.legendaryredfox.foxhg.core.emulator
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
 import io.github.legendaryredfox.foxhg.core.data.mart.Marts
 import java.nio.file.Files
 import java.nio.file.Path
 
 /** What the emulator tests share: the ROM, whether they can run, and a list of items read from RAM. */
 object EmulatorSupport {
-    val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    val romPath: Path = TestRoms.heartGoldEnglish
 
     /** True when the ROM and the DeSmuME core are there; otherwise says so and the test skips. */
     fun available(): Boolean {

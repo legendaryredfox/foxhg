@@ -2,7 +2,6 @@ package io.github.legendaryredfox.foxhg.core.data.trainer
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.csv.Csv
-import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
@@ -120,7 +119,7 @@ class TrainerMessages(
             when (val w = project.write(path, narc)) { is FoxResult.Err -> return@atomically w; is FoxResult.Ok -> Unit }
         }
         val banks = when (val b = TextArchive.load(project)) { is FoxResult.Ok -> b.value; is FoxResult.Err -> return@atomically b }
-        banks.with(TextBanks.TRAINER_MESSAGES, texts).save(project)
+        banks.with(project.layout.textBanks.trainerMessages, texts).save(project)
     }
 
     /** `id,trainer,trigger,trigger_name,text`; the trigger name and the id are for reading, import goes by the row order. */
@@ -159,7 +158,7 @@ class TrainerMessages(
             if (table.size % 4 != 0) return FoxResult.Err("The trainer message table is ${table.size} bytes, not a multiple of 4")
             if (offsets.size % 2 != 0) return FoxResult.Err("The trainer message offsets are ${offsets.size} bytes, not a multiple of 2")
             val n = table.size / 4
-            if (texts.entries.size != n) return FoxResult.Err("The table has $n messages but bank ${TextBanks.TRAINER_MESSAGES} has ${texts.entries.size}")
+            if (texts.entries.size != n) return FoxResult.Err("The table has $n messages but the text bank has ${texts.entries.size}")
             return FoxResult.Ok(
                 TrainerMessages(
                     List(n) { table.u16(it * 4) }, List(n) { table.u16(it * 4 + 2) },
@@ -179,7 +178,7 @@ class TrainerMessages(
             val table = when (val r = file0(project.layout.trainerMessageTable)) { is FoxResult.Ok -> r.value; is FoxResult.Err -> return r }
             val offsets = when (val r = file0(project.layout.trainerMessageOffsets)) { is FoxResult.Ok -> r.value; is FoxResult.Err -> return r }
             val banks = when (val b = TextArchive.load(project)) { is FoxResult.Ok -> b.value; is FoxResult.Err -> return b }
-            val texts = banks.records.getOrNull(TextBanks.TRAINER_MESSAGES) ?: return FoxResult.Err("The ROM has no message bank ${TextBanks.TRAINER_MESSAGES}")
+            val texts = banks.records.getOrNull(project.layout.textBanks.trainerMessages) ?: return FoxResult.Err("The ROM has no message bank ${project.layout.textBanks.trainerMessages}")
             return parse(table, offsets, texts)
         }
     }

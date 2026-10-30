@@ -25,7 +25,7 @@ interface GameLayout {
 
     val items: String
 
-    /** One file per in-game NPC trade (13 in HeartGold); the nickname and trainer name are in [TextBanks.TRADE_NAMES]. */
+    /** One file per in-game NPC trade (13 in HeartGold); the nickname and trainer name are in [TextBanks.tradeNames]. */
     val npcTrades: String
 
     val maps: String
@@ -78,7 +78,7 @@ interface GameLayout {
 
     val trainerParties: String
 
-    /** One-file NARC of `u16 trainer, u16 trigger` pairs, one for each battle message; entry `n` goes with message `n` of [TextBanks.TRAINER_MESSAGES]. */
+    /** One-file NARC of `u16 trainer, u16 trigger` pairs, one for each battle message; entry `n` goes with message `n` of [TextBanks.trainerMessages]. */
     val trainerMessageTable: String
 
     /** One-file NARC of one `u16` for each trainer: the byte offset in [trainerMessageTable] of the trainer's first message (0 for a trainer with none). */
@@ -126,7 +126,7 @@ interface GameLayout {
     /** A plain file (not a NARC): the Bug Catching Contest tables, 4 sets of 10 entries of 8 bytes. */
     val bugContest: String
 
-    /** One file per Battle Tower trainer (315): u16 trainer class, u16 count, then that many u16 ids of the Pokémon sets it draws from. Names and messages are in [TextBanks.BATTLE_TOWER_NAMES] and [TextBanks.BATTLE_TOWER_MESSAGES]. */
+    /** One file per Battle Tower trainer (315): u16 trainer class, u16 count, then that many u16 ids of the Pokémon sets it draws from. Names and messages are in [TextBanks.battleTowerNames] and [TextBanks.battleTowerMessages]. */
     val battleTowerTrainers: String
 
     /** One 16-byte file per Battle Tower Pokémon set (951, set 0 is empty): species, four moves, EV flags, nature, item, form. */
@@ -269,4 +269,7 @@ interface GameLayout {
 
     /** Front pictures: [trainerFrontSprites] has this many files per class. */
     val filesPerTrainerClassPicture: Int
+
+    /** The numbers of the text banks the editors read names from (species, moves, items, trainers, ...). */
+    val textBanks: TextBanks
 }

@@ -6,7 +6,6 @@ import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
 import io.github.legendaryredfox.foxhg.core.data.trainerclass.NewTrainerClass
 import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
 import io.github.legendaryredfox.foxhg.core.emulator.EmulatorSupport.available
-import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.script.ScriptEntry
 import io.github.legendaryredfox.foxhg.core.script.ScriptText
 import io.github.legendaryredfox.foxhg.core.text.MessageText

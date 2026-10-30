@@ -1,10 +1,10 @@
 package io.github.legendaryredfox.foxhg.core.emulator
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.trainer.NewTrainer
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
 import io.github.legendaryredfox.foxhg.core.data.trainerclass.NewTrainerClass
-import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.script.ScriptEntry
@@ -26,7 +26,7 @@ object EyeMusicRun {
     fun ok(r: FoxResult<*>) = check(r is FoxResult.Ok) { (r as FoxResult.Err).message }
 
     fun classId(project: RomProject, name: String): Int =
-        (TextArchive.load(project) as FoxResult.Ok).value.records[TextBanks.TRAINER_CLASSES].entries.map { it.text() }.indexOf(name).also { check(it > 0) { "no class $name" } }
+        (TextArchive.load(project) as FoxResult.Ok).value.records[HgssEnglishLayout.textBanks.trainerClasses].entries.map { it.text() }.indexOf(name).also { check(it > 0) { "no class $name" } }
 
     fun trainerOfClass(project: RomProject, classId: Int): Int =
         (TrainerTable.load(project) as FoxResult.Ok).value.trainers.indexOfFirst { it.header.trainerClass == classId }.also { check(it > 0) { "no trainer of class $classId" } }

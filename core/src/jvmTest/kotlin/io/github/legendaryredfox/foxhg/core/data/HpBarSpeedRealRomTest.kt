@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.data
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.hpbar.HpBarSpeed
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
@@ -12,7 +13,7 @@ import kotlin.test.assertTrue
 
 /** Needs roms/heartgold.nds (or FOXHG_ROM); passes with a notice when absent. */
 class HpBarSpeedRealRomTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val romPath: Path = TestRoms.heartGoldEnglish
 
     @Test
     fun theHpBarSpeedIsTheGamesAndEditsStick() {

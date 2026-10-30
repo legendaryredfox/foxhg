@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.text
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
@@ -13,7 +14,7 @@ import kotlin.test.assertTrue
 
 /** Needs roms/heartgold.nds (or FOXHG_ROM); passes with a notice when absent. */
 class RealRomTextTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val romPath: Path = TestRoms.heartGoldEnglish
 
     private fun withMessages(block: (Narc) -> Unit) {
         if (!Files.exists(romPath)) {

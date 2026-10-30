@@ -1,7 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.data.trainer
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.script.LabelRef
 import io.github.legendaryredfox.foxhg.core.script.ScriptCommand
@@ -14,7 +13,7 @@ import io.github.legendaryredfox.foxhg.core.text.TextEntry
 
 /**
  * Adds a trainer at the end of the trainer list. Four places hold one entry per trainer and all grow together: the header (`a/0/5/5`) and the
- * party (`a/0/5/6`) of [TrainerTable], the name (text bank [TextBanks.TRAINER_NAMES]) and the offset of the trainer's first battle message
+ * party (`a/0/5/6`) of [TrainerTable], the name (text bank [TextBanks.trainerNames]) and the offset of the trainer's first battle message
  * (`a/1/3/1`, 0 for none, see [TrainerMessages]; the vanilla file stops at trainer 734, so the missing offsets of 735 to 737 are filled with 0 as well). The new trainer starts as a copy of another one, so it is a working trainer at once; its
  * messages are added in the messages editor. A refusal leaves the project as it was.
  *
@@ -42,12 +41,12 @@ object NewTrainer {
         val messages = when (val m = TrainerMessages.load(project)) { is FoxResult.Ok -> m.value; is FoxResult.Err -> return@atomically m }
         if (messages.offsets.size > count) return@atomically FoxResult.Err("The message offsets cover ${messages.offsets.size} trainers but the ROM has $count")
         val banks = when (val b = TextArchive.load(project)) { is FoxResult.Ok -> b.value; is FoxResult.Err -> return@atomically b }
-        val names = banks.records.getOrNull(TextBanks.TRAINER_NAMES) ?: return@atomically FoxResult.Err("The ROM has no trainer name bank ${TextBanks.TRAINER_NAMES}")
+        val names = banks.records.getOrNull(project.layout.textBanks.trainerNames) ?: return@atomically FoxResult.Err("The ROM has no trainer name bank ${project.layout.textBanks.trainerNames}")
         if (names.entries.size != count) return@atomically FoxResult.Err("The name bank has ${names.entries.size} names but the ROM has $count trainers")
 
         (table.withAll(table.trainers + source).save(project) as? FoxResult.Err)?.let { return@atomically it }
         val grown = TextArchive(names.key, names.entries + TextEntry(chars))
-        (banks.with(TextBanks.TRAINER_NAMES, grown).save(project) as? FoxResult.Err)?.let { return@atomically it }
+        (banks.with(project.layout.textBanks.trainerNames, grown).save(project) as? FoxResult.Err)?.let { return@atomically it }
         (TrainerMessages(messages.trainers, messages.triggers, messages.offsets + List(count + 1 - messages.offsets.size) { 0 }, messages.texts).save(project) as? FoxResult.Err)?.let { return@atomically it }
         (giveScript(project, count) as? FoxResult.Err)?.let { return@atomically it }
         FoxResult.Ok(count)

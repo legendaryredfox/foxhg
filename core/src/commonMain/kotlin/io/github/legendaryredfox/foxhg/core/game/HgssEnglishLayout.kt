@@ -97,6 +97,7 @@ open class HgssLayoutBase : GameLayout {
     override val encounterMusicArea: Int = classTableArea + classTableAreaSize
     override val encounterMusicAreaSize: Int = 0x600
     override val filesPerTrainerClassPicture: Int = 5
+    override val textBanks: TextBanks = TextBanks()
 }
 
 /** HeartGold and SoulSilver, English: the layout every editor is written and verified against. */

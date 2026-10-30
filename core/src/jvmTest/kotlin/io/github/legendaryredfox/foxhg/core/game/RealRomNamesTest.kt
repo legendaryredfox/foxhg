@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.game
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
 import io.github.legendaryredfox.foxhg.core.nds.NdsRom
@@ -10,7 +11,7 @@ import kotlin.test.assertEquals
 
 /** Needs roms/heartgold.nds (or FOXHG_ROM); passes with a notice when absent. */
 class RealRomNamesTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val romPath: Path = TestRoms.heartGoldEnglish
 
     @Test
     fun namesComeFromTheRomText() {
@@ -20,7 +21,7 @@ class RealRomNamesTest {
         }
         FileRomSource(romPath).use { source ->
             val rom = (NdsRom.open(source) as FoxResult.Ok).value
-            val names = GameNames((GameText.open(rom, HgssEnglishLayout) as FoxResult.Ok).value)
+            val names = GameNames((GameText.open(rom, HgssEnglishLayout) as FoxResult.Ok).value, HgssEnglishLayout.textBanks)
             assertEquals(496, names.species.size)
             assertEquals("BULBASAUR", names.species[1])
             assertEquals("PIKACHU", names.species[25])

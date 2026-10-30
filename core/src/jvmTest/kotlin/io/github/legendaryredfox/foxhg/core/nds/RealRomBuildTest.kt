@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.nds
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.u16
@@ -13,7 +14,7 @@ import kotlin.test.assertTrue
 
 /** Builds against the clean HeartGold ROM (roms/heartgold.nds or FOXHG_ROM); passes with a notice when absent. */
 class RealRomBuildTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val romPath: Path = TestRoms.heartGoldEnglish
 
     private fun sha256(path: Path): String {
         val digest = MessageDigest.getInstance("SHA-256")

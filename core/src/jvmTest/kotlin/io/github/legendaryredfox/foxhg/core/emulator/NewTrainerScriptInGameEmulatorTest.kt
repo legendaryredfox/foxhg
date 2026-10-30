@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.emulator
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.trainer.NewTrainer
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
@@ -7,7 +8,6 @@ import io.github.legendaryredfox.foxhg.core.emulator.EmulatorSupport.available
 import io.github.legendaryredfox.foxhg.core.data.event.EventFile
 import io.github.legendaryredfox.foxhg.core.data.event.OverworldEvent
 import io.github.legendaryredfox.foxhg.core.data.mapheader.MapHeaderTable
-import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.text.TextArchive
 import io.github.legendaryredfox.foxhg.core.save.SaveFile
 import io.github.legendaryredfox.foxhg.core.save.SaveVarsFlags
@@ -31,7 +31,7 @@ class NewTrainerScriptInGameEmulatorTest {
             val rom = MartInGame.build(work, "new-trainer-script.nds") { project ->
                 var id = -1
                 // the last one is a copy of a Youngster (one Rattata), so winning takes a few presses of A
-                val classes = (TextArchive.load(project) as FoxResult.Ok).value.records[TextBanks.TRAINER_CLASSES].entries.map { it.text() }
+                val classes = (TextArchive.load(project) as FoxResult.Ok).value.records[HgssEnglishLayout.textBanks.trainerClasses].entries.map { it.text() }
                 val youngster = (TrainerTable.load(project) as FoxResult.Ok).value.trainers.indexOfFirst { classes.getOrNull(it.header.trainerClass) == "Youngster" }
                 check(youngster > 0) { "no Youngster in the ROM" }
                 repeat(4) { i -> id = (NewTrainer.add(project, if (i == 3) "FOXHG" else "T$i", if (i == 3) youngster else 1 + i) as FoxResult.Ok).value }

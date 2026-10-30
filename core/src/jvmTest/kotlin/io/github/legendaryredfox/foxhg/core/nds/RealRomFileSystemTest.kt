@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.nds
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.ascii
 import io.github.legendaryredfox.foxhg.core.narc.Narc
@@ -12,7 +13,7 @@ import kotlin.test.assertTrue
 
 /** Needs the clean HeartGold ROM at roms/heartgold.nds (or FOXHG_ROM); passes with a notice when absent. */
 class RealRomFileSystemTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val romPath: Path = TestRoms.heartGoldEnglish
 
     private fun withRom(block: (NdsRom) -> Unit) {
         if (!Files.exists(romPath)) {

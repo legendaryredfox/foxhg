@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.nds
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import java.nio.file.Files
@@ -12,7 +13,7 @@ import kotlin.test.assertTrue
 
 /** The DSPRE folder export against the clean HeartGold ROM (roms/heartgold.nds or FOXHG_ROM); passes with a notice when absent. */
 class RealRomDspreFolderTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val romPath: Path = TestRoms.heartGoldEnglish
 
     private fun withProject(block: (RomProject, NdsRom, Path) -> Unit) {
         if (!Files.exists(romPath)) {

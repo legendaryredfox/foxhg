@@ -60,4 +60,16 @@ class LayoutUsageTest {
         assertEquals(HgssEnglishLayout.personal, other.personal)
         assertEquals(HgssEnglishLayout.encounterMusicArea, other.encounterMusicArea)
     }
+
+    @Test
+    fun theTextBankNumbersComeFromTheLayout() {
+        val banks = HgssEnglishLayout.textBanks
+        assertEquals(listOf(237, 750, 222, 720, 735, 729, 730, 279, 27, 724, 728, 200), listOf(banks.species, banks.moves, banks.items, banks.abilities, banks.types, banks.trainerNames, banks.trainerClasses, banks.locations, banks.battleTowerNames, banks.battleTowerMessages, banks.trainerMessages, banks.tradeNames))
+        assertEquals("Item names", banks.describe(222))
+        val other = object : HgssLayoutBase() { override val textBanks = TextBanks(species = 300) }
+        assertEquals(300, other.textBanks.species)
+        assertEquals(750, other.textBanks.moves)
+        assertEquals("Species names", other.textBanks.describe(300))
+        assertEquals(null, other.textBanks.describe(237))
+    }
 }

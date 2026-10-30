@@ -19,7 +19,7 @@ import kotlin.test.Test
  * for the output) and the ROM exists, so normal test runs stay fast.
  */
 class BootFixtures {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val romPath: Path = TestRoms.heartGoldEnglish
     private val outDir: Path? = System.getenv("FOXHG_BOOT_DIR")?.let { Path.of(it) }
 
     private fun open(source: FileRomSource): RomProject = (RomProject.open(source) as FoxResult.Ok).value

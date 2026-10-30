@@ -1,8 +1,8 @@
 package io.github.legendaryredfox.foxhg.core.data.trainerclass
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
 import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.narc.Narc
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
 import io.github.legendaryredfox.foxhg.core.patch.dspre.DsprePatches
@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 
 /** Needs roms/heartgold.nds (or FOXHG_ROM); passes with a notice when absent. */
 class RealRomNewTrainerClassTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val romPath: Path = TestRoms.heartGoldEnglish
 
     private fun <T> FoxResult<T>.ok(): T = (this as? FoxResult.Ok)?.value ?: error((this as FoxResult.Err).message)
 
@@ -30,7 +30,7 @@ class RealRomNewTrainerClassTest {
         FileRomSource(romPath).use { source -> block(RomProject.open(source).ok()) }
     }
 
-    private fun names(project: RomProject) = TextArchive.load(project).ok().records[TextBanks.TRAINER_CLASSES]
+    private fun names(project: RomProject) = TextArchive.load(project).ok().records[HgssEnglishLayout.textBanks.trainerClasses]
     private fun pictures(project: RomProject) = Narc.parse(project.read(HgssEnglishLayout.trainerFrontSprites)!!).ok().files
 
     @Test

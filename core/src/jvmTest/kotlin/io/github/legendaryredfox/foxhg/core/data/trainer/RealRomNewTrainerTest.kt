@@ -1,7 +1,8 @@
 package io.github.legendaryredfox.foxhg.core.data.trainer
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.script.LabelRef
@@ -18,7 +19,7 @@ import kotlin.test.assertTrue
 
 /** Needs roms/heartgold.nds (or FOXHG_ROM); passes with a notice when absent. */
 class RealRomNewTrainerTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val romPath: Path = TestRoms.heartGoldEnglish
 
     private fun <T> FoxResult<T>.ok(): T = (this as? FoxResult.Ok)?.value ?: error((this as FoxResult.Err).message)
 
@@ -30,7 +31,7 @@ class RealRomNewTrainerTest {
         FileRomSource(romPath).use { source -> block(RomProject.open(source).ok()) }
     }
 
-    private fun names(project: RomProject) = TextArchive.load(project).ok().records[TextBanks.TRAINER_NAMES]
+    private fun names(project: RomProject) = TextArchive.load(project).ok().records[HgssEnglishLayout.textBanks.trainerNames]
 
     @Test
     fun aNewTrainerIsACopyAtTheEndWithItsNameAndAnEmptyMessageSlot() = withProject { project ->

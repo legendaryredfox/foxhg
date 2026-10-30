@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.data.personal
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
 import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.narc.Narc
@@ -13,7 +14,7 @@ import kotlin.test.assertEquals
 
 /** Needs roms/heartgold.nds (or FOXHG_ROM); passes with a notice when absent. */
 class RealRomPersonalTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val romPath: Path = TestRoms.heartGoldEnglish
 
     private fun withPersonal(block: (List<PersonalData>, Narc) -> Unit) {
         if (!Files.exists(romPath)) {

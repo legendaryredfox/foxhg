@@ -1,10 +1,10 @@
 package io.github.legendaryredfox.foxhg.core.emulator
 
+import io.github.legendaryredfox.foxhg.core.game.HgssEnglishLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.trainer.NewTrainer
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
 import io.github.legendaryredfox.foxhg.core.emulator.EmulatorSupport.available
-import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.script.ScriptEntry
 import io.github.legendaryredfox.foxhg.core.script.ScriptText
 import io.github.legendaryredfox.foxhg.core.text.MessageText
@@ -27,7 +27,7 @@ class NewTrainerInGameEmulatorTest {
             var id = -1
             val rom = MartInGame.build(work, "new-trainer.nds") { project ->
                 // a Youngster: the Rival's name does not come from the name bank but from the save
-                val classes = (TextArchive.load(project) as FoxResult.Ok).value.records[TextBanks.TRAINER_CLASSES].entries.map { it.text() }
+                val classes = (TextArchive.load(project) as FoxResult.Ok).value.records[HgssEnglishLayout.textBanks.trainerClasses].entries.map { it.text() }
                 val template = (TrainerTable.load(project) as FoxResult.Ok).value.trainers.indexOfFirst { classes.getOrNull(it.header.trainerClass) == "Youngster" }
                 check(template > 0) { "no Youngster in the ROM" }
                 id = (NewTrainer.add(project, "FOXHG", template) as FoxResult.Ok).value

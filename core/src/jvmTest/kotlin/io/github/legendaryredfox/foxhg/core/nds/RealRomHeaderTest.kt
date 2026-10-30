@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.nds
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import java.nio.file.Files
 import java.nio.file.Path
@@ -9,7 +10,7 @@ import kotlin.test.assertTrue
 
 /** Runs against the clean HeartGold ROM at roms/heartgold.nds; prints a notice and passes when it is absent. */
 class RealRomHeaderTest {
-    private val rom: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val rom: Path = TestRoms.heartGoldEnglish
 
     @Test
     fun readsHeartGoldHeader() {

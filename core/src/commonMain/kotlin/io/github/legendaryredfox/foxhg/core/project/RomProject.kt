@@ -285,7 +285,7 @@ class RomProject(
             if (!namesLoaded) {
                 namesCache = read(layout.messages)
                     ?.let { (Narc.parse(it) as? FoxResult.Ok)?.value }
-                    ?.let { GameNames(GameText(it)) }
+                    ?.let { GameNames(GameText(it), layout.textBanks) }
                 namesLoaded = true
             }
             return namesCache

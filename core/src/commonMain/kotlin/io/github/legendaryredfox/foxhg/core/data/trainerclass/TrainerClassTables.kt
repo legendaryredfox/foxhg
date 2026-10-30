@@ -2,7 +2,6 @@ package io.github.legendaryredfox.foxhg.core.data.trainerclass
 
 import io.github.legendaryredfox.foxhg.core.game.GameLayout
 import io.github.legendaryredfox.foxhg.core.FoxResult
-import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.patch.PatchTarget
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.text.TextArchive
@@ -11,8 +10,8 @@ import io.github.legendaryredfox.foxhg.core.text.TextArchive
 internal object TrainerClassTables {
     /** The number of classes: the entries of the class name bank (129 in the vanilla ROM). */
     fun classCount(project: RomProject): FoxResult<Int> = when (val banks = TextArchive.load(project)) {
-        is FoxResult.Ok -> banks.value.records.getOrNull(TextBanks.TRAINER_CLASSES)?.entries?.size?.let { FoxResult.Ok(it) }
-            ?: FoxResult.Err("The ROM has no trainer class name bank ${TextBanks.TRAINER_CLASSES}")
+        is FoxResult.Ok -> banks.value.records.getOrNull(project.layout.textBanks.trainerClasses)?.entries?.size?.let { FoxResult.Ok(it) }
+            ?: FoxResult.Err("The ROM has no trainer class name bank ${project.layout.textBanks.trainerClasses}")
         is FoxResult.Err -> banks
     }
 

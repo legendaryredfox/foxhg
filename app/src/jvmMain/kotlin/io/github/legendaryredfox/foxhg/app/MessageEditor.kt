@@ -24,7 +24,6 @@ import io.github.legendaryredfox.foxhg.app.ui.SectionCard
 import io.github.legendaryredfox.foxhg.app.ui.TextArea
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
-import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.text.TextArchive
 
@@ -34,7 +33,10 @@ import io.github.legendaryredfox.foxhg.core.text.TextArchive
  * Names shown by the other editors come from the ROM as it was opened and update after a reopen.
  */
 class MessageEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
-    val banks = RecordEditorModel(project, TextArchive.SPEC, { bank -> "%03d  %s".format(bank, TextBanks.describe(bank) ?: "Bank $bank") }, onChanged)
+    private val textBanks = project.layout.textBanks
+    fun bankName(bank: Int): String? = textBanks.describe(bank)
+
+    val banks = RecordEditorModel(project, TextArchive.SPEC, { bank -> "%03d  %s".format(bank, textBanks.describe(bank) ?: "Bank $bank") }, onChanged)
     private val original: List<TextArchive> = NarcRecords.original(project, TextArchive.SPEC)
 
     var messageIndex: Int by mutableIntStateOf(0)
@@ -144,7 +146,7 @@ fun MessageEditor(model: MessageEditorModel, modifier: Modifier = Modifier) {
         )
         DetailPane {
             val entry = archive.entries.getOrNull(model.messageIndex)
-            EditorHeader(model.banks.selectedIndex.toString(), TextBanks.describe(model.banks.selectedIndex) ?: "Bank ${model.banks.selectedIndex}")
+            EditorHeader(model.banks.selectedIndex.toString(), model.bankName(model.banks.selectedIndex) ?: "Bank ${model.banks.selectedIndex}")
             SectionCard(
                 stringResource(Res.string.message_message_x_of_x, model.messageIndex, archive.entries.size),
                 subtitle = "Commands are written {NAME args}, for example {STRVAR_1 3, 0, 0}, {PAUSE 30}, {COLOR 1}. Line breaks: \\n next line, \\r new box, \\f clear.",

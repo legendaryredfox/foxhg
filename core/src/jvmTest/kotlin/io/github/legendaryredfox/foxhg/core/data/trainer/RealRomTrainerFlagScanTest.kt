@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.data.trainer
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.event.EventFile
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
@@ -14,7 +15,7 @@ import kotlin.test.assertEquals
 
 /** Needs roms/heartgold.nds (or FOXHG_ROM); passes with a notice when absent. */
 class RealRomTrainerFlagScanTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val romPath: Path = TestRoms.heartGoldEnglish
 
     /** The flags the decomp names unknown after the trainer block of vanilla (0x82E) up to the new trainer limit are free: nothing uses them. */
     @Test

@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.compression
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
 import io.github.legendaryredfox.foxhg.core.nds.NdsRom
@@ -12,7 +13,7 @@ import kotlin.test.assertTrue
 
 /** Verifies BLZ against every compressed overlay and the ARM9 of the real ROM (roms/heartgold.nds or FOXHG_ROM). */
 class RealRomBlzTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val romPath: Path = TestRoms.heartGoldEnglish
 
     private fun withRom(block: (NdsRom) -> Unit) {
         if (!Files.exists(romPath)) {

@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.nds
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.arm9.Arm9
 import io.github.legendaryredfox.foxhg.core.compression.Blz
@@ -14,7 +15,7 @@ import kotlin.test.assertTrue
 
 /** ARM9 replacement against the real ROM (roms/heartgold.nds or FOXHG_ROM); passes with a notice when absent. */
 class RealRomArm9Test {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val romPath: Path = TestRoms.heartGoldEnglish
 
     private fun <T> FoxResult<T>.ok(): T = (this as? FoxResult.Ok)?.value ?: error((this as FoxResult.Err).message)
 

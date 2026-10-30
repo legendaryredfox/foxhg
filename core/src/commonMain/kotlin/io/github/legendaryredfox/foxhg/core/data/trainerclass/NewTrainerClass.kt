@@ -2,7 +2,6 @@ package io.github.legendaryredfox.foxhg.core.data.trainerclass
 
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.NarcRecords
-import io.github.legendaryredfox.foxhg.core.game.TextBanks
 import io.github.legendaryredfox.foxhg.core.patch.PatchTarget
 import io.github.legendaryredfox.foxhg.core.project.RomProject
 import io.github.legendaryredfox.foxhg.core.putU16
@@ -15,7 +14,7 @@ import io.github.legendaryredfox.foxhg.core.u8
 
 /**
  * Adds a trainer class at the end of the class list (HeartGold English). Four things grow together:
- * - the class name (text bank [TextBanks.TRAINER_CLASSES]);
+ * - the class name (text bank [TextBanks.trainerClasses]);
  * - the front picture, five files of [GameLayout.trainerFrontSprites], copied from the class [add] is told to copy;
  * - the gender table, which is read with no bound through one pointer in the ARM9: it is moved to [GameLayout.classTableArea] of the
  *   synthetic overlay (so the ARM9 expansion patch must be applied) with the class appended. Vanilla has 128 entries for 129 classes; class
@@ -36,7 +35,7 @@ object NewTrainerClass {
             ?: return@atomically FoxResult.Err("A new class needs the synthetic overlay: apply the ARM9 expansion patch in the ROM toolbox first")
 
         val banks = when (val b = TextArchive.load(project)) { is FoxResult.Ok -> b.value; is FoxResult.Err -> return@atomically b }
-        val names = banks.records.getOrNull(TextBanks.TRAINER_CLASSES) ?: return@atomically FoxResult.Err("The ROM has no trainer class name bank ${TextBanks.TRAINER_CLASSES}")
+        val names = banks.records.getOrNull(project.layout.textBanks.trainerClasses) ?: return@atomically FoxResult.Err("The ROM has no trainer class name bank ${project.layout.textBanks.trainerClasses}")
         val count = names.entries.size
         if (count >= project.layout.maxTrainerClasses) return@atomically FoxResult.Err("The game keeps the class in a byte and the prize rows in a counter of 8 bits: the most classes are ${project.layout.maxTrainerClasses}")
         if (template !in 0 until count) return@atomically FoxResult.Err("There is no class $template to copy (0 to ${count - 1})")
@@ -83,7 +82,7 @@ object NewTrainerClass {
         if (musicRows != null) (TrainerEncounterMusic.save(project, TrainerEncounterMusic(musicRows)) as? FoxResult.Err)?.let { return@atomically it }
 
         val grownNames = TextArchive(names.key, names.entries + TextEntry(chars))
-        (banks.with(TextBanks.TRAINER_CLASSES, grownNames).save(project) as? FoxResult.Err)?.let { return@atomically it }
+        (banks.with(project.layout.textBanks.trainerClasses, grownNames).save(project) as? FoxResult.Err)?.let { return@atomically it }
         val copy = pictures.records.subList(template * per, template * per + per)
         (pictures.withAll(pictures.records + copy.map { it.copyOf() }).save(project) as? FoxResult.Err)?.let { return@atomically it }
         FoxResult.Ok(count)

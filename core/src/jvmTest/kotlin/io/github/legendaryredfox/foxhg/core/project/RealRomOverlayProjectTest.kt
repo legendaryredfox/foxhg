@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.core.project
 
+import io.github.legendaryredfox.foxhg.core.TestRoms
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSink
 import io.github.legendaryredfox.foxhg.core.nds.FileRomSource
@@ -16,7 +17,7 @@ import kotlin.test.assertTrue
 /** Overlay edits through RomProject and ProjectStore on the real ROM; passes with a notice when it is absent. */
 @OptIn(kotlin.io.path.ExperimentalPathApi::class)
 class RealRomOverlayProjectTest {
-    private val romPath: Path = Path.of(System.getenv("FOXHG_ROM") ?: "../roms/heartgold.nds")
+    private val romPath: Path = TestRoms.heartGoldEnglish
 
     private fun <T> FoxResult<T>.ok(): T = (this as? FoxResult.Ok)?.value ?: error((this as FoxResult.Err).message)
 
