@@ -48,9 +48,11 @@ import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerMessages
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
 import io.github.legendaryredfox.foxhg.core.data.trainerclass.TrainerClassGenders
 import io.github.legendaryredfox.foxhg.core.data.trainerclass.TrainerEncounterMusic
+import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -319,6 +321,34 @@ class ListEditorsUiEndToEndTest {
         assertEquals("FOXHG", project.names!!.trainerNames[before])
         onNodeWithText("Added trainer $before", substring = true).assertIsDisplayed()
         onAllNodesWithText("FOXHG", substring = true).onFirst().assertIsDisplayed()
+    }
+
+    @Test
+    fun exportingAndImportingTrainerPartiesAsCsvOnTheTrainerScreen() = withHeartGoldApp { _, project ->
+        val trainers = { (TrainerTable.load(project) as FoxResult.Ok).value.trainers }
+        val id = trainers().indexOfFirst { it.party.size >= 2 }
+        val before = trainers()[id].party[0].level
+        open("Trainers")
+        tap(onNodeWithTag("csv-toggle"), inScrollPane = false)
+        val dir = tempDir("foxhg-trainer-csv")
+        val parties = dir.resolve("parties.csv")
+        withChoosers(file = { _, _, _ -> parties }) { tap(onAllNodesWithText("Export CSV")[1], inScrollPane = false) }
+        val rows = Files.readAllLines(parties)
+        assertEquals(trainers().sumOf { it.party.size } + 1, rows.size)
+        assertTrue(rows[0].startsWith("trainer,trainer_name,slot,species"), rows[0])
+
+        val level = rows[0].split(",").indexOf("level")
+        val edited = rows.mapIndexed { i, row -> if (i > 0 && row.startsWith("$id,") && row.split(",")[2] == "1") row.split(",").toMutableList().also { it[level] = "77" }.joinToString(",") else row }
+        val good = Files.write(dir.resolve("good.csv"), edited)
+        withChoosers(file = { _, _, _ -> good }) { tap(onAllNodesWithText("Import CSV")[1], inScrollPane = false) }
+        onNodeWithText("Imported good.csv").assertIsDisplayed()
+        assertEquals(77, trainers()[id].party[0].level)
+        assertNotEquals(before, trainers()[id].party[0].level)
+
+        val bad = Files.writeString(dir.resolve("bad.csv"), "trainer,slot,species,level\r\n$id,1,25,101\r\n")
+        withChoosers(file = { _, _, _ -> bad }) { tap(onAllNodesWithText("Import CSV")[1], inScrollPane = false) }
+        onAllNodesWithText("Import rejected", substring = true).onFirst().assertIsDisplayed()
+        assertEquals(77, trainers()[id].party[0].level, "a rejected file changes nothing")
     }
 
     @Test

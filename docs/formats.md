@@ -3,6 +3,8 @@
 Facts verified against the clean English HeartGold ROM (`roms/heartgold.nds`, game code `IPKE`) by tests in `core`.
 Add an entry here whenever a layout, offset or quirk is confirmed.
 
+**Scope of every fact below:** HeartGold, English (`IPKE`), unless the line or its heading names another game or language. Where SoulSilver (`IPGE`) was compared it says so. Nothing here is confirmed for any other language (Spanish `IPKS`/`IPGS`, French, German, Italian, Japanese, Korean) or game; those layouts are `GameLayout` subclasses that override only what differs (docs/plan.md M8 and M11), and a value in a language layout is **[UNVERIFIED]** until a real ROM of it passes the tests (`TestRoms`).
+
 ## NDS container
 
 - Header is 0x200 bytes of fields; the image has a 0x4000-byte header area (`headerSize` at 0x84). CRC-16/MODBUS of
@@ -789,3 +791,8 @@ Flail/Reversal are 13 Battle rules: `flail-multiplier` (overlay 12 0x97A4, `MOVS
 | `data/...` | every named file of the file system, same paths as the ROM |
 
 The folder is written under `<name>.part` and moved into place when it is complete, the folder must not exist or be empty, and a ROM file name with `..`, an empty part, a backslash or a colon is refused. DSPRE makes its own `unpacked/` folder of NARC contents when it first needs one. ARM7 overlays are not written (HeartGold has none). The real-ROM test checks every part against the ROM and that an edited file and overlay show in the folder; the layout was written from DSPRE's reading code and `ndstool`'s documented behavior and **was not opened in DSPRE**, **[UNVERIFIED]**.
+
+## Trainer CSV files
+
+`TrainerCsv` writes and reads two files. **Headers**: `id,name,class,class_name,ai_flags,double_battle,item1..item4,custom_moves,held_items,unknown2,party_size` (one row per trainer; `name`, `class_name` and `party_size` are for reading). `custom_moves` and `held_items` are bits 0 and 1 of the header's type byte, the two flags that give the size of every party record (8 bytes, plus 2 for an item, plus 8 for four moves); the other bits are kept. **Parties**: `trainer,trainer_name,slot,species,species_name,form,level,difficulty,gender,ability,item,move1..move4,capsule`, one row per Pokémon with the slot counted from 1, `gender` and `ability` being the low and high half of the stored byte (0 none, 1 male or first, 2 female or second). Import goes by the `id` (or `trainer`) column, leaves out a column or a trainer it does not name, and refuses the whole file for an unknown column, a number that does not fit its field (class and unknown2 a byte, level 1 to 100, species 10 bits, form 6 bits, items and moves 16 bits), a trainer twice or a slot repeated or missing. The rows of a trainer are its whole new party (up to 6); an item or a move in a row turns the trainer's flag on so the record has room, and an unedited export imports back to the same 1717 trainers (`RealRomTrainerCsvTest`).
+

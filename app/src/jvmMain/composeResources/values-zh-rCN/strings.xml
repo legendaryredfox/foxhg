@@ -1137,4 +1137,8 @@
     <string name="file_tree_dspre_choose">选择 DSPRE 文件夹的存放位置</string>
     <string name="app_exporting_x">正在导出 %1$s</string>
     <string name="app_exported_dspre_x">已将 DSPRE 文件夹导出到 %1$s</string>
+    <string name="trainer_csv_title">电子表格 (CSV)</string>
+    <string name="trainer_csv_subtitle">导出所有训练家或所有队伍，在电子表格中编辑后再导入。任何一个值无效，整个文件都会被拒绝。队伍文件中，一个训练家的所有行就是他的整支队伍。</string>
+    <string name="trainer_csv_headers">训练家（类别、AI、道具）</string>
+    <string name="trainer_csv_parties">队伍（每只宝可梦一行）</string>
 </resources>

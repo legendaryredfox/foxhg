@@ -1148,4 +1148,8 @@
     <string name="file_tree_dspre_choose">Choose where to put the DSPRE folder</string>
     <string name="app_exporting_x">Exporting %1$s</string>
     <string name="app_exported_dspre_x">Exported the DSPRE folder to %1$s</string>
+    <string name="trainer_csv_title">Spreadsheets (CSV)</string>
+    <string name="trainer_csv_subtitle">Export every trainer or every party to edit in a spreadsheet, then import the file back. A file with any bad value is refused whole. In a party file the rows of a trainer are its whole party.</string>
+    <string name="trainer_csv_headers">Trainers (class, AI, items)</string>
+    <string name="trainer_csv_parties">Parties (one row per Pokémon)</string>
 </resources>

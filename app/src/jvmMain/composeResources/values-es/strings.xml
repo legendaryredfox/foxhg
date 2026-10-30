@@ -1148,4 +1148,8 @@
     <string name="file_tree_dspre_choose">Elige dónde poner la carpeta de DSPRE</string>
     <string name="app_exporting_x">Exportando %1$s</string>
     <string name="app_exported_dspre_x">Carpeta de DSPRE exportada a %1$s</string>
+    <string name="trainer_csv_title">Hojas de cálculo (CSV)</string>
+    <string name="trainer_csv_subtitle">Exporta todos los entrenadores o todos los equipos para editarlos en una hoja de cálculo e importa el archivo de vuelta. Un archivo con cualquier valor no válido se rechaza entero. En un archivo de equipos, las filas de un entrenador son todo su equipo.</string>
+    <string name="trainer_csv_headers">Entrenadores (clase, IA, objetos)</string>
+    <string name="trainer_csv_parties">Equipos (una fila por Pokémon)</string>
 </resources>

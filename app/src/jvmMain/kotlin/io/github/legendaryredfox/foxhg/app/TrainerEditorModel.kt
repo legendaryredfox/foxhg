@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import io.github.legendaryredfox.foxhg.core.FoxResult
 import io.github.legendaryredfox.foxhg.core.data.trainer.NewTrainer
 import io.github.legendaryredfox.foxhg.core.data.trainer.Trainer
+import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerCsv
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerMon
 import io.github.legendaryredfox.foxhg.core.data.trainer.TrainerTable
 import io.github.legendaryredfox.foxhg.core.game.GameNames
@@ -110,6 +111,24 @@ class TrainerEditorModel(private val project: RomProject, private val onChanged:
         version++
         onChanged()
         return null
+    }
+
+    fun exportTrainersCsv(): String = TrainerCsv.exportTrainers(trainers, ::name) { names?.trainerClasses?.getOrNull(it) ?: "#$it" }
+
+    fun exportPartiesCsv(): String = TrainerCsv.exportParties(trainers, ::name) { names?.species?.getOrNull(it) ?: "#$it" }
+
+    /** Applies the rows of a trainer header file; returns the reason it was refused, or null. */
+    fun importTrainersCsv(text: String): String? = commitCsv(TrainerCsv.importTrainers(text, trainers))
+
+    /** Applies a party file, whose rows become the whole party of each trainer they name; returns the reason it was refused, or null. */
+    fun importPartiesCsv(text: String): String? = commitCsv(TrainerCsv.importParties(text, trainers))
+
+    private fun commitCsv(result: FoxResult<List<Trainer>>): String? {
+        val current = table ?: return loadError
+        return when (result) {
+            is FoxResult.Err -> result.message
+            is FoxResult.Ok -> { if (result.value != current.trainers) replace(current.withAll(result.value)); loadError }
+        }
     }
 
     private fun replace(updated: TrainerTable) {

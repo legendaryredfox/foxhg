@@ -50,6 +50,7 @@ fun TrainerEditor(model: TrainerEditorModel, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         ReplaceSpeciesCard(model)
         AddTrainerCard(model)
+        TrainerCsvCard(model)
         Row(Modifier.fillMaxSize()) {
             ListPane(
                 rows = model.rows(),
@@ -65,6 +66,28 @@ fun TrainerEditor(model: TrainerEditorModel, modifier: Modifier = Modifier) {
                 leading = { TrainerClassIcon(model.classOf(it), 26.dp) },
             )
             model.selected?.let { t -> DetailPane { Detail(model, t) } }
+        }
+    }
+}
+
+/** Every trainer header, and every party, as a CSV file to edit elsewhere and import back. */
+@Composable
+private fun TrainerCsvCard(model: TrainerEditorModel) {
+    var open by remember { mutableStateOf(false) }
+    SectionCard(
+        stringResource(Res.string.trainer_csv_title),
+        subtitle = stringResource(Res.string.trainer_csv_subtitle),
+        actions = { OutlinedButton(onClick = { open = !open }, modifier = Modifier.testTag("csv-toggle")) { Text(if (open) stringResource(Res.string.trainer_hide) else stringResource(Res.string.trainer_show)) } },
+    ) {
+        if (open) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(stringResource(Res.string.trainer_csv_headers), Modifier.width(220.dp))
+                CsvFileButtons(tr(Res.string.trainer_csv_headers), export = { model.exportTrainersCsv() }, import = { model.importTrainersCsv(it) })
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(stringResource(Res.string.trainer_csv_parties), Modifier.width(220.dp))
+                CsvFileButtons(tr(Res.string.trainer_csv_parties), export = { model.exportPartiesCsv() }, import = { model.importPartiesCsv(it) })
+            }
         }
     }
 }

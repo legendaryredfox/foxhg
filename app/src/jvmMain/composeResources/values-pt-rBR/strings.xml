@@ -1148,4 +1148,8 @@
     <string name="file_tree_dspre_choose">Escolha onde colocar a pasta do DSPRE</string>
     <string name="app_exporting_x">Exportando %1$s</string>
     <string name="app_exported_dspre_x">Pasta do DSPRE exportada para %1$s</string>
+    <string name="trainer_csv_title">Planilhas (CSV)</string>
+    <string name="trainer_csv_subtitle">Exporte todos os treinadores ou todos os times para editar numa planilha e importe o arquivo de volta. Um arquivo com qualquer valor inválido é recusado inteiro. Num arquivo de times, as linhas de um treinador são o time inteiro dele.</string>
+    <string name="trainer_csv_headers">Treinadores (classe, IA, itens)</string>
+    <string name="trainer_csv_parties">Times (uma linha por Pokémon)</string>
 </resources>
