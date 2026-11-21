@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import io.github.legendaryredfox.foxhg.app.resources.*
@@ -77,11 +78,11 @@ private fun BulkTools(model: RecordEditorModel<Learnset>) {
     var message by remember { mutableStateOf<String?>(null) }
     var failed by remember { mutableStateOf(false) }
     val shown = model.rows()
-    fun apply(verb: String, change: (List<Learnset>) -> LearnsetChange) {
+    fun apply(verb: StringResource, change: (List<Learnset>) -> LearnsetChange) {
         val result = change(model.records)
         if (result.changed > 0) model.updateAll { result.records }
         failed = false
-        message = "$verb ${plural(result.changed, "species")}" + if (result.skipped > 0) tr(Res.string.learnset_left_x_alone_move_already_there_no, result.skipped) else ""
+        message = tr(verb, trPlural(Res.plurals.plural_species, result.changed, result.changed)) + if (result.skipped > 0) tr(Res.string.learnset_left_x_alone_move_already_there_no, result.skipped) else ""
     }
     SectionCard(
         stringResource(Res.string.learnset_bulk_tools),
@@ -90,12 +91,12 @@ private fun BulkTools(model: RecordEditorModel<Learnset>) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
             PickerField(stringResource(Res.string.learnset_bulk_move), move, moves, { move = it }, Modifier.width(240.dp))
             NumberField(stringResource(Res.string.learnset_level), level, 1..100, { level = it }, Modifier.width(80.dp), tag = "Bulk level")
-            OutlinedButton(onClick = { apply("Taught it to") { LearnsetBulk.teach(it, shown, move, level) } }, modifier = Modifier.testTag("bulk-teach")) { Text(stringResource(Res.string.learnset_teach)) }
-            OutlinedButton(onClick = { apply("Took it from") { LearnsetBulk.forget(it, shown, move) } }, modifier = Modifier.testTag("bulk-forget")) { Text(stringResource(Res.string.learnset_forget)) }
+            OutlinedButton(onClick = { apply(Res.string.learnset_taught_x) { LearnsetBulk.teach(it, shown, move, level) } }, modifier = Modifier.testTag("bulk-teach")) { Text(stringResource(Res.string.learnset_teach)) }
+            OutlinedButton(onClick = { apply(Res.string.learnset_took_x) { LearnsetBulk.forget(it, shown, move) } }, modifier = Modifier.testTag("bulk-forget")) { Text(stringResource(Res.string.learnset_forget)) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
             PickerField(stringResource(Res.string.learnset_replace_with), replacement, moves, { replacement = it }, Modifier.width(240.dp))
-            OutlinedButton(onClick = { apply("Replaced it in") { LearnsetBulk.replace(it, shown, move, replacement) } }, modifier = Modifier.testTag("bulk-replace")) { Text(stringResource(Res.string.learnset_replace_the_move_above)) }
+            OutlinedButton(onClick = { apply(Res.string.learnset_replaced_x) { LearnsetBulk.replace(it, shown, move, replacement) } }, modifier = Modifier.testTag("bulk-replace")) { Text(stringResource(Res.string.learnset_replace_the_move_above)) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedButton(onClick = {

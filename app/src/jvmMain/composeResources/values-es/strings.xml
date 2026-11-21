@@ -971,7 +971,6 @@
     <string name="file_tree_exported_x_to_x">%1$s exportado a %2$s</string>
     <string name="file_tree_empty_file">(archivo vacío)</string>
     <string name="fly_header_x">Cabecera %1$s</string>
-    <string name="headbutt_tree_group">grupo de árboles</string>
     <string name="headbutt_special">Especial</string>
     <string name="headbutt_around_x_x">Cerca de %1$s, %2$s</string>
     <string name="headbutt_empty_group">Grupo vacío</string>
@@ -1196,4 +1195,19 @@
     <string name="mart_opened_by_x">Se abre con el comando de script SpMartScreen %1$s. Los precios se fijan por objeto en el editor de Objetos. </string>
     <string name="editor_not_implemented_x">%1$s aún no está implementado (docs/plan.md)</string>
     <string name="message_count_x_x">%1$s, %2$s</string>
+    <string name="learnset_taught_x">Enseñado a %1$s</string>
+    <string name="learnset_took_x">Quitado de %1$s</string>
+    <string name="learnset_replaced_x">Reemplazado en %1$s</string>
+    <plurals name="plural_map">
+        <item quantity="one">%1$d mapa</item>
+        <item quantity="other">%1$d mapas</item>
+    </plurals>
+    <plurals name="plural_tree">
+        <item quantity="one">%1$d árbol</item>
+        <item quantity="other">%1$d árboles</item>
+    </plurals>
+    <plurals name="plural_tree_group">
+        <item quantity="one">%1$d grupo de árboles</item>
+        <item quantity="other">%1$d grupos de árboles</item>
+    </plurals>
 </resources>

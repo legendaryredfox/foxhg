@@ -86,7 +86,7 @@ fun RockSmashEditor(model: RockSmashEditorModel, modifier: Modifier = Modifier) 
                     subtitle = stringResource(Res.string.rock_smash_shared_by_every_map_that_uses_it_s),
                     actions = {
                         if (t == site.type) Chip(stringResource(Res.string.rock_smash_this_map), emphasis = true)
-                        Chip(plural(model.mapsUsing(t), "map"))
+                        Chip(trPlural(Res.plurals.plural_map, model.mapsUsing(t), model.mapsUsing(t)))
                     },
                 ) {
                     FieldFlow {

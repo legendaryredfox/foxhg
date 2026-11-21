@@ -961,7 +961,6 @@
     <string name="file_tree_exported_x_to_x">已把 %1$s 导出到 %2$s</string>
     <string name="file_tree_empty_file">（空文件）</string>
     <string name="fly_header_x">地图头 %1$s</string>
-    <string name="headbutt_tree_group">树组</string>
     <string name="headbutt_special">特殊</string>
     <string name="headbutt_around_x_x">位于 %1$s, %2$s 附近</string>
     <string name="headbutt_empty_group">空组</string>
@@ -1184,4 +1183,16 @@
     <string name="mart_opened_by_x">由脚本命令 SpMartScreen %1$s 打开。价格在“物品”编辑器中按物品设置。</string>
     <string name="editor_not_implemented_x">%1$s 尚未实现 (docs/plan.md)</string>
     <string name="message_count_x_x">%1$s，%2$s</string>
+    <string name="learnset_taught_x">已教给 %1$s</string>
+    <string name="learnset_took_x">已从 %1$s 移除</string>
+    <string name="learnset_replaced_x">已在 %1$s 中替换</string>
+    <plurals name="plural_map">
+        <item quantity="other">%1$d 张地图</item>
+    </plurals>
+    <plurals name="plural_tree">
+        <item quantity="other">%1$d 棵树</item>
+    </plurals>
+    <plurals name="plural_tree_group">
+        <item quantity="other">%1$d 个树组</item>
+    </plurals>
 </resources>

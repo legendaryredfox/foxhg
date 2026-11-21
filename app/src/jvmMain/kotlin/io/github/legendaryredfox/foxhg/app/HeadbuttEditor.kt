@@ -61,11 +61,11 @@ fun HeadbuttEditor(model: HeadbuttEditorModel, modifier: Modifier = Modifier) {
     val species = model.files.names?.species ?: emptyList()
     RecordListDetail(
         model.files, modifier,
-        rowDetail = { i -> model.files.records.getOrNull(i)?.takeIf { it.hasTrees }?.let { plural(model.treeCount(it), "tree") } },
+        rowDetail = { i -> model.files.records.getOrNull(i)?.takeIf { it.hasTrees }?.let { model.treeCount(it).let { n -> trPlural(Res.plurals.plural_tree, n, n) } } },
     ) { file ->
         val index = model.files.selectedIndex
         EditorHeader(index.toString(), nameOf(model.files.label(index)), trailing = {
-            Chip(if (file.hasTrees) plural(model.treeCount(file), tr(Res.string.headbutt_tree_group)) else stringResource(Res.string.headbutt_no_trees))
+            Chip(if (file.hasTrees) model.treeCount(file).let { n -> trPlural(Res.plurals.plural_tree_group, n, n) } else stringResource(Res.string.headbutt_no_trees))
         })
         if (!file.hasTrees) {
             Text(
