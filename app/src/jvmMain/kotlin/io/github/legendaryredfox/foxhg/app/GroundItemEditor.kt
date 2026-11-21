@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Row
@@ -130,7 +131,7 @@ fun GroundItemEditor(model: GroundItemEditorModel, modifier: Modifier = Modifier
                     val where = model.where(ball)
                     Text(
                         if (ball.usedBy.isEmpty()) stringResource(Res.string.ground_item_no_overworld_event_runs_script_x_p, ball.scriptNumber)
-                        else "Used by ${ball.usedBy.size} ${if (ball.usedBy.size == 1) "map" else "maps"}${if (where.isNotEmpty()) ": $where" else ""}. Every event with script ${ball.scriptNumber} gives this item.",
+                        else pluralStringResource(Res.plurals.ground_item_used_by_maps, ball.usedBy.size, ball.usedBy.size, if (where.isNotEmpty()) stringResource(Res.string.ground_item_list_suffix_x, where) else "", ball.scriptNumber),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

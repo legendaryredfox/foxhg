@@ -1155,4 +1155,19 @@
     <string name="trainer_csv_subtitle">Exporte todos os treinadores ou todos os times para editar numa planilha e importe o arquivo de volta. Um arquivo com qualquer valor inválido é recusado inteiro. Num arquivo de times, as linhas de um treinador são o time inteiro dele.</string>
     <string name="trainer_csv_headers">Treinadores (classe, IA, itens)</string>
     <string name="trainer_csv_parties">Times (uma linha por Pokémon)</string>
+    <string name="event_alias_of_x">Alias de %1$s, sprite %2$s, script %3$s</string>
+    <string name="event_object_x">Objeto %1$s, sprite %2$s, script %3$s</string>
+    <string name="town_map_town_x">Cidade %1$s  %2$s</string>
+    <string name="town_map_spot_x">Local %1$s  %2$s</string>
+    <string name="overlay_stored_compressed_x">Guardado comprimido (BLZ): %1$s bytes na ROM, %2$s bytes descomprimidos. Comprimido de novo ao gerar a ROM.</string>
+    <string name="overlay_stored_as_it_is_x">Guardado como está: %1$s bytes na ROM.</string>
+    <string name="ground_item_list_suffix_x">: %1$s</string>
+    <string name="party_personality_note">O valor de personalidade, que define a natureza e se o Pokémon é shiny, não é alterado. Mudar a espécie, o nível, os IVs ou os EVs recalcula os atributos.</string>
+    <string name="party_personality_note_no_rom">O valor de personalidade, que define a natureza e se o Pokémon é shiny, não é alterado. Sem uma ROM os atributos não são recalculados: use os campos de atributos abaixo.</string>
+    <string name="save_trainer_subtitle_x">%1$s, idioma %2$s. O ID aparece como na Carteira de Treinador; não é editado aqui</string>
+    <string name="save_game_x">Jogo %1$s</string>
+    <plurals name="ground_item_used_by_maps">
+        <item quantity="one">Usado por %1$s mapa%2$s. Todo evento com o script %3$s dá este item.</item>
+        <item quantity="other">Usado por %1$s mapas%2$s. Todo evento com o script %3$s dá este item.</item>
+    </plurals>
 </resources>

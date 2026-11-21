@@ -130,8 +130,8 @@ fun OverlayEditor(model: OverlayEditorModel, appModel: AppModel, modifier: Modif
                 )
                 val stored = model.storedSize(entry)
                 Text(
-                    if (entry.isCompressed) "Stored compressed (BLZ): ${stored ?: "?"} bytes in the ROM, ${image?.size ?: "?"} bytes decompressed. Built again compressed when the ROM is built."
-                    else "Stored as it is: ${stored ?: "?"} bytes in the ROM.",
+                    if (entry.isCompressed) stringResource(Res.string.overlay_stored_compressed_x, stored ?: "?", image?.size ?: "?")
+                    else stringResource(Res.string.overlay_stored_as_it_is_x, stored ?: "?"),
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }

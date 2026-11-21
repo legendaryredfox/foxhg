@@ -54,8 +54,8 @@ class TownMapEditorModel(private val project: RomProject, private val onChanged:
 
     fun label(position: Int): String {
         val t = table ?: return "%03d".format(position)
-        return if (position < townCount) "Town %02d  %s".format(position, mapName(t.spots[position].mapHeader))
-        else "Spot %02d  %s".format(position - townCount, mapName(t.selections[position - townCount].mapHeader))
+        return if (position < townCount) tr(Res.string.town_map_town_x, "%02d".format(position), mapName(t.spots[position].mapHeader))
+        else tr(Res.string.town_map_spot_x, "%02d".format(position - townCount), mapName(t.selections[position - townCount].mapHeader))
     }
 
     fun rows(): List<Int> {

@@ -83,7 +83,7 @@ fun EventEditor(model: RecordEditorModel<EventFile>, labels: EventLabels, modifi
         key(model.selectedIndex) {
             EventSection(tr(Res.string.event_overworld_objects), tr(Res.string.event_npcs_trainers_and_item_balls), file.overworlds, { model.update { f -> f.copy(overworlds = it) } },
                 csv = OverworldEvent.CSV,
-                summary = { "${if (it.isAlias) "Alias of" else "Object"} ${it.id}, sprite ${it.spriteEntry}, script ${it.script}" },
+                summary = { tr(if (it.isAlias) Res.string.event_alias_of_x else Res.string.event_object_x, it.id, it.spriteEntry, it.script) },
                 create = { file.overworlds.lastOrNull()?.copy(id = (file.overworlds.maxOfOrNull { o -> o.id } ?: 0) + 1) ?: OverworldEvent(1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0) },
                 leading = { OverworldIcon(it.spriteEntry, it.orientation, 32.dp) },
             ) { o, set -> OverworldForm(o, set) }

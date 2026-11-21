@@ -262,7 +262,7 @@ fun SavePlayerScreen(model: SaveEditorModel, modifier: Modifier = Modifier) {
             Text(stringResource(Res.string.save_this_save_has_no_sound_general_blo), color = MaterialTheme.colorScheme.error)
             return@DetailPane
         }
-        SectionCard(stringResource(Res.string.trainer_trainer), subtitle = "${if (player.version == 7) "HeartGold" else if (player.version == 8) "SoulSilver" else "Game ${player.version}"}, language ${player.language}. The ID is shown as the Trainer Card shows it; it is not edited here") {
+        SectionCard(stringResource(Res.string.trainer_trainer), subtitle = stringResource(Res.string.save_trainer_subtitle_x, if (player.version == 7) "HeartGold" else if (player.version == 8) "SoulSilver" else stringResource(Res.string.save_game_x, player.version), player.language)) {
             FieldFlow {
                 var name by remember(player.name) { mutableStateOf(player.name) }
                 LabeledText(stringResource(Res.string.save_name_up_to_x_characters, PlayerData.MAX_NAME), name) { text ->

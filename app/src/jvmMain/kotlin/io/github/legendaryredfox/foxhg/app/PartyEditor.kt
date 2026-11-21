@@ -100,7 +100,7 @@ fun SavePartyScreen(model: SaveEditorModel, names: GameNames?, loadRules: () -> 
         val mon = party.members.getOrNull(slot) ?: return@DetailPane
         fun edit(change: (Pokemon) -> Pokemon) = model.updateParty { it.with(slot, change(it.members[slot])) }
 
-        SectionCard(stringResource(Res.string.group_pokemon), subtitle = "The personality value, which sets the nature and whether the Pokémon is shiny, is left alone. ${if (rules == null) "Without a ROM the stats are not recalculated: use the stat fields below." else "Changing the species, level, IVs or EVs recalculates the stats."}") {
+        SectionCard(stringResource(Res.string.group_pokemon), subtitle = stringResource(if (rules == null) Res.string.party_personality_note_no_rom else Res.string.party_personality_note)) {
             FieldFlow {
                 SpeciesPicker(stringResource(Res.string.evolution_species), mon.species, speciesNames, { v -> edit { it.withSpecies(v).settled(rules) } }, Modifier.width(220.dp))
                 var nickname by remember(slot, mon.nickname) { mutableStateOf(mon.nickname) }

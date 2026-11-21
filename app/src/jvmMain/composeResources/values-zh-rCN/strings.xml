@@ -1144,4 +1144,18 @@
     <string name="trainer_csv_subtitle">导出所有训练家或所有队伍，在电子表格中编辑后再导入。任何一个值无效，整个文件都会被拒绝。队伍文件中，一个训练家的所有行就是他的整支队伍。</string>
     <string name="trainer_csv_headers">训练家（类别、AI、道具）</string>
     <string name="trainer_csv_parties">队伍（每只宝可梦一行）</string>
+    <string name="event_alias_of_x">%1$s 的别名，精灵 %2$s，脚本 %3$s</string>
+    <string name="event_object_x">对象 %1$s，精灵 %2$s，脚本 %3$s</string>
+    <string name="town_map_town_x">城镇 %1$s  %2$s</string>
+    <string name="town_map_spot_x">地点 %1$s  %2$s</string>
+    <string name="overlay_stored_compressed_x">以压缩方式存储（BLZ）：ROM 中 %1$s 字节，解压后 %2$s 字节。生成 ROM 时会重新压缩。</string>
+    <string name="overlay_stored_as_it_is_x">原样存储：ROM 中 %1$s 字节。</string>
+    <string name="ground_item_list_suffix_x">：%1$s</string>
+    <string name="party_personality_note">性格值决定性格以及宝可梦是否为闪光，此处不会改动。更改种类、等级、个体值或努力值会重新计算能力值。</string>
+    <string name="party_personality_note_no_rom">性格值决定性格以及宝可梦是否为闪光，此处不会改动。没有 ROM 时不会重新计算能力值：请使用下方的能力值字段。</string>
+    <string name="save_trainer_subtitle_x">%1$s，语言 %2$s。ID 的显示方式与训练家卡片相同；此处不可编辑</string>
+    <string name="save_game_x">游戏 %1$s</string>
+    <plurals name="ground_item_used_by_maps">
+        <item quantity="other">被 %1$s 张地图使用%2$s。每个使用脚本 %3$s 的事件都会给出此物品。</item>
+    </plurals>
 </resources>

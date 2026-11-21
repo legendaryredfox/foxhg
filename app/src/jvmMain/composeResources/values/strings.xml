@@ -1155,4 +1155,19 @@
     <string name="trainer_csv_subtitle">Export every trainer or every party to edit in a spreadsheet, then import the file back. A file with any bad value is refused whole. In a party file the rows of a trainer are its whole party.</string>
     <string name="trainer_csv_headers">Trainers (class, AI, items)</string>
     <string name="trainer_csv_parties">Parties (one row per Pokémon)</string>
+    <string name="event_alias_of_x">Alias of %1$s, sprite %2$s, script %3$s</string>
+    <string name="event_object_x">Object %1$s, sprite %2$s, script %3$s</string>
+    <string name="town_map_town_x">Town %1$s  %2$s</string>
+    <string name="town_map_spot_x">Spot %1$s  %2$s</string>
+    <string name="overlay_stored_compressed_x">Stored compressed (BLZ): %1$s bytes in the ROM, %2$s bytes decompressed. Built again compressed when the ROM is built.</string>
+    <string name="overlay_stored_as_it_is_x">Stored as it is: %1$s bytes in the ROM.</string>
+    <string name="ground_item_list_suffix_x">: %1$s</string>
+    <string name="party_personality_note">The personality value, which sets the nature and whether the Pokémon is shiny, is left alone. Changing the species, level, IVs or EVs recalculates the stats.</string>
+    <string name="party_personality_note_no_rom">The personality value, which sets the nature and whether the Pokémon is shiny, is left alone. Without a ROM the stats are not recalculated: use the stat fields below.</string>
+    <string name="save_trainer_subtitle_x">%1$s, language %2$s. The ID is shown as the Trainer Card shows it; it is not edited here</string>
+    <string name="save_game_x">Game %1$s</string>
+    <plurals name="ground_item_used_by_maps">
+        <item quantity="one">Used by %1$s map%2$s. Every event with script %3$s gives this item.</item>
+        <item quantity="other">Used by %1$s maps%2$s. Every event with script %3$s gives this item.</item>
+    </plurals>
 </resources>

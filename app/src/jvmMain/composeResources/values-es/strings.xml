@@ -1155,4 +1155,19 @@
     <string name="trainer_csv_subtitle">Exporta todos los entrenadores o todos los equipos para editarlos en una hoja de cálculo e importa el archivo de vuelta. Un archivo con cualquier valor no válido se rechaza entero. En un archivo de equipos, las filas de un entrenador son todo su equipo.</string>
     <string name="trainer_csv_headers">Entrenadores (clase, IA, objetos)</string>
     <string name="trainer_csv_parties">Equipos (una fila por Pokémon)</string>
+    <string name="event_alias_of_x">Alias de %1$s, sprite %2$s, script %3$s</string>
+    <string name="event_object_x">Objeto %1$s, sprite %2$s, script %3$s</string>
+    <string name="town_map_town_x">Ciudad %1$s  %2$s</string>
+    <string name="town_map_spot_x">Lugar %1$s  %2$s</string>
+    <string name="overlay_stored_compressed_x">Guardado comprimido (BLZ): %1$s bytes en la ROM, %2$s bytes descomprimidos. Se vuelve a comprimir al generar la ROM.</string>
+    <string name="overlay_stored_as_it_is_x">Guardado tal cual: %1$s bytes en la ROM.</string>
+    <string name="ground_item_list_suffix_x">: %1$s</string>
+    <string name="party_personality_note">El valor de personalidad, que define la naturaleza y si el Pokémon es shiny, no se toca. Cambiar la especie, el nivel, los IV o los EV recalcula las estadísticas.</string>
+    <string name="party_personality_note_no_rom">El valor de personalidad, que define la naturaleza y si el Pokémon es shiny, no se toca. Sin una ROM no se recalculan las estadísticas: usa los campos de estadísticas de abajo.</string>
+    <string name="save_trainer_subtitle_x">%1$s, idioma %2$s. El ID se muestra como en la Tarjeta de Entrenador; no se edita aquí</string>
+    <string name="save_game_x">Juego %1$s</string>
+    <plurals name="ground_item_used_by_maps">
+        <item quantity="one">Usado por %1$s mapa%2$s. Todo evento con el script %3$s da este objeto.</item>
+        <item quantity="other">Usado por %1$s mapas%2$s. Todo evento con el script %3$s da este objeto.</item>
+    </plurals>
 </resources>
