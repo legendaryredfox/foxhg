@@ -365,7 +365,7 @@ class AppModel(
             is FoxResult.Ok -> {
                 savedRevision = revision
                 error = null
-                status = "Saved"
+                status = tr(Res.string.app_saved)
                 true
             }
             is FoxResult.Err -> { fail(r.message); false }
@@ -485,7 +485,7 @@ class AppModel(
                 throw e
             }
             error = null
-            status = if (kept) tr(Res.string.app_built_x_the_previous_file_is_x, target, backup.fileName) else "Built $target"
+            status = if (kept) tr(Res.string.app_built_x_the_previous_file_is_x, target, backup.fileName) else tr(Res.string.app_built_x, target)
         } catch (e: Exception) {
             runCatching { Files.deleteIfExists(part) }
             fail(tr(Res.string.app_cannot_build_x_x, target, e.message ?: e::class.simpleName))

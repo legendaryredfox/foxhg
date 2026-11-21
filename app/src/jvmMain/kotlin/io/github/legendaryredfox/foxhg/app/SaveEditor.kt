@@ -189,7 +189,7 @@ class SaveEditorModel(val path: Path, file: SaveFile) {
             Files.write(temp, bytes)
             Files.move(temp, path, StandardCopyOption.REPLACE_EXISTING)
             onDisk = bytes
-            status = "Wrote ${path.fileName}"
+            status = tr(Res.string.app_wrote_x, path.fileName)
             error = null
             true
         } catch (e: java.io.IOException) {

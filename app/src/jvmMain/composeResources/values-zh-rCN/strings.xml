@@ -920,6 +920,9 @@
     <string name="app_opened_x">已打开 %1$s</string>
     <string name="app_opened_project_x">已打开项目 %1$s</string>
     <string name="app_saved_project_x">已保存项目 %1$s</string>
+    <string name="app_saved">已保存</string>
+    <string name="app_built_x">已生成 %1$s</string>
+    <string name="app_wrote_x">已写入 %1$s</string>
     <string name="app_set_the_emulator_command_to_use_ru">请设置模拟器命令以使用“运行”。ROM的位置用 {rom} 表示。</string>
     <string name="app_cannot_write_to_x_x">无法写入 %1$s：%2$s</string>
     <string name="app_building_the_rom_to_run">正在生成要运行的ROM</string>

@@ -930,6 +930,9 @@
     <string name="app_opened_x">%1$s aberto</string>
     <string name="app_opened_project_x">Projeto %1$s aberto</string>
     <string name="app_saved_project_x">Projeto %1$s salvo</string>
+    <string name="app_saved">Salvo</string>
+    <string name="app_built_x">%1$s gerado</string>
+    <string name="app_wrote_x">%1$s gravado</string>
     <string name="app_set_the_emulator_command_to_use_ru">Defina o comando do emulador para usar Executar. Use {rom} onde a ROM deve ir.</string>
     <string name="app_cannot_write_to_x_x">Não foi possível gravar em %1$s: %2$s</string>
     <string name="app_building_the_rom_to_run">Gerando a ROM para executar</string>
