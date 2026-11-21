@@ -411,7 +411,7 @@ private fun Content(model: AppModel, modifier: Modifier) {
             KeepSelection(model, EditorKind.ENCOUNTERS, editor.editor.selectedIndex)
             EncounterEditor(editor, modifier.padding(16.dp))
         }
-        else -> Box(modifier, contentAlignment = Alignment.Center) { Text("${selected.title} is not implemented yet (docs/plan.md)", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        else -> Box(modifier, contentAlignment = Alignment.Center) { Text(stringResource(Res.string.editor_not_implemented_x, selected.title), color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
     }
     }

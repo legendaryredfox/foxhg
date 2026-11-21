@@ -1,5 +1,6 @@
 package io.github.legendaryredfox.foxhg.app
 
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import io.github.legendaryredfox.foxhg.app.resources.*
 import androidx.compose.foundation.layout.Arrangement
@@ -182,7 +183,7 @@ fun MessageEditor(model: MessageEditorModel, modifier: Modifier = Modifier) {
             ) {
                 TextArea(model.draft, model::edit, invalid = model.draftError != null, modifier = Modifier.fillMaxWidth())
                 val lines = model.draft.split("\\n", "\\r", "\\f", "\n").size
-                Text("${plural(model.draft.length, "character")}, ${plural(lines, "line")}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(Res.string.message_count_x_x, pluralStringResource(Res.plurals.plural_character, model.draft.length, model.draft.length), pluralStringResource(Res.plurals.plural_line, lines, lines)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 model.draftError?.let { Text(stringResource(Res.string.script_not_applied_x, it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
             }
         }

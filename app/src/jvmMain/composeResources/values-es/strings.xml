@@ -1193,4 +1193,7 @@
     <string name="file_tree_size_x">Tamaño %1$s bytes (0x%2$s)  ·  offset en la ROM 0x%3$s</string>
     <string name="matrix_used_by_x">Usado por: %1$s</string>
     <string name="matrix_rendering_maps_x">Dibujando los mapas… %1$s</string>
+    <string name="mart_opened_by_x">Se abre con el comando de script SpMartScreen %1$s. Los precios se fijan por objeto en el editor de Objetos. </string>
+    <string name="editor_not_implemented_x">%1$s aún no está implementado (docs/plan.md)</string>
+    <string name="message_count_x_x">%1$s, %2$s</string>
 </resources>

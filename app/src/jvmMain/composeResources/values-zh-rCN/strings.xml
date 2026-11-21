@@ -1181,4 +1181,7 @@
     <string name="file_tree_size_x">大小 %1$s 字节（0x%2$s）  ·  ROM 偏移 0x%3$s</string>
     <string name="matrix_used_by_x">使用者：%1$s</string>
     <string name="matrix_rendering_maps_x">正在渲染地图… %1$s</string>
+    <string name="mart_opened_by_x">由脚本命令 SpMartScreen %1$s 打开。价格在“物品”编辑器中按物品设置。</string>
+    <string name="editor_not_implemented_x">%1$s 尚未实现 (docs/plan.md)</string>
+    <string name="message_count_x_x">%1$s，%2$s</string>
 </resources>

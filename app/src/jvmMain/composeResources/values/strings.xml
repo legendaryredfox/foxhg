@@ -1193,4 +1193,7 @@
     <string name="file_tree_size_x">Size %1$s bytes (0x%2$s)  ·  ROM offset 0x%3$s</string>
     <string name="matrix_used_by_x">Used by: %1$s</string>
     <string name="matrix_rendering_maps_x">Rendering the maps… %1$s</string>
+    <string name="mart_opened_by_x">Opened by the script command SpMartScreen %1$s. Prices are set per item in the Items editor. </string>
+    <string name="editor_not_implemented_x">%1$s is not implemented yet (docs/plan.md)</string>
+    <string name="message_count_x_x">%1$s, %2$s</string>
 </resources>
