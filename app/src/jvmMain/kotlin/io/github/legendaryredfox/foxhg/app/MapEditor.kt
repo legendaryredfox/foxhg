@@ -81,7 +81,7 @@ class MapEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
     val eventLabels = EventLabels(project)
     val pictures = MapPictures(project)
 
-    val maps = RecordEditorModel(project, MapFile.SPEC, ::label, onChanged)
+    val maps: RecordEditorModel<MapFile> = RecordEditorModel(project, MapFile.SPEC, ::label) { pictures.invalidate(maps.selectedIndex); onChanged() }
 
     var layer by mutableStateOf(MapLayer.BOTH)
     /** FOXHG_MAP_TOOL=EVENTS starts with that tool (for screenshots). */
@@ -255,10 +255,10 @@ fun MapEditor(model: MapEditorModel, modifier: Modifier = Modifier) {
         model.maps, modifier,
         rowDetail = { model.usagesOf(it).size.takeIf { n -> n > 1 }?.let { n -> "×$n" } },
         onSelect = model::select,
-        leading = { i -> AsyncMapPicture(i) { model.pictures.ofMap(i) } },
+        leading = { i -> AsyncMapPicture(i to model.pictures.version) { model.pictures.ofMap(i) } },
     ) { map ->
         val index = model.maps.selectedIndex
-        EditorHeader(index.toString(), nameOf(model.maps.label(index)), trailing = { AsyncMapPicture(index, 96.dp) { model.pictures.ofMap(index) } })
+        EditorHeader(index.toString(), nameOf(model.maps.label(index)), trailing = { AsyncMapPicture(index to model.pictures.version, 96.dp) { model.pictures.ofMap(index) } })
         val usages = model.usagesOf(index)
         val usage = model.usage(index)
         if (usages.size > 1) {

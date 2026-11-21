@@ -23,7 +23,10 @@ class MessageEditorEndToEndTest {
         try {
             app.openRom(romPath)
             val project = app.project!!
+            val started = System.nanoTime()
             val editor = MessageEditorModel(project, app::projectChanged)
+            editor.awaitIndex()
+            println("MESSAGE INDEX: all ${editor.banks.recordCount} banks in ${(System.nanoTime() - started) / 1_000_000} ms")
 
             editor.banks.search = "great ball"
             val matches = editor.bankRows()

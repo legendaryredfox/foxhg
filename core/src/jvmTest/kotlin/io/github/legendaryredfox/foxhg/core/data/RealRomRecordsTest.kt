@@ -78,6 +78,7 @@ import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 /** Needs roms/heartgold.nds (or FOXHG_ROM); passes with a notice when absent. */
@@ -966,6 +967,20 @@ class RealRomRecordsTest {
                 javax.imageio.ImageIO.write(out, "png", java.io.File(dir, "map$m.png"))
             }
         }
+    }
+
+    @Test
+    fun aMapPictureShowsAnEditOnlyAfterRefresh() = withProject { project ->
+        val scenes = MapScenes(project)
+        val before = scenes.render(0, 4)!!
+        val table = NarcRecords.load(project, MapFile.SPEC).ok()
+        val map = table.records[0]
+        val moved = map.buildings.mapIndexed { i, b -> if (i == 0) b.copy(x = FixedPos.of(b.x.value + 8.0)) else b }
+        assertTrue(table.with(0, map.withBuildings(moved)).save(project) is FoxResult.Ok)
+        assertEquals(before, scenes.render(0, 4), "the picture is kept until it is told about the edit")
+        scenes.refresh(0)
+        assertNotEquals(before, scenes.render(0, 4), "a moved building shows in the next picture")
+        assertEquals(moved, scenes.maps[0].buildings)
     }
 
     @Test

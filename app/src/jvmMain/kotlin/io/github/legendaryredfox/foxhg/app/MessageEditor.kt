@@ -51,20 +51,45 @@ class MessageEditorModel(project: RomProject, onChanged: () -> Unit = {}) {
 
     init { loadDraft() }
 
-    /** Lower-case text of every message of a bank, rebuilt when the bank changes. */
-    private val searchText = HashMap<Int, Pair<TextArchive, String>>()
+    /** Lower-case text of every message of a bank, kept with the archive it was made from so an edit makes it stale. */
+    private val searchText = java.util.concurrent.ConcurrentHashMap<Int, Pair<TextArchive, String>>()
 
-    private fun textOf(bank: Int): String {
+    /** How many banks the background pass has indexed; read by [bankRows] so the list fills in as the index does. */
+    private var indexed by mutableIntStateOf(0)
+    private val indexer: Thread
+
+    init {
+        // Decoding every bank takes long enough to freeze the window on the first search, so it is done once in the background.
+        val snapshot = banks.records
+        indexer = Thread {
+            snapshot.forEachIndexed { bank, archive ->
+                searchText.putIfAbsent(bank, archive to archive.entries.joinToString("\u0000") { it.text() }.lowercase())
+                if (bank % 25 == 24) indexed = bank + 1
+            }
+            indexed = snapshot.size
+        }.apply { isDaemon = true; name = "foxhg-message-index"; start() }
+    }
+
+    /** True until every bank has been indexed; a search then only sees the banks done so far. */
+    val indexing: Boolean get() = indexed < banks.recordCount
+
+    /** Waits for the background pass (tests use it so a search sees every bank). */
+    fun awaitIndex() { indexer.join(); indexed = banks.recordCount }
+
+    /** The lower-case text of [bank], or null while the background pass has not reached it. A bank edited since is made again at once. */
+    private fun textOf(bank: Int): String? {
         val archive = banks.records.getOrNull(bank) ?: return ""
-        searchText[bank]?.let { (cached, text) -> if (cached === archive) return text }
+        val cached = searchText[bank] ?: return null
+        if (cached.first === archive) return cached.second
         return archive.entries.joinToString("\u0000") { it.text() }.lowercase().also { searchText[bank] = archive to it }
     }
 
     /** Banks whose name or any of whose messages contains the search text. */
     fun bankRows(): List<Int> {
+        indexed // subscribe: the list is made again as the index grows
         val q = banks.search.trim().lowercase()
         if (q.isEmpty()) return (0 until banks.recordCount).toList()
-        return (0 until banks.recordCount).filter { banks.label(it).lowercase().contains(q) || textOf(it).contains(q) }
+        return (0 until banks.recordCount).filter { banks.label(it).lowercase().contains(q) || textOf(it)?.contains(q) == true }
     }
 
     /** The bank search also narrows the message list of the bank you open, so the match is in view. */

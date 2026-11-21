@@ -6,7 +6,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.Modifier
@@ -41,10 +43,24 @@ import java.awt.image.BufferedImage
  */
 class MapPictures(project: RomProject) {
     private val usages = MapUsages(project)
-    private val maps: List<MapFile> = (NarcRecords.load(project, MapFile.SPEC) as? FoxResult.Ok)?.value?.records ?: emptyList()
     private val scenes = MapScenes(project)
+    private val maps: List<MapFile> get() = scenes.maps
+
+    /** Counts the edits [invalidate] saw, so a picture that is shown can tell it has to be asked for again. */
+    var version: Int by mutableIntStateOf(0)
+        private set
     private val lock = Any()
     private val cache = HashMap<Any, ImageBitmap>()
+
+    /** Map file [index] was edited: its pictures, and every matrix picture that may hold it, are made again the next time they are asked for. */
+    fun invalidate(index: Int) {
+        synchronized(lock) {
+            scenes.refresh(index)
+            // the map picture itself and the matrix pictures (their keys are not strings); the building previews stay
+            cache.keys.removeAll { it == "scene$index" || it !is String }
+        }
+        version++
+    }
 
     /** Map file [index] as a render of its scene, or its tile schematic; null for an unknown map. */
     fun ofMap(index: Int): ImageBitmap? = synchronized(lock) {

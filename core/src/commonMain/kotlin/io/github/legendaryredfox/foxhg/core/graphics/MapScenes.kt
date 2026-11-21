@@ -20,7 +20,9 @@ import kotlin.math.min
  */
 class MapScenes(private val project: RomProject) {
     private val usages = MapUsages(project)
-    private val maps: List<MapFile> = (NarcRecords.load(project, MapFile.SPEC) as? FoxResult.Ok)?.value?.records ?: emptyList()
+    /** The map files as the project had them when this was made, with the ones [refresh] has read again. */
+    var maps: List<MapFile> = (NarcRecords.load(project, MapFile.SPEC) as? FoxResult.Ok)?.value?.records ?: emptyList()
+        private set
     private val areaData: Narc? by lazy { narc(project.layout.areaData) }
     private val mapTextures: Narc? by lazy { narc(project.layout.mapTextures) }
     private val buildingModels: Narc? by lazy { narc(project.layout.buildingModels) }
@@ -34,6 +36,18 @@ class MapScenes(private val project: RomProject) {
     private val heights = HashMap<Int, FloatArray>()
 
     private fun narc(path: String): Narc? = project.read(path)?.let { (Narc.parse(it) as? FoxResult.Ok)?.value }
+
+    /**
+     * Reads map file [map] from the project again after it was edited and forgets its pictures, so the next one shows the edit. The terrain model
+     * is kept: painting tiles and moving buildings do not change it.
+     */
+    fun refresh(map: Int) {
+        val bytes = project.read(project.layout.maps)?.let { (Narc.parse(it) as? FoxResult.Ok)?.value?.files?.getOrNull(map) } ?: return
+        val file = (MapFile.SPEC.parse(bytes) as? FoxResult.Ok)?.value ?: return
+        if (map !in maps.indices) return
+        maps = maps.toMutableList().also { it[map] = file }
+        rendered.keys.removeAll { it.first == map }
+    }
 
     /** The picture of map file [map], `32 * pixelsPerTile` pixels square. */
     fun render(map: Int, pixelsPerTile: Int = 4): RgbaImage? = rendered.getOrPut(map to pixelsPerTile) { draw(map, pixelsPerTile) }
