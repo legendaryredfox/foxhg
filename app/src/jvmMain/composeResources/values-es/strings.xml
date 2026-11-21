@@ -1210,4 +1210,12 @@
         <item quantity="one">%1$d grupo de árboles</item>
         <item quantity="other">%1$d grupos de árboles</item>
     </plurals>
+    <string name="starter_updated_x">Iniciales actualizados%1$s, la elección contraria del rival en %2$s y %3$s</string>
+    <string name="starter_part_cries">, los gritos del selector</string>
+    <string name="starter_part_text">el texto del profesor</string>
+    <string name="starter_part_no_text">ningún texto</string>
+    <plurals name="plural_script">
+        <item quantity="one">%1$d script</item>
+        <item quantity="other">%1$d scripts</item>
+    </plurals>
 </resources>

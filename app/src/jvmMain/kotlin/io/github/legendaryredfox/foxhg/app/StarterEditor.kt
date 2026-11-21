@@ -74,8 +74,12 @@ class StarterEditorModel(private val project: RomProject, private val onChanged:
     }
 
     private fun describe(r: Starters.Companion.Report): String =
-        "Updated the starters" + (if (r.chooserPatched) ", the chooser cries" else "") +
-            ", the rival's counter-pick in ${plural(r.rivalScriptsPatched, "script")} and " + (if (r.textPatched) "the professor's text" else "no text")
+        tr(
+            Res.string.starter_updated_x,
+            if (r.chooserPatched) tr(Res.string.starter_part_cries) else "",
+            trPlural(Res.plurals.plural_script, r.rivalScriptsPatched, r.rivalScriptsPatched),
+            tr(if (r.textPatched) Res.string.starter_part_text else Res.string.starter_part_no_text),
+        )
 }
 
 @Composable

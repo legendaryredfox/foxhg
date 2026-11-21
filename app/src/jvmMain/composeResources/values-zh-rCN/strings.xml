@@ -1195,4 +1195,11 @@
     <plurals name="plural_tree_group">
         <item quantity="other">%1$d 个树组</item>
     </plurals>
+    <string name="starter_updated_x">已更新初始宝可梦%1$s，对手的克制选择见于 %2$s，以及%3$s</string>
+    <string name="starter_part_cries">、选择界面的叫声</string>
+    <string name="starter_part_text">教授的文本</string>
+    <string name="starter_part_no_text">不含文本</string>
+    <plurals name="plural_script">
+        <item quantity="other">%1$d 个脚本</item>
+    </plurals>
 </resources>
