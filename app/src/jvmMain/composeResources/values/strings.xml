@@ -1180,4 +1180,17 @@
     <string name="direction_west">West</string>
     <string name="direction_east">East</string>
     <string name="save_facing_x">Facing %1$s</string>
+    <string name="pokemon_nature_x">Nature %1$s</string>
+    <string name="script_of_map_header_x">Script of map header %1$s</string>
+    <string name="level_script_of_map_header_x">Level script of map header %1$s</string>
+    <string name="pickup_activates_x">Activates %1$s of battles</string>
+    <string name="encounter_slots_are_approximate_x">Slots come from the Pokémon with the biggest chance, in steps of the slot chances (%1$s), so the result can be a little off.</string>
+    <string name="battle_tower_add_x">Add %1$s</string>
+    <string name="map_collision_x">Collision 0x%1$s</string>
+    <string name="map_collision_blocked_x">Collision 0x%1$s (blocked)</string>
+    <string name="save_map_x">Map %1$s</string>
+    <string name="save_map_x_named_x">Map %1$s - %2$s</string>
+    <string name="file_tree_size_x">Size %1$s bytes (0x%2$s)  ·  ROM offset 0x%3$s</string>
+    <string name="matrix_used_by_x">Used by: %1$s</string>
+    <string name="matrix_rendering_maps_x">Rendering the maps… %1$s</string>
 </resources>

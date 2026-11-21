@@ -70,7 +70,7 @@ fun BattleTowerTrainerEditor(model: RecordEditorModel<BattleTowerTrainer>, sets:
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
                 NumberField(stringResource(Res.string.battle_tower_set_to_add), next, 0..maxOf(sets.size - 1, 0), { next = it }, Modifier.width(120.dp), tag = "Set to add")
                 OutlinedButton(onClick = { model.update { it.addSet(next) } }, enabled = next in sets.indices, modifier = Modifier.testTag("bt-add")) {
-                    Text("Add ${sets.getOrNull(next)?.let { names?.species?.getOrNull(it.species) } ?: ""}".trim())
+                    Text(stringResource(Res.string.battle_tower_add_x, sets.getOrNull(next)?.let { names?.species?.getOrNull(it.species) } ?: "").trim())
                 }
             }
         }

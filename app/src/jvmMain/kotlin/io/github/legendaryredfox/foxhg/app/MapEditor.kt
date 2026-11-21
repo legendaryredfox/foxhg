@@ -417,7 +417,7 @@ private fun MapLegend(model: MapEditorModel, map: MapFile) {
                 Swatch(typeColor(info.id))
                 Text(stringResource(Res.string.map_type_x_x, info.id, info.label), style = MaterialTheme.typography.bodySmall)
             }
-            Text("Collision 0x%02X%s".format(map.collision(x, y), if (Collision.isBlocked(map.collision(x, y))) " (blocked)" else ""), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(if (Collision.isBlocked(map.collision(x, y))) Res.string.map_collision_blocked_x else Res.string.map_collision_x, "%02X".format(map.collision(x, y))), style = MaterialTheme.typography.bodySmall)
             if (info.surfable || info.encounters) Text(listOfNotNull("surfable".takeIf { info.surfable }, tr(Res.string.app_wild_encounters).takeIf { info.encounters }).joinToString(", "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else Text(stringResource(Res.string.map_point_at_a_tile), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         val used = (0 until MapFile.SIZE * MapFile.SIZE).map { map.type(it % MapFile.SIZE, it / MapFile.SIZE) }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.take(8)

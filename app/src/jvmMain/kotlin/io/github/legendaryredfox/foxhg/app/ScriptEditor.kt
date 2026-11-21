@@ -145,8 +145,8 @@ fun ScriptEditor(model: ScriptEditorModel, labels: ScriptLabels, modifier: Modif
         EditorHeader(index.toString(), nameOf(model.files.label(index)))
         val scriptUsers = labels.scriptUsers(index)
         val levelUsers = labels.levelScriptUsers(index)
-        if (scriptUsers.isNotEmpty()) Text("Script of map header " + labels.describe(scriptUsers), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        if (levelUsers.isNotEmpty()) Text("Level script of map header " + labels.describe(levelUsers), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (scriptUsers.isNotEmpty()) Text(stringResource(Res.string.script_of_map_header_x, labels.describe(scriptUsers)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (levelUsers.isNotEmpty()) Text(stringResource(Res.string.level_script_of_map_header_x, labels.describe(levelUsers)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (entry is ScriptEntry.Script) ScriptSounds(model.draft)
         if (entry is ScriptEntry.Script && model.weatherAvailable) WeatherSnippet(model)
         when (entry) {

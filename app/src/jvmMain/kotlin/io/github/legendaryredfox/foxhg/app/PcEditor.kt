@@ -104,7 +104,7 @@ fun SavePcScreen(model: SaveEditorModel, names: GameNames?, loadRules: () -> Sav
                 NumberField(stringResource(Res.string.party_experience), mon.experience.toInt(), 0..2_000_000, { v -> edit { it.withExperience(v.toLong()) } }, Modifier.width(130.dp))
                 NumberField(stringResource(Res.string.personal_friendship), mon.friendship, 0..255, { v -> edit { it.withFriendship(v) } }, Modifier.width(100.dp))
                 rules?.level(mon.species, mon.experience)?.let { Chip(stringResource(Res.string.growth_level_x, it)) }
-                Chip("Nature ${BattleTowerSet.NATURES.getOrElse(mon.nature) { "?" }}")
+                Chip(stringResource(Res.string.pokemon_nature_x, BattleTowerSet.NATURES.getOrElse(mon.nature) { "?" }))
                 Chip(stringResource(Res.string.party_ot_x, mon.otName))
                 if (mon.isEgg) Chip(stringResource(Res.string.party_egg), emphasis = true)
             }

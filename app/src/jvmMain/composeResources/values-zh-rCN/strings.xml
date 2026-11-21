@@ -1168,4 +1168,17 @@
     <string name="direction_west">西</string>
     <string name="direction_east">东</string>
     <string name="save_facing_x">面朝%1$s</string>
+    <string name="pokemon_nature_x">性格 %1$s</string>
+    <string name="script_of_map_header_x">地图头 %1$s 的脚本</string>
+    <string name="level_script_of_map_header_x">地图头 %1$s 的关卡脚本</string>
+    <string name="pickup_activates_x">在 %1$s 的战斗中触发</string>
+    <string name="encounter_slots_are_approximate_x">槽位取自概率最大的宝可梦，步长为各槽位的概率（%1$s），因此结果可能略有偏差。</string>
+    <string name="battle_tower_add_x">添加 %1$s</string>
+    <string name="map_collision_x">碰撞 0x%1$s</string>
+    <string name="map_collision_blocked_x">碰撞 0x%1$s（阻挡）</string>
+    <string name="save_map_x">地图 %1$s</string>
+    <string name="save_map_x_named_x">地图 %1$s - %2$s</string>
+    <string name="file_tree_size_x">大小 %1$s 字节（0x%2$s）  ·  ROM 偏移 0x%3$s</string>
+    <string name="matrix_used_by_x">使用者：%1$s</string>
+    <string name="matrix_rendering_maps_x">正在渲染地图… %1$s</string>
 </resources>

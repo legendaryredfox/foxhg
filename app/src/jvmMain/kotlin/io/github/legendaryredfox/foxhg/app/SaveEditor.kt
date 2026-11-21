@@ -324,7 +324,7 @@ fun SavePositionScreen(model: SaveEditorModel, mapName: (Int) -> String?, modifi
         val here = field.current
         SectionCard(stringResource(Res.string.save_where_the_player_is)) {
             FieldFlow {
-                Chip("Map ${here.map}" + (mapName(here.map)?.let { " - $it" } ?: ""))
+                Chip(mapName(here.map)?.let { stringResource(Res.string.save_map_x_named_x, here.map, it) } ?: stringResource(Res.string.save_map_x, here.map))
                 Chip(stringResource(Res.string.map_tile_x_x, here.x, here.y))
                 Chip(stringResource(Res.string.save_facing_x, directionNames().getOrElse(here.direction) { "?" }.lowercase()))
             }

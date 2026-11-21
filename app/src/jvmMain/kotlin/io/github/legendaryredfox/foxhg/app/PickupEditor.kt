@@ -70,7 +70,7 @@ fun PickupEditor(model: PickupEditorModel, modifier: Modifier = Modifier) {
         ) {
             FieldFlow {
                 NumberField(stringResource(Res.string.pickup_divisor), table.divisor, 1..255, { v -> model.update { it.copy(divisor = v) } }, Modifier.width(100.dp))
-                Chip("Activates ${"%.2f".format(activation)}% of battles")
+                Chip(stringResource(Res.string.pickup_activates_x, "%.2f%%".format(activation)))
             }
             table.weights.forEachIndexed { slot, weight ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {

@@ -125,7 +125,7 @@ fun FileTreeEditor(model: FileTreeModel, appModel: AppModel, modifier: Modifier 
                 EditorHeader(file.id.toString(), file.name, trailing = { if (model.isEdited(file.path)) Chip(stringResource(Res.string.map_edited), emphasis = true) })
                 SectionCard(stringResource(Res.string.file_tree_file)) {
                     Text(file.path, style = Fox.mono)
-                    Text("Size ${file.size} bytes (0x%X)  ·  ROM offset 0x%X".format(file.size, file.start), style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(Res.string.file_tree_size_x, file.size, "%X".format(file.size), "%X".format(file.start)), style = MaterialTheme.typography.bodyMedium)
                     OutlinedButton(onClick = {
                         pickFile(tr(Res.string.csv_buttons_export_x, file.name), FileDialog.SAVE, "")?.let { target -> model.export(file.path, target)?.let { appModel.error = it } ?: run { appModel.status = tr(Res.string.file_tree_exported_x_to_x, file.path, target) } }
                     }, modifier = Modifier.testTag("export-file")) { Text(stringResource(Res.string.file_tree_export_file)) }

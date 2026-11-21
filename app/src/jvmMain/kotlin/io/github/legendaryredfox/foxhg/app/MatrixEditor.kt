@@ -62,7 +62,7 @@ fun MatrixEditor(model: MatrixEditorModel, modifier: Modifier = Modifier) {
 
         EditorHeader(index.toString(), matrix.name, trailing = { Chip(stringResource(Res.string.matrix_x_x, matrix.width, matrix.height)) })
         if (users.isNotEmpty()) {
-            Text("Used by: " + users.distinct().take(6).joinToString(", ") + if (users.distinct().size > 6) " …" else "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(Res.string.matrix_used_by_x, users.distinct().take(6).joinToString(", ") + if (users.distinct().size > 6) " …" else ""), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
         SectionCard(stringResource(Res.string.matrix_overview), subtitle = stringResource(Res.string.matrix_the_tiles_of_every_cell_as_in_the)) {
@@ -77,7 +77,7 @@ fun MatrixEditor(model: MatrixEditorModel, modifier: Modifier = Modifier) {
             }
             if (rendering && matrix.width * matrix.height > 4) {
                 androidx.compose.material3.LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().testTag("matrix-progress"))
-                Text("Rendering the maps… ${(progress * 100).toInt()} %", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(Res.string.matrix_rendering_maps_x, "${(progress * 100).toInt()} %"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             val width = minOf(720f, schematic.width * 2f)
             MapPicture(bitmap, width.dp, (width * schematic.height / schematic.width).dp)

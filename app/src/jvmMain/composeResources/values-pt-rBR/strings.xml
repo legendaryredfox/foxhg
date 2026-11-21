@@ -1180,4 +1180,17 @@
     <string name="direction_west">Oeste</string>
     <string name="direction_east">Leste</string>
     <string name="save_facing_x">Virado para %1$s</string>
+    <string name="pokemon_nature_x">Natureza %1$s</string>
+    <string name="script_of_map_header_x">Script do cabeçalho de mapa %1$s</string>
+    <string name="level_script_of_map_header_x">Script de nível do cabeçalho de mapa %1$s</string>
+    <string name="pickup_activates_x">Ativa em %1$s das batalhas</string>
+    <string name="encounter_slots_are_approximate_x">Os espaços saem do Pokémon com a maior chance, em passos das chances dos espaços (%1$s), então o resultado pode ficar um pouco diferente.</string>
+    <string name="battle_tower_add_x">Adicionar %1$s</string>
+    <string name="map_collision_x">Colisão 0x%1$s</string>
+    <string name="map_collision_blocked_x">Colisão 0x%1$s (bloqueado)</string>
+    <string name="save_map_x">Mapa %1$s</string>
+    <string name="save_map_x_named_x">Mapa %1$s - %2$s</string>
+    <string name="file_tree_size_x">Tamanho %1$s bytes (0x%2$s)  ·  offset na ROM 0x%3$s</string>
+    <string name="matrix_used_by_x">Usado por: %1$s</string>
+    <string name="matrix_rendering_maps_x">Desenhando os mapas… %1$s</string>
 </resources>

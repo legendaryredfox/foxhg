@@ -235,7 +235,7 @@ private fun AddDialog(group: EncounterGroup, species: List<String>, onAdd: (Int,
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 SpeciesPicker(stringResource(Res.string.evolution_species), chosen, species, { chosen = it }, Modifier.fillMaxWidth())
                 NumberField(stringResource(Res.string.encounter_chance_percent), percent, 1..99, { percent = it }, Modifier.width(140.dp), tag = "add-percent")
-                Text("Slots come from the Pokémon with the biggest chance, in steps of the slot chances (${group.percents.joinToString(", ")}%), so the result can be a little off.", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(Res.string.encounter_slots_are_approximate_x, group.percents.joinToString(", ") + "%"), style = MaterialTheme.typography.bodySmall)
             }
         },
         confirmButton = { Button(onClick = { onAdd(chosen, percent) }, enabled = chosen != 0, modifier = Modifier.testTag("confirm")) { Text(stringResource(Res.string.encounter_add)) } },
