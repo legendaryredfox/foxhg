@@ -1171,4 +1171,13 @@
         <item quantity="other">Used by %1$s maps%2$s. Every event with script %3$s gives this item.</item>
     </plurals>
     <string name="message_editor_commands_help">Commands are written {NAME args}, for example {STRVAR_1 3, 0, 0}, {PAUSE 30}, {COLOR 1}. Line breaks: \\n next line, \\r new box, \\f clear.</string>
+    <string name="gender_boy">Boy</string>
+    <string name="gender_girl">Girl</string>
+    <string name="gender_male">Male</string>
+    <string name="gender_female">Female</string>
+    <string name="direction_north">North</string>
+    <string name="direction_south">South</string>
+    <string name="direction_west">West</string>
+    <string name="direction_east">East</string>
+    <string name="save_facing_x">Facing %1$s</string>
 </resources>

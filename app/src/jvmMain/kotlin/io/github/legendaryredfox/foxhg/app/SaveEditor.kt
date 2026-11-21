@@ -269,7 +269,7 @@ fun SavePlayerScreen(model: SaveEditorModel, modifier: Modifier = Modifier) {
                     name = text
                     player.withName(text).let { r -> if (r is FoxResult.Ok) model.updatePlayer { r.value } }
                 }
-                PickerField(stringResource(Res.string.new_save_gender), player.gender.coerceIn(0, 1), PlayerData.GENDERS, { v -> model.updatePlayer { it.copy(gender = v) } }, Modifier.width(140.dp))
+                PickerField(stringResource(Res.string.new_save_gender), player.gender.coerceIn(0, 1), playerGenderNames(), { v -> model.updatePlayer { it.copy(gender = v) } }, Modifier.width(140.dp))
                 Chip("ID %05d".format(player.visibleId))
             }
             FieldFlow {
@@ -326,7 +326,7 @@ fun SavePositionScreen(model: SaveEditorModel, mapName: (Int) -> String?, modifi
             FieldFlow {
                 Chip("Map ${here.map}" + (mapName(here.map)?.let { " - $it" } ?: ""))
                 Chip(stringResource(Res.string.map_tile_x_x, here.x, here.y))
-                Chip("Facing ${Location.DIRECTIONS.getOrElse(here.direction) { "?" }.lowercase()}")
+                Chip(stringResource(Res.string.save_facing_x, directionNames().getOrElse(here.direction) { "?" }.lowercase()))
             }
         }
         var map by remember(here) { mutableStateOf(here.map) }
@@ -341,7 +341,7 @@ fun SavePositionScreen(model: SaveEditorModel, mapName: (Int) -> String?, modifi
                 NumberField(stringResource(Res.string.new_save_map), map, 0..65535, { map = it }, Modifier.width(100.dp), tag = "Map")
                 NumberField(stringResource(Res.string.new_save_tile_x), x, 0..1023, { x = it }, Modifier.width(100.dp), tag = "Tile X")
                 NumberField(stringResource(Res.string.new_save_tile_y), y, 0..1023, { y = it }, Modifier.width(100.dp), tag = "Tile Y")
-                PickerField(stringResource(Res.string.new_save_facing), direction, Location.DIRECTIONS, { direction = it }, Modifier.width(140.dp))
+                PickerField(stringResource(Res.string.new_save_facing), direction, directionNames(), { direction = it }, Modifier.width(140.dp))
             }
             mapName(map)?.let { Text(stringResource(Res.string.save_map_x_x, map, it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             Button(onClick = { model.moveTo(Location(map, -1, x, y, direction)) }, modifier = Modifier.testTag("save-move")) { Text(stringResource(Res.string.save_move_the_player_here)) }

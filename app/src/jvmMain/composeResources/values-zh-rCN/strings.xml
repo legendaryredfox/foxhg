@@ -1159,4 +1159,13 @@
         <item quantity="other">被 %1$s 张地图使用%2$s。每个使用脚本 %3$s 的事件都会给出此物品。</item>
     </plurals>
     <string name="message_editor_commands_help">命令写作 {NAME args}，例如 {STRVAR_1 3, 0, 0}、{PAUSE 30}、{COLOR 1}。换行：\\n 下一行，\\r 新对话框，\\f 清除。</string>
+    <string name="gender_boy">男孩</string>
+    <string name="gender_girl">女孩</string>
+    <string name="gender_male">男</string>
+    <string name="gender_female">女</string>
+    <string name="direction_north">北</string>
+    <string name="direction_south">南</string>
+    <string name="direction_west">西</string>
+    <string name="direction_east">东</string>
+    <string name="save_facing_x">面朝%1$s</string>
 </resources>

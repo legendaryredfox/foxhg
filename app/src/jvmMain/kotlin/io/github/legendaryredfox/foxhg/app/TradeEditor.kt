@@ -52,7 +52,7 @@ fun TradeEditor(model: RecordEditorModel<NpcTrade>, modifier: Modifier = Modifie
         }
         SectionCard(stringResource(Res.string.trade_original_trainer), subtitle = stringResource(Res.string.trade_nickname_and_trainer_name_are_mess)) {
             FieldFlow {
-                PickerField(stringResource(Res.string.trade_trainer_gender), m.otGender.coerceIn(0, NpcTrade.GENDERS.lastIndex), NpcTrade.GENDERS, { v -> model.update { it.copy(otGender = v) } }, Modifier.width(160.dp))
+                PickerField(stringResource(Res.string.trade_trainer_gender), m.otGender.coerceIn(0, NpcTrade.GENDERS.lastIndex), trainerGenderNames(), { v -> model.update { it.copy(otGender = v) } }, Modifier.width(160.dp))
                 NumberField(stringResource(Res.string.trade_trainer_id), m.otId.toInt(), 0..Int.MAX_VALUE, { v -> model.update { it.copy(otId = v.toLong()) } }, Modifier.width(130.dp))
                 NumberField(stringResource(Res.string.trade_personality_value), m.pid.toInt(), 0..Int.MAX_VALUE, { v -> model.update { it.copy(pid = v.toLong()) } }, Modifier.width(150.dp))
                 NumberField(stringResource(Res.string.trade_language_id_2_english), m.language, 0..255, { v -> model.update { it.copy(language = v) } }, Modifier.width(180.dp))

@@ -346,12 +346,12 @@ private fun NewSaveDialog(model: AppModel) {
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 LabeledText(stringResource(Res.string.new_save_name, PlayerData.MAX_NAME), name, tag = "Name (up to ${PlayerData.MAX_NAME} characters)") { name = it }
-                PickerField(stringResource(Res.string.new_save_gender), gender, PlayerData.GENDERS, { gender = it }, Modifier.width(140.dp), tag = "Gender")
+                PickerField(stringResource(Res.string.new_save_gender), gender, playerGenderNames(), { gender = it }, Modifier.width(140.dp), tag = "Gender")
                 FieldFlow {
                     NumberField(stringResource(Res.string.new_save_map), map, 0..65535, { map = it }, Modifier.width(100.dp), tag = "Map")
                     NumberField(stringResource(Res.string.new_save_tile_x), x, 0..1023, { x = it }, Modifier.width(100.dp), tag = "Tile X")
                     NumberField(stringResource(Res.string.new_save_tile_y), y, 0..1023, { y = it }, Modifier.width(100.dp), tag = "Tile Y")
-                    PickerField(stringResource(Res.string.new_save_facing), direction, Location.DIRECTIONS, { direction = it }, Modifier.width(140.dp), tag = "Facing")
+                    PickerField(stringResource(Res.string.new_save_facing), direction, directionNames(), { direction = it }, Modifier.width(140.dp), tag = "Facing")
                 }
                 PRESETS.forEach { p ->
                     OutlinedButton(onClick = { map = p.place.map; x = p.place.x; y = p.place.y; direction = p.place.direction }) { Text(p.label) }
