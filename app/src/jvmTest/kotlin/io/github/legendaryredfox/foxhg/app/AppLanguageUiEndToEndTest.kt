@@ -5,12 +5,31 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import java.util.Locale
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /** Choosing the app language in the settings window changes the words on screen at once (docs/spec.md section 12). */
 @OptIn(ExperimentalTestApi::class)
 class AppLanguageUiEndToEndTest {
+    private lateinit var locale: Locale
+    private lateinit var formatLocale: Locale
+
+    // choosing a language sets the JVM's default locale, which every later test in the same JVM would otherwise inherit
+    @BeforeTest
+    fun rememberLocale() {
+        locale = Locale.getDefault()
+        formatLocale = Locale.getDefault(Locale.Category.FORMAT)
+    }
+
+    @AfterTest
+    fun restoreLocale() {
+        Locale.setDefault(locale)
+        Locale.setDefault(Locale.Category.FORMAT, formatLocale)
+    }
+
     private fun androidx.compose.ui.test.DesktopComposeUiTest.chooseLanguage(model: AppModel, language: AppLanguage) {
         model.dialog = AppDialog.Settings()
         waitForIdle()
