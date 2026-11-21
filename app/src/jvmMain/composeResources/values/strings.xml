@@ -1170,4 +1170,5 @@
         <item quantity="one">Used by %1$s map%2$s. Every event with script %3$s gives this item.</item>
         <item quantity="other">Used by %1$s maps%2$s. Every event with script %3$s gives this item.</item>
     </plurals>
+    <string name="message_editor_commands_help">Commands are written {NAME args}, for example {STRVAR_1 3, 0, 0}, {PAUSE 30}, {COLOR 1}. Line breaks: \\n next line, \\r new box, \\f clear.</string>
 </resources>

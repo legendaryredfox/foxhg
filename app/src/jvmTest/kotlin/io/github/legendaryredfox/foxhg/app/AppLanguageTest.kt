@@ -1,5 +1,7 @@
 package io.github.legendaryredfox.foxhg.app
 
+import io.github.legendaryredfox.foxhg.app.resources.Res
+import io.github.legendaryredfox.foxhg.app.resources.message_editor_commands_help
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Locale
@@ -54,6 +56,12 @@ class AppLanguageTest {
         assertEquals(AppLanguage.CHINESE_SIMPLIFIED, AppLanguage.SYSTEM.resolved(Locale.forLanguageTag("zh-CN")))
         assertEquals(AppLanguage.ENGLISH, AppLanguage.SYSTEM.resolved(Locale.forLanguageTag("de-DE")))
         assertEquals(AppLanguage.SPANISH, AppLanguage.SPANISH.resolved(Locale.forLanguageTag("zh-CN")), "a chosen language wins")
+    }
+
+    @Test
+    fun theMessageHelpKeepsItsBackslashEscapesAsTyped() {
+        val text = tr(Res.string.message_editor_commands_help)
+        assertTrue("\\n next line, \\r new box, \\f clear" in text, text)
     }
 
     @Test

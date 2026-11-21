@@ -1158,4 +1158,5 @@
     <plurals name="ground_item_used_by_maps">
         <item quantity="other">被 %1$s 张地图使用%2$s。每个使用脚本 %3$s 的事件都会给出此物品。</item>
     </plurals>
+    <string name="message_editor_commands_help">命令写作 {NAME args}，例如 {STRVAR_1 3, 0, 0}、{PAUSE 30}、{COLOR 1}。换行：\\n 下一行，\\r 新对话框，\\f 清除。</string>
 </resources>

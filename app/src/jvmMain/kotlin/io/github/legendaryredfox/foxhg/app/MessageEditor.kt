@@ -174,7 +174,7 @@ fun MessageEditor(model: MessageEditorModel, modifier: Modifier = Modifier) {
             EditorHeader(model.banks.selectedIndex.toString(), model.bankName(model.banks.selectedIndex) ?: "Bank ${model.banks.selectedIndex}")
             SectionCard(
                 stringResource(Res.string.message_message_x_of_x, model.messageIndex, archive.entries.size),
-                subtitle = "Commands are written {NAME args}, for example {STRVAR_1 3, 0, 0}, {PAUSE 30}, {COLOR 1}. Line breaks: \\n next line, \\r new box, \\f clear.",
+                subtitle = stringResource(Res.string.message_editor_commands_help),
                 actions = {
                     if (entry?.compressed == true) Chip(stringResource(Res.string.message_packed))
                     if (model.isMessageEdited(model.messageIndex)) OutlinedButton(onClick = model::revertMessage) { Text(stringResource(Res.string.message_revert)) }
